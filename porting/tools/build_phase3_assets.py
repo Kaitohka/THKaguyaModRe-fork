@@ -36,8 +36,8 @@ ITEMS = [
     ('JEWELED_BRANCH_OF_HOURAI', 'jeweled_branch_of_hourai', 'houraiJewelBranch', 'houraiEda.png', 'bow', {'dur': 301}),
     ('JEWEL_FROM_THE_DRAGONS_NECK', 'jewel_from_the_dragons_neck', 'dragonNeckJewel', 'ryuuTama.png', 'item', {'dur': 300, 'stack': 1}),
     ('BUDDHAS_STONE_BOWL', 'buddhas_stone_bowl', 'buddhaStoneBowl', 'hotokeHachi.png', 'item', {'dur': 131}),
-    ('ROBE_OF_THE_FIRE_RAT', 'robe_of_the_fire_rat', 'fireRatRobe', 'hinezumi.png', 'armor:HINEZUMI_ROBE:chest', {}),
-    ('SWALLOWS_COWRIE_SHELL', 'swallows_cowrie_shell', 'swallowCowrieShell', 'koyasugai.png', 'food:0:always', {}),
+    ('ROBE_OF_THE_FIRE_RAT', 'robe_of_the_fire_rat', 'fireRatRobe', 'hinezumi.png', 'armor:HINEZUMI_ROBE:chest', {}, 'ItemFireRatRobe'),
+    ('SWALLOWS_COWRIE_SHELL', 'swallows_cowrie_shell', 'swallowCowrieShell', 'koyasugai.png', 'food:0:always', {}, 'ItemSwallowCowrieShell'),
     ('SEAMLESS_CEILING_OF_KINKAKUJI', 'seamless_ceiling_of_kinkakuji', 'kinkaku-ji', 'kinkakuzi.png', 'item', {'stack': 1}),
     ('RED_STONE_OF_AJA', 'red_stone_of_aja', 'ajaRedStone', 'AjaRedStone.png', 'item', {'stack': 1}),# 8 pearls
     ('RED_PEARL',    'red_pearl',    'houraiPearl.red',    'material/RedPearl.png',    'item', {}),
@@ -56,7 +56,7 @@ ITEMS = [
     ('BLOODTHIRSTY_YIN_YANG_ORB', 'bloodthirsty_yin_yang_orb', 'bloodthirstyYinYangOrb', 'material/Onmyoudama.png', 'item', {'dur': 150}),
     ('MAGIC_BROOM', 'magic_broom', 'magicBroom', 'magicBroom.png', 'item', {'stack': 1}),
     ('MINI_HAKKERO', 'mini_hakkero', 'miniHakkero', 'miniHakkero.png', 'item', {'stack': 1}),
-    ('MARISAS_HAT', 'marisas_hat', 'marisaHat', 'MarisaHat.png', 'armor:MARISA:helm', {'dur': 40}),
+    ('MARISAS_HAT', 'marisas_hat', 'marisaHat', 'MarisaHat.png', 'armor:MARISA:helm', {'dur': 40}, 'ItemMarisaHat'),
     # ---- 紅魔郷 ----
     ('ICICLE_SWORD', 'icicle_sword', 'icicleSword', 'IcicleSword.png', 'sword:ICICLE', {}),
     ('SILVER_KNIFE_BLUE', 'silver_knife_blue', 'silverKnife.blue', 'shot/SilverKnife_Blue.png', 'item', {}),
@@ -76,41 +76,41 @@ ITEMS = [
     ('GAP', 'gap', 'gap', 'sukima.png', 'item', {}),
     ('GAP_FOLDING_UMBRELLA', 'gap_folding_umbrella', 'gapFoldingUmbrella', 'GapFoldingUmbrella_base.png|GapFoldingUmbrella_ribbon.png', 'item', {'dur': 30}),
     # ---- 萃夢想 ----
-    ('IBUKI_GOURD', 'ibuki_gourd', 'ibukiGourd', 'ibukihyou.png', 'item', {'dur': 11, 'stack': 1}),
+    ('IBUKI_GOURD', 'ibuki_gourd', 'ibukiGourd', 'ibukihyou.png', 'item', {'dur': 11, 'stack': 1}, 'ItemIbukihyou'),
     # ---- 花映塚 ----
     ('YUUKAS_PARASOL', 'yuukas_parasol', 'yuukaParasol', 'yuukaParasol.png', 'item', {'dur': 60}),
-    ('SCYTHE_OF_DEATH', 'scythe_of_death', 'deathScythe', 'deathScythe.png', 'sword:IRON:444', {}),
-    ('ROD_OF_REMORSE', 'rod_of_remorse', 'remorseRod', 'kaigoStick_0.png', 'item', {'stack': 1}),
+    ('SCYTHE_OF_DEATH', 'scythe_of_death', 'deathScythe', 'deathScythe.png', 'sword:IRON:444', {}, 'ItemDeathScythe'),
+    ('ROD_OF_REMORSE', 'rod_of_remorse', 'remorseRod', 'kaigoStick_0.png', 'sword:KAIGO', {'dur': 2}, 'ItemKaigo'),
     # ---- 文花帖 ----
     ('TENGUS_FAN', 'tengus_fan', 'tenguFan', 'tenguFan.png', 'item', {'dur': 40}),
     # ---- 風神録 ----
-    ('KAPPA_CAP', 'kappa_cap', 'kappaCap', 'kappaCap.png', 'armor:KAPPA:helm', {'dur': 500}),
+    ('KAPPA_CAP', 'kappa_cap', 'kappaCap', 'kappaCap.png', 'armor:KAPPA:helm', {'dur': 500}, 'ItemKappaCap'),
     ('KAPPAS_WATER_PISTOL', 'kappas_water_pistol', 'kappaWaterPistol', 'kappaWaterPistol.png', 'item', {'dur': 39}),
     ('WIND_SHRINE_MAIDEN_STICK', 'wind_shrine_maiden_stick', 'windMikoStick', 'mikoStick_S.png', 'item', {'dur': 50}),
-    ('ILLNESS_RECOVERY_CHARM', 'illness_recovery_charm', 'byoukiheiyuMamori', 'ByoukiheiyuMamori.png', 'item', {}),
-    ('ONBASHIRA', 'onbashira', 'onbashira', 'onbashira.png', 'sword:WOOD', {}),
-    ('SUWAKOS_HAT', 'suwakos_hat', 'suwakoHat', 'Kerobou.png', 'armor:SUWAKO:helm', {'dur': 620}),
+    ('ILLNESS_RECOVERY_CHARM', 'illness_recovery_charm', 'byoukiheiyuMamori', 'ByoukiheiyuMamori.png', 'item', {}, 'ItemByoukiheiyuMamori'),
+    ('ONBASHIRA', 'onbashira', 'onbashira', 'onbashira.png', 'sword:WOOD', {}, 'ItemOnbashira'),
+    ('SUWAKOS_HAT', 'suwakos_hat', 'suwakoHat', 'Kerobou.png', 'armor:SUWAKO:helm', {'dur': 620}, 'ItemKerobou'),
     # ---- 緋想天 ----
-    ('HEAVENLY_PEACH', 'heavenly_peach', 'heavenlyPeach', 'heavenlyPeach.png', 'food:2:always', {}),
+    ('HEAVENLY_PEACH', 'heavenly_peach', 'heavenlyPeach', 'heavenlyPeach.png', 'food:2:always', {}, 'ItemHeavenlyPeach'),
     ('SWORD_OF_SCARLET_PERCEPTION', 'sword_of_scarlet_perception', 'scarletPerceptionSword', 'hisousword.png', 'sword:HISOU', {}),
     # ---- 地霊殿 ----
-    ('THIRD_EYE', 'third_eye', 'thirdEye', 'thirdEye_0.png', 'item', {'dur': 150, 'stack': 1}),
+    ('THIRD_EYE', 'third_eye', 'thirdEye', 'thirdEye_0.png', 'item', {'dur': 150, 'stack': 1}, 'ItemThirdEye'),
     ('NUCLEAR_CONTROL_ROD', 'nuclear_control_rod', 'nuclearControlRod', 'nuclearControlRod.png', 'item', {'dur': 36}),
-    ('CLOSED_THIRD_EYE', 'closed_third_eye', 'closedThirdEye', 'closedThirdEye.png', 'item', {'stack': 1}),
+    ('CLOSED_THIRD_EYE', 'closed_third_eye', 'closedThirdEye', 'closedThirdEye.png', 'item', {'stack': 1}, 'ItemClosedThirdEye'),
     # ---- 星蓮船 ----
     ('NAZRIN_PENDULUM', 'nazrin_pendulum', 'nazrinPendulum', 'pendulum.png', 'item', {'stack': 1}),
     ('SHIP_GHOSTS_DIPPER_EMPTY', 'ship_ghosts_dipper_empty', 'shipGhostDipperEmpty', 'hisyaku_1.png', 'item', {'dur': 60, 'stack': 1}),
     ('SHIP_GHOSTS_DIPPER', 'ship_ghosts_dipper', 'shipGhostDipper', 'hisyaku_0.png', 'item', {'dur': 60, 'stack': 1}),
     ('SORCERERS_SUTRA_SCROLL', 'sorcerers_sutra_scroll', 'sorcererSutraScroll', 'mazinKyoukan.png', 'item', {'stack': 1}),
     # ---- 神霊廟 ----
-    ('WALL_PASSING_CHISEL', 'wall_passing_chisel', 'wallPassingChisel', 'kabenuke.png', 'item', {'dur': 122}),
+    ('WALL_PASSING_CHISEL', 'wall_passing_chisel', 'wallPassingChisel', 'kabenuke.png', 'item', {'dur': 122}, 'ItemKabenuke'),
     ('SACRED_SWORD_OF_TOYOSATOMIMI', 'sacred_sword_of_toyosatomimi', 'toyosatomimiSword', 'toyosatomimiSword.png', 'sword:IRON', {}),
     # ---- 輝針城 ----
     ('MIRACLE_MALLET', 'miracle_mallet', 'miracleMallet', 'UchidenoKoduchi.png', 'item', {'dur': 100}),
     # ---- 分類外 ----
     ('SPIRITUAL_STRIKE_TALISMAN', 'spiritual_strike_talisman', 'spiritualStrikeTalisman', 'SpiritualStrikeTalisman.png', 'item', {}),
     # ---- 基本アイテム ----
-    ('SHOT_MATERIAL', 'shot_material', 'shotMaterial', 'material/ShotMaterial.png', 'item', {}),
+    ('SHOT_MATERIAL', 'shot_material', 'shotMaterial', 'material/ShotMaterial.png', 'item', {}, 'ItemShotMaterial'),
     ('POWER_UP_ITEM_SMALL', 'power_up_item_small', 'thPowerItem.small', 'material/SmallPowerUpItem.png', 'item', {}),
     ('POWER_UP_ITEM_BIG', 'power_up_item_big', 'thPowerItem.big', 'material/BigPowerUpItem.png', 'item', {}),
     ('POINT_ITEM', 'point_item', 'thPointItem', 'material/THPointItem.png', 'item', {}),
@@ -141,12 +141,12 @@ SHOTS = [
     ('ARROW_SHOT', 'arrow_shot', 'arrowShot', 'ArrowShot.png'),
 ]
 for c, sid, vk, icon in SHOTS:
-    ITEMS.append((c, sid, 'thShot.' + vk, 'shot/' + icon, 'item', {}))
+    ITEMS.append((c, sid, 'thShot.' + vk, 'shot/' + icon, 'shotitem', {}))
 
 LASERS = [
-    ('MIDDLE_LASER', 'middle_laser', 'thLaser.middle', 'shot/MiddleLaser.png', 'item', {}),
-    ('SHORT_LASER', 'short_laser', 'thLaser.short', 'shot/ShortLaser.png', 'item', {}),
-    ('LONG_LASER', 'long_laser', 'thLaser.long', 'shot/LongLaser.png', 'item', {}),
+    ('MIDDLE_LASER', 'middle_laser', 'thLaser.middle', 'shot/MiddleLaser.png', 'laseritem', {}),
+    ('SHORT_LASER', 'short_laser', 'thLaser.short', 'shot/ShortLaser.png', 'laseritem', {}),
+    ('LONG_LASER', 'long_laser', 'thLaser.long', 'shot/LongLaser.png', 'laseritem', {}),
 ]
 ITEMS.extend(LASERS)
 
@@ -272,7 +272,8 @@ def main():
                       'spellCard/%s.png' % reg_name, 'spellcard', {'stack': 1, 'level': level}))
 
     # ---------- textures + item models ----------
-    for const, rid, old_key, tex_src, kind, props in ITEMS:
+    for entry in ITEMS:
+        const, rid, old_key, tex_src, kind, props = entry[:6]
         parts = tex_src.split('|')
         sub = 'spell_card/' if kind == 'spellcard' else ''
         if tex_src.startswith('shot/') or tex_src.startswith('material/'):
@@ -350,7 +351,8 @@ def main():
         main_tab, spell_tab = TAB_LANG[lang]
         new['itemGroup.thkaguyamod'] = main_tab
         new['itemGroup.thkaguyamod.spellcard'] = spell_tab
-        for const, rid, old_key, tex_src, kind, props in ITEMS:
+        for entry in ITEMS:
+            const, rid, old_key, tex_src, kind, props = entry[:6]
             ok = 'item.%s.name' % old_key
             if ok in old:
                 new['item.thkaguyamod.%s' % rid] = old[ok]
@@ -370,59 +372,89 @@ def main():
         for color in DIVINE_COLORS:
             ok = 'tile.divineSpirit.%s.name' % color
             new['block.thkaguyamod.divine_spirit_%s' % color] = old.get(ok, old.get('tile.divineSpirit.name', 'divine_spirit_' + color))
+        # GUI labels and misc message keys pass through unchanged
+        for k, v in old.items():
+            if k.startswith(('danmakuCrafting.', 'laserCrafting.', 'thKaguya.')):
+                new[k] = v
         write_json(os.path.join(ASSETS, 'lang', lang + '.json'), new)
 
     # ---------- ModItems.java ----------
-    lines = []
-    lines.append('package thkaguyamod.init;')
-    lines.append('')
-    lines.append('import java.util.List;')
-    lines.append('')
-    lines.append('import net.minecraft.world.food.FoodProperties;')
-    lines.append('import net.minecraft.world.item.ArmorItem;')
-    lines.append('import net.minecraft.world.item.BowItem;')
-    lines.append('import net.minecraft.world.item.Item;')
-    lines.append('import net.minecraft.world.item.SwordItem;')
-    lines.append('import net.neoforged.bus.api.IEventBus;')
-    lines.append('import net.neoforged.neoforge.registries.DeferredItem;')
-    lines.append('import net.neoforged.neoforge.registries.DeferredRegister;')
-    lines.append('')
-    lines.append('import thkaguyamod.THKaguyaMod;')
-    lines.append('')
-    lines.append('/** Item registry. GENERATED by porting/tools/build_phase3_assets.py - do not edit by hand. */')
-    lines.append('public final class ModItems {')
-    lines.append('')
-    lines.append('    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(THKaguyaMod.MOD_ID);')
-    lines.append('')
-    lines.append('    private ModItems() {}')
-    lines.append('')
-    for const, rid, old_key, tex_src, kind, props in ITEMS:
+    body = []
+    body.append('/** Item registry. GENERATED by porting/tools/build_phase3_assets.py - do not edit by hand. */')
+    body.append('public final class ModItems {')
+    body.append('')
+    body.append('    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(THKaguyaMod.MOD_ID);')
+    body.append('')
+    body.append('    private ModItems() {}')
+    body.append('')
+    shot_idx = 0
+    laser_idx = 0
+    extra_imports = set()
+    for entry in ITEMS:
+        const, rid, old_key, tex_src, kind, props = entry[:6]
+        cls = entry[6] if len(entry) > 6 else None
         p = ['new Item.Properties()']
         if props.get('stack'):
             p.append('.stacksTo(%d)' % props['stack'])
         if props.get('dur'):
             p.append('.durability(%d)' % props['dur'])
         prop = ''.join(p)
-        if kind.startswith('sword:'):
+        if cls:
+            extra_imports.add(cls)
+        if kind == 'shotitem':
+            body.append('    public static final DeferredItem<ItemTHShot> %s = ITEMS.registerItem("%s", props -> new ItemTHShot(props, %d), %s);' % (const, rid, shot_idx, prop))
+            extra_imports.add('ItemTHShot')
+            shot_idx += 1
+        elif kind == 'laseritem':
+            body.append('    public static final DeferredItem<ItemTHLaser> %s = ITEMS.registerItem("%s", props -> new ItemTHLaser(props, %d), %s);' % (const, rid, laser_idx, prop))
+            extra_imports.add('ItemTHLaser')
+            laser_idx += 1
+        elif kind.startswith('sword:'):
             tier = kind.split(':')[1]
             if len(kind.split(':')) > 2:
                 prop = 'new Item.Properties().durability(%s)' % kind.split(':')[2]
-            lines.append('    public static final DeferredItem<SwordItem> %s = ITEMS.registerItem("%s", props -> new SwordItem(ModTiers.%s, props), %s);' % (const, rid, tier, prop))
+            if cls:
+                body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", props -> new %s(ModTiers.%s, props), %s);' % (cls, const, rid, cls, tier, prop))
+            else:
+                body.append('    public static final DeferredItem<SwordItem> %s = ITEMS.registerItem("%s", props -> new SwordItem(ModTiers.%s, props), %s);' % (const, rid, tier, prop))
         elif kind == 'bow':
-            lines.append('    public static final DeferredItem<BowItem> %s = ITEMS.registerItem("%s", BowItem::new, %s);' % (const, rid, prop))
+            body.append('    public static final DeferredItem<BowItem> %s = ITEMS.registerItem("%s", BowItem::new, %s);' % (const, rid, prop))
         elif kind.startswith('armor:'):
             _, mat, slot = kind.split(':')
             atype = 'ArmorItem.Type.HELMET' if slot == 'helm' else 'ArmorItem.Type.CHESTPLATE'
-            lines.append('    public static final DeferredItem<ArmorItem> %s = ITEMS.registerItem("%s", props -> new ArmorItem(ModArmorMaterials.%s, %s, props), %s);' % (const, rid, mat, atype, prop))
+            if cls:
+                body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", props -> new %s(ModArmorMaterials.%s, %s, props), %s);' % (cls, const, rid, cls, mat, atype, prop))
+            else:
+                body.append('    public static final DeferredItem<ArmorItem> %s = ITEMS.registerItem("%s", props -> new ArmorItem(ModArmorMaterials.%s, %s, props), %s);' % (const, rid, mat, atype, prop))
         elif kind.startswith('food:'):
             _, nut, always = kind.split(':')
             food = 'new FoodProperties.Builder().nutrition(%s)%s.build()' % (nut, '.alwaysEdible()' if always == 'always' else '')
-            lines.append('    public static final DeferredItem<Item> %s = ITEMS.registerItem("%s", Item::new, %s.food(%s));' % (const, rid, prop, food))
+            factory = (cls + '::new') if cls else 'Item::new'
+            rettype = cls if cls else 'Item'
+            body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", %s, %s.food(%s));' % (rettype, const, rid, factory, prop, food))
         else:
-            lines.append('    public static final DeferredItem<Item> %s = ITEMS.registerItem("%s", Item::new, %s);' % (const, rid, prop))
+            factory = (cls + '::new') if cls else 'Item::new'
+            rettype = cls if cls else 'Item'
+            body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", %s, %s);' % (rettype, const, rid, factory, prop))
+    body.append('')
+
+    lines = ['package thkaguyamod.init;', '', 'import java.util.List;', '',
+             'import net.minecraft.world.food.FoodProperties;',
+             'import net.minecraft.world.item.ArmorItem;',
+             'import net.minecraft.world.item.BowItem;',
+             'import net.minecraft.world.item.Item;',
+             'import net.minecraft.world.item.SwordItem;',
+             'import net.neoforged.bus.api.IEventBus;',
+             'import net.neoforged.neoforge.registries.DeferredItem;',
+             'import net.neoforged.neoforge.registries.DeferredRegister;', '',
+             'import thkaguyamod.THKaguyaMod;']
+    for imp in sorted(extra_imports):
+        lines.append('import thkaguyamod.item.%s;' % imp)
     lines.append('')
-    main_consts = [c for c, r, o, t, k, p in ITEMS if k != 'spellcard']
-    card_consts = [c for c, r, o, t, k, p in ITEMS if k == 'spellcard']
+    lines.extend(body)
+
+    main_consts = [e[0] for e in ITEMS if e[4] != 'spellcard']
+    card_consts = [e[0] for e in ITEMS if e[4] == 'spellcard']
     lines.append('    /** Contents of the main creative tab (registration order). */')
     lines.append('    public static final List<DeferredItem<? extends Item>> MAIN_TAB = List.of(')
     for i, c in enumerate(main_consts):
@@ -445,7 +477,7 @@ def main():
 
     # ---------- id manifest for the recipe migration ----------
     manifest = {
-        'items': {rid: {'old_lang_key': ok, 'kind': k} for c, rid, ok, t, k, pr in ITEMS},
+        'items': {e[1]: {'old_lang_key': e[2], 'kind': e[4]} for e in ITEMS},
         'blocks': [b[1] for b in BLOCKS] + ['divine_spirit_' + c for c in DIVINE_COLORS],
         'spell_cards': {str(old): cid for old, name, cid, lvl in card_entries},
     }

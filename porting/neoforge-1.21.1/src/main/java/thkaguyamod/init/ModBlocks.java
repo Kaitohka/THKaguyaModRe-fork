@@ -10,6 +10,7 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import thkaguyamod.THKaguyaMod;
+import thkaguyamod.block.DanmakuCraftingTableBlock;
 import thkaguyamod.block.DivineSpiritBlock;
 
 /**
@@ -21,15 +22,15 @@ public final class ModBlocks {
 
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(THKaguyaMod.MOD_ID);
 
-    public static final DeferredBlock<Block> DANMAKU_CRAFTING_TABLE = BLOCKS.registerBlock(
-            "danmaku_crafting_table", Block::new,
+    public static final DeferredBlock<DanmakuCraftingTableBlock> DANMAKU_CRAFTING_TABLE = BLOCKS.registerBlock(
+            "danmaku_crafting_table", p -> new DanmakuCraftingTableBlock(p, false),
             BlockBehaviour.Properties.of()
                     .strength(1.5F, 1.0F)
                     .sound(SoundType.WOOD)
                     .lightLevel(state -> 15));
 
-    public static final DeferredBlock<Block> DANMAKU_LASER_CRAFTING_TABLE = BLOCKS.registerBlock(
-            "danmaku_laser_crafting_table", Block::new,
+    public static final DeferredBlock<DanmakuCraftingTableBlock> DANMAKU_LASER_CRAFTING_TABLE = BLOCKS.registerBlock(
+            "danmaku_laser_crafting_table", p -> new DanmakuCraftingTableBlock(p, true),
             BlockBehaviour.Properties.of()
                     .strength(1.5F, 1.0F)
                     .sound(SoundType.WOOD)

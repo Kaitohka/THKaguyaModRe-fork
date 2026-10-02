@@ -35,6 +35,11 @@ public final class ModTiers {
             BlockTags.INCORRECT_FOR_WOODEN_TOOL, 200, 4.0F, 0.0F, 0,
             () -> Ingredient.of(ModItems.HEAVENLY_PEACH.get()));
 
+    /** Rod of Remorse (kaigo): negative damage bonus, it is not a weapon. */
+    public static final Tier KAIGO = new SimpleTier(
+            BlockTags.INCORRECT_FOR_WOODEN_TOOL, 1, 0.0F, -4.0F, 0,
+            Ingredient::of);
+
     /** Aliases so generated code can reference vanilla tiers through this class. */
     public static final Tier WOOD = Tiers.WOOD;
     public static final Tier IRON = Tiers.IRON;

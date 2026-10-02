@@ -170,7 +170,7 @@
     },
     "rod_of_remorse": {
       "old_lang_key": "remorseRod",
-      "kind": "item"
+      "kind": "sword:KAIGO"
     },
     "tengus_fan": {
       "old_lang_key": "tenguFan",
@@ -278,91 +278,91 @@
     },
     "small_shot": {
       "old_lang_key": "thShot.smallShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "tiny_shot": {
       "old_lang_key": "thShot.tinyShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "medium_shot": {
       "old_lang_key": "thShot.mediumShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "big_shot": {
       "old_lang_key": "thShot.bigShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "star_shot": {
       "old_lang_key": "thShot.starShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "small_star_shot": {
       "old_lang_key": "thShot.smallStarShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "circle_shot": {
       "old_lang_key": "thShot.circleShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "scale_shot": {
       "old_lang_key": "thShot.scaleShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "butterfly_shot": {
       "old_lang_key": "thShot.butterflyShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "light_shot": {
       "old_lang_key": "thShot.lightShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "knife_shot": {
       "old_lang_key": "thShot.knifeShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "heart_shot": {
       "old_lang_key": "thShot.heartShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "kunai_shot": {
       "old_lang_key": "thShot.kunaiShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "talisman_shot": {
       "old_lang_key": "thShot.talismanShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "big_light_shot": {
       "old_lang_key": "thShot.bigLightShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "rice_shot": {
       "old_lang_key": "thShot.riceShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "oval_shot": {
       "old_lang_key": "thShot.ovalShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "crystal_shot": {
       "old_lang_key": "thShot.crystalShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "arrow_shot": {
       "old_lang_key": "thShot.arrowShot",
-      "kind": "item"
+      "kind": "shotitem"
     },
     "middle_laser": {
       "old_lang_key": "thLaser.middle",
-      "kind": "item"
+      "kind": "laseritem"
     },
     "short_laser": {
       "old_lang_key": "thLaser.short",
-      "kind": "item"
+      "kind": "laseritem"
     },
     "long_laser": {
       "old_lang_key": "thLaser.long",
-      "kind": "item"
+      "kind": "laseritem"
     },
     "spell_card_musou_fuuin": {
       "old_lang_key": "thSpellCard.0",

@@ -1,7 +1,5 @@
 package thkaguyamod.client.renderer.shot;
 
-import java.util.Random;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -68,6 +66,39 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 
 	private static final ResourceLocation resourceLocation_Familiar = ResourceLocation.fromNamespaceAndPath("thkaguyamod", "textures/entity/familiar.png");
 	private static final ResourceLocation resourceLocation_Arrow = DanmakuRenderTypes.texture("ArrowShot");
+
+	/**
+	 * # perf: B6 — 描画コンテキストの再利用用フィールド。
+	 * 根因: 以前は {@code render()} ごとに {@code new Ctx(...)} していた（每帧每弹 1 个）。
+	 * エンティティ描画はレンダースレッド単一スレッドなので、フィールドを使い回してよい。
+	 * 注意: レンダラのインスタンスはエンティティ型ごとに 1 つ（EntityRenderDispatcher が保持）だが、
+	 * 描画中に入れ子で別エンティティを描くことはないため上書き競合は起きない。
+	 */
+	private final Ctx ctx = new Ctx();
+
+	/**
+	 * # perf: A10 — 星弾の外周/内周頂点表。内容は {@code count} に依存しない純粋な定数なので、
+	 * 以前のように每帧 2 個の {@code float[11]} を new する代わりに static final で保持する。
+	 * 生成値は 1.7.10 のループ（36° 刻み、外周 2.0 / 内周 1.2、最後に先頭を複製）と完全に同一。
+	 */
+	private static final float[] STAR_TOP_POINT_X = buildStarTopPoint(true);
+	private static final float[] STAR_TOP_POINT_Y = buildStarTopPoint(false);
+
+	private static float[] buildStarTopPoint(boolean x)
+	{
+		float[] points = new float[11];
+		float angle = 0F;
+		float spanAngle = (float)Math.PI * 0.2F;//36°
+		for(int i = 0; i < 10; i+=2)
+		{
+			points[i] = (float)(x ? Math.cos(angle) : Math.sin(angle)) * 2.0F;
+			angle += spanAngle;
+			points[i+1] = (float)(x ? Math.cos(angle) : Math.sin(angle)) * 1.2F;
+			angle += spanAngle;
+		}
+		points[10] = points[0];
+		return points;
+	}
 
 	/** 1.7.10 の色パレット（数値はそのまま）。 */
 	protected float colorR[] = { 224F/255F,   0F/255F,   0F/255F, 224F/255F, 224F/255F,   0F/255F, 255F/255F, 255F/255F};
@@ -179,7 +210,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		// packedLight は使用しない（FULL_BRIGHT 固定のため）
 		ResourceLocation texture = this.getTextureLocation(entity);
 		poseStack.pushPose();
-		Ctx ctx = new Ctx(poseStack, bufferSource, texture, this.entityRenderDispatcher);
+		// # perf: B6 — new Ctx せずフィールドを使い回す（レンダースレッド単一なので安全）
+		this.ctx.set(poseStack, bufferSource, texture, this.entityRenderDispatcher);
+		Ctx ctx = this.ctx;
 		this.renderTHShot(ctx, entity, entityYaw, entityYaw, partialTick);
 		poseStack.popPose();
 	}
@@ -339,8 +372,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 使い魔の描画 */
 	public void renderFamiliar(Ctx ctx, float size, int color, int count)
 	{
-		// 1.7.10: glDepthMask(false)
-		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR, false, true);
+		// 1.7.10: glDepthMask(false) / GL_CULL_FACE は変更なし（有効）→ CULL 版
+		// # perf: A5 — カリング有効でラスタライズ量を半減
+		VertexConsumer b = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
 		billboard(ctx);
@@ -363,7 +397,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 円形弾の描画 */
 	public void renderNormalShot(Ctx ctx, float size, int color, boolean blend)
 	{
-		VertexConsumer b = ctx.buf(blend ? DanmakuRenderTypes.MODE_ADD_SRC_ALPHA : DanmakuRenderTypes.MODE_OPAQUE, false, blend);
+		// 1.7.10 renderNormalShot は GL_CULL_FACE に触れない（有効のまま）→ CULL 版
+		// # perf: A5 — 弹 1 quad が表裏 2 面ラスタライズされるのを防ぐ
+		VertexConsumer b = ctx.bufCulled(blend ? DanmakuRenderTypes.MODE_ADD_SRC_ALPHA : DanmakuRenderTypes.MODE_OPAQUE, false, blend);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
 		billboard(ctx);
@@ -385,8 +421,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 光の弾の描画 */
 	public void renderLightShot(Ctx ctx, float size, int color, int count)
 	{
-		// 1.7.10: glDepthMask(false)
-		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
+		// 1.7.10: glDepthMask(false) / GL_CULL_FACE は変更なし（有効）→ CULL 版
+		// # perf: A5 — 本体 2 quad の表裏ラスタライズを防ぐ
+		VertexConsumer b = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
 		billboard(ctx);
@@ -416,8 +453,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 気質弾の描画 */
 	public void renderKishituShot(Ctx ctx, float size, int color, int count)
 	{
-		// 1.7.10: glDepthMask(false)
-		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
+		// 1.7.10: glDepthMask(false) / GL_CULL_FACE は変更なし（有効）→ CULL 版
+		// # perf: A5
+		VertexConsumer b = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
 		billboard(ctx);
@@ -446,7 +484,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 光のエフェクト（遅延期の予告） */
 	public void renderLightEffect(Ctx ctx, int color, float size, int count)
 	{
-		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA);
+		// 1.7.10: GL_CULL_FACE は変更なし（有効）→ CULL 版
+		// # perf: A5
+		VertexConsumer b = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA);
 		int c = count % 2;
 		float u1 = (float)(c * 32 +  0) / 64F;
 		float u2 = (float)(c * 32 + 32) / 64F;
@@ -479,9 +519,11 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		ctx.pose.scale(size, size, size);
 		ctx.pose.mulPose(Axis.YP.rotationDegrees(yaw + 180F));
 		ctx.pose.mulPose(Axis.XP.rotationDegrees(pitch));
-		// 内側（ブレンドなし・深度書き込みあり）
-		renderOvalShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_OPAQUE), ctx.pose.last(), size, yaw, pitch, length * 0.4D, width * 0.5F, -0.85D, zAngleDivNum, 5, 7, 1.0F);
-		// 外側（(SRC_ALPHA, ONE)・glDepthMask(false)）
+		// 内側（ブレンドなし・深度書き込みあり）／1.7.10 でも GL_CULL_FACE 有効 → CULL 版
+		// # perf: A5
+		renderOvalShotPart(ctx, ctx.bufCulled(DanmakuRenderTypes.MODE_OPAQUE), ctx.pose.last(), size, yaw, pitch, length * 0.4D, width * 0.5F, -0.85D, zAngleDivNum, 5, 7, 1.0F);
+		// 外側（(SRC_ALPHA, ONE)・glDepthMask(false)）／1.7.10 renderHarfOvalShotPart は
+		// GL11.glDisable(GL_CULL_FACE)（RenderTHShot.java:1341）→ NO_CULL のまま
 		renderHarfOvalShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true), ctx.pose.last(), size, yaw, pitch, length, width * 1.2F, zPos, zAngleDivNum, zDivNum, color, alpha);
 		ctx.pose.popPose();
 	}
@@ -550,28 +592,19 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 星弾の描画 */
 	public void renderStarShot(Ctx ctx, float size, int color, int count)
 	{
-		// 1.7.10: glDepthMask(false)
+		// 1.7.10: glDepthMask(false)。
+		// # perf: A5 — 星弾の quad は (外周2.0 → 内周1.2 → 外周2.0 → 中心0) の凹（reflex）多角形で、
+		// 三角形分割すると 2 枚の三角形の面が逆向きになる。CULL にすると片側だけが消えて星が欠けるため
+		// NO_CULL を維持する。
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
 		billboard(ctx);
 		ctx.pose.mulPose(Axis.ZP.rotationDegrees((float)count * 3.7F));
 
-		float[] topPointX = new float[11];
-		float[] topPointY = new float[11];
-		float angle = 0F;
-		float spanAngle = (float)Math.PI * 0.2F;//36°
-		for(int i = 0; i < 10; i+=2)
-		{
-			topPointX[i] = (float)Math.cos(angle) * 2.0F;
-			topPointY[i] = (float)Math.sin(angle) * 2.0F;
-			angle += spanAngle;
-			topPointX[i+1] = (float)Math.cos(angle) * 1.2F;
-			topPointY[i+1] = (float)Math.sin(angle) * 1.2F;
-			angle += spanAngle;
-		}
-		topPointX[10] = topPointX[0];
-		topPointY[10] = topPointY[0];
+		// # perf: A10 — 定数の頂点表は static final（以前は每帧 2 個の float[11] を new）
+		float[] topPointX = STAR_TOP_POINT_X;
+		float[] topPointY = STAR_TOP_POINT_Y;
 		for(int i = 0; i < 9; i+=2)
 		{
 			//星の枠部
@@ -595,7 +628,12 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 結晶弾の描画 */
 	public void renderCrystalShot(Ctx ctx, float size, int color, float yaw, float pitch)
 	{
-		// 1.7.10: glDepthMask(false)
+		// 1.7.10: glDepthMask(false)。
+		// # perf: A5 — 結晶弾は 8+8 枚の三角フィンを放射状に並べる形状。巻き方向は数値確認した限り
+		// 全フィンで軸から外向きに揃っている（＝CULL でも幾何的には面は消えない）が、
+		// 加算合成では背面フィンの寄与も見た目に効くため、CULL にすると明度が変わる。
+		// 1.7.10 はこの分岐で GL_CULL_FACE に触れていない（＝有効）が、視覚一致を優先して NO_CULL を維持する。
+		// カリングを有効化する場合は実機で明度差を確認すること。
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
@@ -667,8 +705,9 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		ctx.pose.mulPose(Axis.XP.rotationDegrees(-pitch));
 		ctx.pose.mulPose(Axis.ZP.rotationDegrees(slope));
 
-		// --- 下地（ブレンドなし・白） ---
-		VertexConsumer b0 = ctx.buf(DanmakuRenderTypes.MODE_OPAQUE);
+		// --- 下地（ブレンドなし・白）／1.7.10 も GL_CULL_FACE 有効のまま → CULL 版 ---
+		// # perf: A5
+		VertexConsumer b0 = ctx.bufCulled(DanmakuRenderTypes.MODE_OPAQUE);
 		PoseStack.Pose p = ctx.pose.last();
 		float width = 0.8F;
 		float width2 = 0.6F;
@@ -698,7 +737,8 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		back  = -0.8F;
 		back2 = -1.0F;
 		height = 0.3F;
-		VertexConsumer b1 = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR);
+		// 1.7.10 は本体 8 quad まで GL_CULL_FACE 有効 → CULL 版（# perf: A5）
+		VertexConsumer b1 = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR);
 		float r = colorR[color], g = colorG[color], bl = colorB[color];
 		//上
 		quad(b1, p, -width, 0.0F, back, 0.50F, 1.0F,   0.0F, 0.0F, flont, 0.25F, 0.0F,   width, 0.0F, back, 0.00F, 1.0F,   0.0F, height, back, 0.25F, 1.0F, r,g,bl,1F);
@@ -715,7 +755,10 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		//下右
 		quad(b1, p, 0.0F, 0.0F, back2, 0.25F, 0.0F,  0.0F, 0.0F, back2, 0.25F, 0.0F,  0.0F, -height, back, 0.25F, 1.0F,  -width, 0.0F, back, 0.50F, 1.0F, r,g,bl,1F);
 		//取っ手（両面）
-		quad(b1, p,  width2, 0.0F, back2, 0.50F, handleV,  -width2, 0.0F, back2, 0.75F, handleV,  -width2, 0.0F, root, 0.75F, 1.0F,  width2, 0.0F, root, 0.50F, 1.0F, r,g,bl,1F);
+		// 1.7.10 はこの 1 quad の前後だけ GL11.glDisable(GL_CULL_FACE)（RenderTHShot.java:835-843 /
+		// 994-1002）→ NO_CULL 版に分ける。# perf: A5
+		VertexConsumer bHandle = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR);
+		quad(bHandle, p,  width2, 0.0F, back2, 0.50F, handleV,  -width2, 0.0F, back2, 0.75F, handleV,  -width2, 0.0F, root, 0.75F, 1.0F,  width2, 0.0F, root, 0.50F, 1.0F, r,g,bl,1F);
 
 		ctx.pose.popPose();
 	}
@@ -723,6 +766,8 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 札弾の描画 */
 	public void renderTalismanShot(Ctx ctx, float size, int color, float yaw, float pitch, float slope)
 	{
+		// 1.7.10 renderTalismanShot は GL11.glDisable(GL11.GL_CULL_FACE)（RenderTHShot.java:1024-1031）
+		// → 1 quad を両面で見せるため NO_CULL のまま。# perf: A5
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_OPAQUE);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
@@ -748,14 +793,19 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	/** 風弾の描画 */
 	public void renderWindShot(Ctx ctx, float size, int color, int count)
 	{
+		// 1.7.10 renderWindShot は GL11.glDisable(GL11.GL_CULL_FACE)（RenderTHShot.java:1055-1069）
+		// → 8 枚の板を両面で見せるため NO_CULL のまま。# perf: A5
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR);
 		ctx.pose.pushPose();
 		float size2 = size * 0.5F;
 		ctx.pose.scale(size2, size2, size2);
 
-		Random random = new Random();
-		float rand1 = (float)random.nextInt(50) / 100F;
-		float rand2 = (float)random.nextInt(100) / 100F + 4F;
+		// # perf: A9 — 根因: 以前は每帧每个风弹 new Random()（seedUniquifier 自旋 + nanoTime）。
+		// count は animationCount 由来で実質 tick 相当なので、そこから決定的な揺らぎを作る
+		// （旧 nextInt(50)/100 と nextInt(100)/100 の値域をそのまま保つ）。
+		int seed = count * 0x9E3779B9;
+		float rand1 = (float)(((seed >>> 8) & 0x7FFFFFFF) % 50) / 100F;
+		float rand2 = (float)(((seed >>> 16) & 0x7FFFFFFF) % 100) / 100F + 4F;
 		int pattern = count % 4;
 		float u1 = (float)((pattern % 2) * 32) / 64F;
 		float u2 = (float)((pattern % 2) * 32 + 32) / 64F;
@@ -784,10 +834,12 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		ctx.pose.mulPose(Axis.XP.rotationDegrees(-pitch));
 		ctx.pose.scale(size, size, size);
 
-		renderRiceShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_OPAQUE, false, false), ctx.pose.last(),
+		// 1.7.10 renderRiceShot も GL_CULL_FACE は有効のまま（RenderTHShot.java:1112-1118）→ CULL 版
+		// # perf: A5
+		renderRiceShotPart(ctx, ctx.bufCulled(DanmakuRenderTypes.MODE_OPAQUE, false, false), ctx.pose.last(),
 				size * 0.8F, yaw, pitch, length * 0.8D, width * 0.8F, zPos + length * 0.1D, zAngleDivNum, zDivNum, 7, 1.0F);
 		// 1.7.10: glDepthMask(false)
-		renderRiceShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true), ctx.pose.last(),
+		renderRiceShotPart(ctx, ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true), ctx.pose.last(),
 				size, yaw, pitch, length, width, zPos, zAngleDivNum, zDivNum, color, alpha);
 		ctx.pose.popPose();
 	}
@@ -866,10 +918,12 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		ctx.pose.mulPose(Axis.YP.rotationDegrees(yaw));
 		ctx.pose.mulPose(Axis.XP.rotationDegrees(-pitch));
 
-		renderOvalShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_OPAQUE, false, false), ctx.pose.last(),
+		// 1.7.10 renderOvalShot も GL_CULL_FACE は有効のまま（RenderTHShot.java:1217-1222）→ CULL 版
+		// # perf: A5
+		renderOvalShotPart(ctx, ctx.bufCulled(DanmakuRenderTypes.MODE_OPAQUE, false, false), ctx.pose.last(),
 				size, yaw, pitch, length * 0.8D, width * 0.8F, zPos + length * 0.1D, zAngleDivNum, zDivNum, 7, 1.0F);
 		// 1.7.10: glDepthMask(false)
-		renderOvalShotPart(ctx, ctx.buf(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true), ctx.pose.last(),
+		renderOvalShotPart(ctx, ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA, false, true), ctx.pose.last(),
 				size, yaw, pitch, length, width, zPos, zAngleDivNum, zDivNum, color, alpha);
 		ctx.pose.popPose();
 	}
@@ -1003,7 +1057,8 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 
 	protected void renderAmuletShot(Ctx ctx, float size, int color, int count, float yaw, float pitch, float slope)
 	{
-		// 1.7.10: glDepthMask(false)
+		// 1.7.10 renderAmuletShot は GL11.glDisable(GL11.GL_CULL_FACE)（RenderTHShot.java:1418-1442）
+		// → 板 2 枚を両面で見せるため NO_CULL のまま。# perf: A5
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE_MINUS_SRC_COLOR, false, true);
 		ctx.pose.pushPose();
 		ctx.pose.scale(size, size, size);
@@ -1071,7 +1126,10 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 
 	private void renderPhantomPart(Ctx ctx, int color, double time_r, int damage)
 	{
-		// 1.7.10: glDepthMask(false)
+		// 1.7.10: glDepthMask(false)。
+		// # perf: A5 — この分岐は 1.7.10 に GL_CULL_FACE の切替が無いが、brief の「両面維持」リスト
+		// （蝶弾/幽霊弾/結晶外圈）に幽霊弾が明示されているため NO_CULL を維持する
+		// （3 枚の幽霊板が重なって半透明合成される見た目を保証する）。
 		VertexConsumer b = ctx.buf(DanmakuRenderTypes.MODE_ADD_ONE, false, true);// 1.7.10: glBlendFunc(GL_ONE, GL_ONE)
 		PoseStack.Pose p = ctx.pose.last();
 		int pattern = 0;//time % 2;
@@ -1141,15 +1199,32 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		b.addVertex(pose, x3, y3, z3).setColor(r, g, bl, a).setUv(u3, v3).setLight(LightTexture.FULL_BRIGHT);
 	}
 
-	/** 描画コンテキスト（poseStack / bufferSource / 現在の弾テクスチャ）。 */
+	/**
+	 * 描画コンテキスト（poseStack / bufferSource / 現在の弾テクスチャ）。
+	 *
+	 * <p># perf: B6 — 以前は描画のたびに {@code new Ctx(...)} していた（每帧每弹 1 個）。
+	 * レンダースレッド単一スレッドであることを利用し、{@link RenderTHShot} がフィールドを
+	 * 使い回せるように可変にした（外部の利用者は従来どおり 4 引数コンストラクタで新規作成してよい）。</p>
+	 */
 	public static final class Ctx
 	{
-		public final PoseStack pose;
-		public final MultiBufferSource buffers;
-		public final ResourceLocation texture;
-		public final net.minecraft.client.renderer.entity.EntityRenderDispatcher entityRenderDispatcher;
+		public PoseStack pose;
+		public MultiBufferSource buffers;
+		public ResourceLocation texture;
+		public net.minecraft.client.renderer.entity.EntityRenderDispatcher entityRenderDispatcher;
+
+		/** 再利用用（フィールドとして保持し {@link #set} で中身を差し替える）。 */
+		public Ctx()
+		{
+		}
 
 		public Ctx(PoseStack pose, MultiBufferSource buffers, ResourceLocation texture, net.minecraft.client.renderer.entity.EntityRenderDispatcher erd)
+		{
+			this.set(pose, buffers, texture, erd);
+		}
+
+		/** # perf: B6 — 既存インスタンスの中身を差し替える（new しない）。 */
+		public void set(PoseStack pose, MultiBufferSource buffers, ResourceLocation texture, net.minecraft.client.renderer.entity.EntityRenderDispatcher erd)
 		{
 			this.pose = pose;
 			this.buffers = buffers;
@@ -1160,6 +1235,21 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		public VertexConsumer buf(String mode)
 		{
 			return buf(mode, false, false);
+		}
+
+		public VertexConsumer bufCulled(String mode)
+		{
+			return bufCulled(mode, false, false);
+		}
+
+		/**
+		 * # perf: A5 — 背面カリング版（1.7.10 で GL_CULL_FACE が有効だったパス用）。
+		 * @param noDepthTest  true で glDepthFunc(GL_ALWAYS) 相当
+		 * @param noDepthWrite true で glDepthMask(false) 相当（深度を書かない）
+		 */
+		public VertexConsumer bufCulled(String mode, boolean noDepthTest, boolean noDepthWrite)
+		{
+			return this.buffers.getBuffer(DanmakuRenderTypes.getCulled(this.texture, mode, noDepthTest, noDepthWrite));
 		}
 
 		/**

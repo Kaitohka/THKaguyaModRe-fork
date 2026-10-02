@@ -41,6 +41,9 @@
 | P20 | 万宝槌地牢注入概率 0.77% vs 原作意图 5% | agent-26 | 保持 GLM 现状（干净、可回退）；发布说明记录偏差 |
 | P21 | iceMountains → #c:is_snowy 略宽 | agent-26 | 接受（21w40a 合并群系所致），文档化 |
 | P22 | 原作 registerChestItem 为空方法（地牢战利品从未生效） | agent-26 | GLM 实现的是设计意图；发布说明注明 |
+| P28 | lang JSON 所有权冲突：生成器会覆盖审计补齐内容 | agent-36 | 裁决：lang 移交 check_lang.py --apply 维护；生成器加存在即跳过守卫 |
+| P29 | 渲染 A7 fixed buffer 延期 | agent-34 | 接受（收益需实测+THKaguyaClient 冲突）；收尾批再做 |
+| P30 | 1.7.10 lang 笔误 thKaguya,color.4（逗号） | agent-36 | 已修复（ja/tw 补齐紫色键） |
 | P26 | ModelCursedDecoyDoll 实体包归属：模型批写 entity.living，实体批落 entity.item | agent-21 TODO#2 | 以实体批为准（entity.item）；步骤3合并时改模型 import |
 | P27 | 旧版模型 bug 原样保留（度/弧度混用 3 处：THFairy/SunFlowerFairy 死亡分支、Toziko 臂链、Cirno 翅膀） | agent-21 TODO#5 | 保持（玩家可见行为一致原则）；登记已知怪癖，不单独修 |
 

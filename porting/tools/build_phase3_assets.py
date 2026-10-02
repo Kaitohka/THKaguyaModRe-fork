@@ -389,7 +389,12 @@ def main():
         for k, v in old.items():
             if k.startswith(('danmakuCrafting.', 'laserCrafting.', 'thKaguya.')):
                 new[k] = v
-        write_json(os.path.join(ASSETS, 'lang', lang + '.json'), new)
+        out_path = os.path.join(ASSETS, 'lang', lang + '.json')
+        if os.path.exists(out_path):
+            # lang 所有权已移交 check_lang.py --apply（审计补齐批次）；生成器不再覆盖
+            print('lang %s exists, skip (owned by check_lang.py)' % lang)
+        else:
+            write_json(out_path, new)
 
     # ---------- ModItems.java ----------
     body = []

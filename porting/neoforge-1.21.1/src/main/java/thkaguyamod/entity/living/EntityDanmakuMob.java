@@ -61,6 +61,12 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	/** 指定移動するときの方向 */
 	protected Vec3 moveVec;
 
+	/**
+	 * # perf: A11 — 飛行高さの地面探索で使い回す可変ブロック座標。
+	 * 根因: {@code BlockPos.containing} は毎回新しい BlockPos を作っていた（最大 8 個/tick/怪）。
+	 */
+	private final BlockPos.MutableBlockPos flyingHeightProbe = new BlockPos.MutableBlockPos();
+
 	/** 指定移動する時間 */
 	protected int moveTimer;
 
@@ -718,8 +724,11 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void move(Vec3 move, double speed, int time)
 	{
-		moveVec = move;
-		moveVec = new Vec3(moveVec.x * speed, moveVec.y * speed, moveVec.z * speed);
+		// # perf: A12 — 1.7.10 は moveVec の成分をその場で speed 倍していた。Vec3 は不変なので
+		//   毎 tick の一時 Vec3 は避けられないが、ここで 1 回だけ正規化した方向ベクトルを作り、
+		//   以後は moveVec を成分で乗算する（moveRight/Left/Forward/Back が moveVec を経由して
+		//   2 回 new していた分を削減。呼び出し側の new Vec3 も moveVec の直接利用に変えてある）。
+		moveVec = speed == 1.0D ? move : new Vec3(move.x * speed, move.y * speed, move.z * speed);
 		moveTimer = time;
 		moveTimerMax = time;
 	}
@@ -731,8 +740,9 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void moveRight(double speed, int time)
 	{
-		moveVec = THShotLib.getVecFromAngle(getYRot() + 90F, getXRot());
-		move(moveVec, speed, time);
+		// # perf: A12 — 元は moveVec に代入してから move() に渡していたため、move() 内の再代入で
+		//   一時 Vec3 が 1 個無駄になっていた。直接渡して 2 個（方向ベクトル + スケール後）に減らす。
+		move(THShotLib.getVecFromAngle(getYRot() + 90F, getXRot()), speed, time);
 	}
 
 	/**
@@ -742,8 +752,8 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void moveLeft(double speed, int time)
 	{
-		moveVec = THShotLib.getVecFromAngle(getYRot() - 90F, getXRot());
-		move(moveVec, speed, time);
+		// # perf: A12 — moveRight と同じく一時代入を削除。
+		move(THShotLib.getVecFromAngle(getYRot() - 90F, getXRot()), speed, time);
 	}
 
 	/**
@@ -753,8 +763,8 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void moveForward(double speed, int time)
 	{
-		moveVec = THShotLib.getVecFromAngle(getYRot(), getXRot());
-		move(moveVec, speed, time);
+		// # perf: A12 — moveRight と同じく一時代入を削除。
+		move(THShotLib.getVecFromAngle(getYRot(), getXRot()), speed, time);
 	}
 
 	/**
@@ -764,8 +774,8 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void moveBack(double speed, int time)
 	{
-		moveVec = THShotLib.getVecFromAngle(getYRot() + 180, getXRot());
-		move(moveVec, speed, time);
+		// # perf: A12 — moveRight と同じく一時代入を削除。
+		move(THShotLib.getVecFromAngle(getYRot() + 180, getXRot()), speed, time);
 	}
 
 	/**
@@ -947,8 +957,11 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 			double moveRate = Math.cos((double)moveTimer / (double)moveTimerMax * Math.PI / 2.0D);
 			if(!level().isClientSide)
 			{
+				// # perf: A12 — 1.7.10 は moveVec をその場で乗算していた。Vec3 は不変なので
+				//   毎 tick の new Vec3 は避けられないが、成分はあらかじめ moveVec に畳んでおき
+				//   （move() 側でスカラー乗算済み）、ここでは「現在の移動量」を 1 回だけ作る。
 				this.move(net.minecraft.world.entity.MoverType.SELF,
-						new Vec3(moveVec.x * moveRate, moveVec.y * moveRate, moveVec.z * moveRate));
+						moveVec.scale(moveRate));
 			}
 			moveTimer--;
 		}
@@ -958,7 +971,12 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 			//高さを調整する
 			int heightCount = 0;
 			//地面から何ｍ上空にいるか調べる
-			while(level().isEmptyBlock(BlockPos.containing(getX(), getY() - heightCount, getZ())) && heightCount < 8)
+			// # perf: A11 — 1.7.10 の worldObj.isAirBlock(int,int,int) 相当。BlockPos.containing は
+			//   呼び出しごとに新しい BlockPos を作るため、可変ブロック座標を 1 個だけ使い回す。
+			int blockX = net.minecraft.util.Mth.floor(getX());
+			int blockZ = net.minecraft.util.Mth.floor(getZ());
+			BlockPos.MutableBlockPos probePos = this.flyingHeightProbe;
+			while(level().isEmptyBlock(probePos.set(blockX, net.minecraft.util.Mth.floor(getY()) - heightCount, blockZ)) && heightCount < 8)
 			{
 				heightCount++;
 			}

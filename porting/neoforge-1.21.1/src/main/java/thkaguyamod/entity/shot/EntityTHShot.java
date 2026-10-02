@@ -9,8 +9,10 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -47,6 +49,36 @@ public class EntityTHShot extends Entity
 
 	//種類特性変数
 	protected float shotSize;//弾のサイズ
+
+	/**
+	 * クライアント側のアニメーションカウント。
+	 *
+	 * <p># perf: A2 — 1.7.10 は {@code dataWatcher} の更新値が「実際に変化したときだけ」送られていたが、
+	 * 1.21.1 の {@code SynchedEntityData#isDirty()} は「set が呼ばれたら常に true」なので、
+	 * 毎 tick {@code DATA_ANIMATION_COUNT} を書き換えると {@code ServerEntity.sendChanges()} の
+	 * {@code updateInterval} を素通りして毎 tick 位置+データパケットが出ていた
+	 * （{@code ServerEntity:121} の {@code || getEntityData().isDirty()} が interval 判定より後にある）。
+	 * そこでクライアントは同期槽ではなく「受信した基準値 + tickCount の差分」で算出する。
+	 * 基準値は遅延フェーズ・実体化の瞬間・低速同期（{@link #ANIMATION_SYNC_INTERVAL}）でのみ送る。
+	 */
+	private int clientAnimationBase;
+	/** {@link #clientAnimationBase} を記録したときの tickCount。 */
+	private int clientAnimationBaseTick;
+	/** クライアント側で基準値を一度でも受け取ったか（未受信の間は同期槽の値をそのまま使う）。 */
+	private boolean clientAnimationSynced;
+	/** サーバー側で最後にアニメーション基準値を同期槽へ書いた tick。 */
+	private int serverAnimationSyncedTick = -1;
+	/** アニメーション基準値の低速同期間隔（tick）。 */
+	private static final int ANIMATION_SYNC_INTERVAL = 20;
+
+	/** ホーミングの追尾対象をキャッシュするフィールド（{@code # perf: B1}）。 */
+	private LivingEntity homingTarget;
+	/** {@link #homingTarget} を最後に選び直した tick（未選択は {@code Integer.MIN_VALUE}）。 */
+	private int homingTargetSelectedTick = Integer.MIN_VALUE;
+	/** ホーミングの対象再選択間隔（tick）。1.7.10 は毎 tick 選び直していた（# perf: B1 の節流値）。 */
+	protected static final int HOMING_TARGET_INTERVAL = 4;
+	/** ホーミングの探索半径。1.7.10 の {@code expand(24, 24, 24)} と同じ。 */
+	protected static final double HOMING_TARGET_RANGE = 24.0D;
 
 	//個別特性変数
 	/** 弾の持ち主 ダメージ判定や消滅判定に係る */
@@ -210,6 +242,105 @@ public class EntityTHShot extends Entity
 		builder.define(DATA_SHOT_END_TIME, 0);
 		builder.define(DATA_SHOT_ID, 0);
 		builder.define(DATA_SHOT_SIZE, 0);
+	}
+
+	/**
+	 * # perf: A2 / A4 — 同期データ受信時の追従処理。
+	 * <ul>
+	 *   <li>{@code DATA_ANIMATION_COUNT} : クライアント側の位相基準を取り直す（A2）</li>
+	 *   <li>{@code DATA_SHOT_SIZE} : クライアントの当たり判定／描画距離の基準を作り直す（A4）</li>
+	 * </ul>
+	 */
+	@Override
+	public void onSyncedDataUpdated(EntityDataAccessor<?> key)
+	{
+		super.onSyncedDataUpdated(key);
+		if(!level().isClientSide)
+		{
+			return;
+		}
+		if(DATA_ANIMATION_COUNT.equals(key))
+		{
+			onAnimationCountSynced();
+		}
+		else if(DATA_SHOT_SIZE.equals(key))
+		{
+			// # perf: A4 — クライアントは setShotSize() を経由せず同期で値を受け取るため、
+			//   ここで dimensions を作り直さないと描画距離・カリング判定が 0.5 のままになる。
+			refreshDimensions();
+		}
+	}
+
+	/**
+	 * # perf: A4 — サイズ拡大時に原版が取る「めり込み回避の押し出し」を弾では行わない。
+	 *
+	 * <p>1.7.10 の {@code setSize} は位置を動かさない。1.21.1 の {@code refreshDimensions()} は
+	 * サイズが拡大したとき {@code findFreePosition} で周囲の空きを探して位置をずらすため、
+	 * 弾の軌道が意図せず変わり得る（弾は独自の {@code motionX/Y/Z} 積算で動いており
+	 * ブロック衝突で止まらないため、押し出しの必要も無い）。よって判定だけ false に固定する。
+	 */
+	@Override
+	public boolean fudgePositionAfterSizeChange(EntityDimensions dimensions)
+	{
+		return false;
+	}
+
+	/**
+	 * 弾の当たり判定サイズを弾サイズに追従させる。
+	 *
+	 * <p># perf: A4 — 1.7.10 は弾のコンストラクタで {@code setSize(size, size)} を呼び、
+	 * 弾サイズ（0.15～1.0）がそのまま当たり判定と {@code shouldRenderAtSqrDistance()} の基準になっていた。
+	 * 移植版は EntityType の {@code .sized(0.5F, 0.5F)} 固定で、大弾は判定が狭く・小弾は広くなっていた。
+	 * ここで {@code DATA_SHOT_SIZE}（同期値）から算出して元の意味に戻す。
+	 *
+	 * <p>登録・構築の途中では {@code entityData} がまだ null なので（{@code Entity#Entity} は
+	 * {@code defineSynchedData} の後に {@code setPos} → {@link net.minecraft.world.entity.Entity#makeBoundingBox}
+	 * を呼ぶ）、その場合は 0.5F にフォールバックする。
+	 */
+	@Override
+	public EntityDimensions getDimensions(Pose pose)
+	{
+		if(this.entityData == null)
+		{
+			return EntityDimensions.scalable(0.5F, 0.5F);
+		}
+		float size = getShotSize();
+		if(size <= 0.0F)
+		{
+			return EntityDimensions.scalable(0.5F, 0.5F);
+		}
+		return EntityDimensions.scalable(size, size);
+	}
+
+	/**
+	 * 弾は流体の押し流しを受けない。
+	 *
+	 * <p># perf: A1 — 1.7.10 の {@code onUpdate()} は {@code super.onUpdate()} を呼んでおらず
+	 * （{@code //super.onUpdate();} としてコメントアウト）、移植版は {@code Entity#tick()} →
+	 * {@code baseTick()} を毎 tick 走らせていた。baseTick 内の流体処理は 0.5³ の判定箱で
+	 * 最大 8 ブロックの {@code getFluidState}/{@code getFluidType} を引き、流体高さ Map を毎 tick クリアする。
+	 * 弾は {@code motionX/Y/Z} を自前で積算しており流体物理に一切依存しないため、この 2 つを切って
+	 * 「クリア + 流体押し流し」の全走査を止める（{@code isPushedByFluid()} を false にすると
+	 * {@code updateFluidHeightAndDoFluidPushing} の flowVector 計算も同時に落ちる）。
+	 */
+	@Override
+	protected boolean updateInWaterStateAndDoFluidPushing()
+	{
+		return false;
+	}
+
+	/** # perf: A1 — {@code updateInWaterStateAndDoFluidPushing()} の前段。流体に触れていない扱いにする。 */
+	@Override
+	public boolean isPushedByFluid()
+	{
+		return false;
+	}
+
+	/** # perf: A1 — FluidType 版（{@code IEntityExtension} の既定実装は {@code isPushedByFluid()} を参照する）。 */
+	@Override
+	public boolean isPushedByFluid(net.neoforged.neoforge.fluids.FluidType type)
+	{
+		return false;
 	}
 
 	/**
@@ -522,6 +653,14 @@ public class EntityTHShot extends Entity
 
 	/**
 	 * ショットが存在する限り呼び出されるメソッド
+	 *
+	 * <p># perf: A1 — {@code super.tick()} は残す。理由は {@code Entity#baseTick()} のうち
+	 * {@code xRotO/yRotO} の退避（{@link #updateAngle()} が差分補正に使う）、
+	 * {@code firstTick} の落とし込み、{@code remainingFireTicks} の減衰、{@code checkBelowWorld()}
+	 * （奈落消滅）が弾にも必要なため（1.7.10 の {@code onUpdate} もこれらを自前で持っていた）。
+	 * 代わりに、弾に意味の無い流体処理を {@link #updateInWaterStateAndDoFluidPushing()} と
+	 * {@link #isPushedByFluid()} のオーバーライドで丸ごと落としている（そちらのコメント参照）。
+	 * これで baseTick の残りは「2 つの Map を clear するだけ」になる。
 	 */
 	@Override
 	public void tick()
@@ -573,6 +712,13 @@ public class EntityTHShot extends Entity
 			discard();
 		}
 
+		// # perf: A2 — サーバー側のアニメーションカウントをここから先は同期槽に書かない。
+		//   1.7.10 の dataWatcher は「値が実際に変化したときだけ」dirty になったが、
+		//   1.21.1 は set を呼ぶたび isDirty()==true になり、ServerEntity.sendChanges() の
+		//   updateInterval 判定を素通りして毎 tick 位置+データパケットを送ってしまう
+		//   （ServerEntity:121 の `|| getEntityData().isDirty()`）。フライト中の弾のカウントは
+		//   サーバーは lastTime から、クライアントは受信基準値 + tickCount から復元する
+		//   （getAnimationCount() 参照）。
 		clearFire();//火はつかないようにする
 
 		//時間が進んでいないなら
@@ -590,16 +736,38 @@ public class EntityTHShot extends Entity
 			motionZ = lastShotMotionZ;
 			if(!level().isClientSide)
 			{
-				if(getAnimationCount() >= 0)
+				if(getAnimationCount() < 0)
 				{
-					setAnimationCount(lastTime);
-				}
-				else
-				{
+					// # perf: A2 — 遅延フェーズだけは毎 tick 同期して 1.7.10 の「出現までの光」の
+					//   縮小アニメを厳密に再現する（この期間は delay ≤ 数十 tick で、以後は送らない）。
 					setAnimationCount(getAnimationCount() + 1);
 					timeProcess();
 					return;
 				}
+				// # perf: A2 — 実体化後は同期槽を毎 tick 書き換えない（旧: setAnimationCount(lastTime)）。
+				//   1.7.10 の dataWatcher は「値が実際に変化したときだけ」dirty になったが、1.21.1 は
+				//   set を呼ぶたび isDirty()==true になり、ServerEntity.sendChanges() の updateInterval
+				//   判定を素通りして毎 tick 位置+データパケットを送ってしまう
+				//   （ServerEntity:121 の `|| getEntityData().isDirty()`）。
+				//   サーバー側の値は getAnimationCount() が lastTime から導出するので意味は変わらず、
+				//   同期槽への書き込みは下の「実体化直後 + ANIMATION_SYNC_INTERVAL ごと」だけになる。
+			}
+		}
+
+		if(!level().isClientSide)
+		{
+			// # perf: A2 — 実体化の瞬間と、その後 ANIMATION_SYNC_INTERVAL tick ごとにだけ基準値を送る。
+			//   発射後のカウントは同期槽に書かない（書くと isDirty() が updateInterval を素通りして
+			//   毎 tick 位置+データパケットが出る）。同期を受けたクライアントは
+			//   「基準値 + tickCount の差分」でカウントを進めるので、標準状態ではサーバーの値と一致する。
+			//   ANIMATION_SYNC_INTERVAL ごとの再同期は、時刻停止やクライアント側の取りこぼしの保険
+			//   （同期槽に書くのは実体化直後の 1 回 + 約 1/20 tick だけになる）。
+			int animationCount = getAnimationCount();
+			if(animationCount >= 0
+					&& (serverAnimationSyncedTick < 0 || tickCount - serverAnimationSyncedTick >= ANIMATION_SYNC_INTERVAL))
+			{
+				setAnimationCount(animationCount);
+				serverAnimationSyncedTick = tickCount;
 			}
 		}
 
@@ -898,6 +1066,12 @@ public class EntityTHShot extends Entity
 	 */
 	protected void specialMotion()
 	{
+		// # perf: B5 — shotSpecial==0 が大多数なので、レジストリの HashMap 参照（id が大きい場合は
+		//   Integer のボクシングも発生）を丸ごと素通りする。0 はどの特殊弾にも割り当てられていない。
+		if(shotSpecial == 0)
+		{
+			return;
+		}
 		ISpecialShot specialShot = SpecialShotRegistry.getSpecialShot(shotSpecial);
 		if(specialShot != null)
 		{
@@ -1070,6 +1244,11 @@ public class EntityTHShot extends Entity
 	 */
 	public boolean entityHitSpecialProcess(Entity hitEntity)
 	{
+		// # perf: B5 — shotSpecial==0 はレジストリ未登録なので、HashMap 参照を素通りする。
+		if(shotSpecial == 0)
+		{
+			return false;
+		}
 		ISpecialShot specialShot = SpecialShotRegistry.getSpecialShot(shotSpecial);
 		if(specialShot != null)
 		{
@@ -1110,6 +1289,11 @@ public class EntityTHShot extends Entity
 	 */
 	public boolean blockHitSpecialProcess(BlockHitResult hitResult)
 	{
+		// # perf: B5 — shotSpecial==0 はレジストリ未登録で、switch の default も false を返すだけ。
+		if(shotSpecial == 0)
+		{
+			return false;
+		}
 		ISpecialShot specialShot = SpecialShotRegistry.getSpecialShot(shotSpecial);
 		if(specialShot != null)
 		{
@@ -1201,62 +1385,18 @@ public class EntityTHShot extends Entity
 	 */
 	public void homing(float homingLevel)
 	{
-		//追尾する動きをする
-		List<Entity> list = level().getEntities(this, getBoundingBox().expandTowards(motionX, motionY, motionZ).inflate(24.0D));//指定範囲内のEntityをリストに登録
-
-		LivingEntity nearEntity = null;
-		double nearDistance = 999.9D;
-		float nearAngle = 180F;
-		double nearValue = nearDistance * THShotLib.halfAbsSin(nearAngle / 180F * (float)Math.PI);
-		Vec3 shotVec = this.getShotVector();
-
-		for (int j = 0; j < list.size(); j++)
-		{
-			Entity entitys = list.get(j);//entity1にリストの先端のentityを保存
-			//動物や生物でないものなら反応しない
-			if ( !(entitys instanceof LivingEntity) || entitys instanceof Animal || entitys instanceof AbstractVillager || entitys == source || entitys == user)
-			{
-				continue;
-			}
-			LivingEntity entity1 = (LivingEntity)entitys;
-			//生物が死んでいるなら無視する
-			if(!entity1.isAlive())
-			{
-				continue;
-			}
-
-			//始点（現在地）
-			Vec3 vec3d = new Vec3(getX(), getY(), getZ());
-			//終点（対象の目の位置）
-			Vec3 vec3d1 = new Vec3(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ());
-			//始点と終点からブロックとの当たりを取得
-			HitResult blockHit = clipBlocks(vec3d, vec3d1);
-			//何らかのブロックに当たっているなら
-			if (blockHit != null)
-			{
-				continue;
-			}
-
-			Vec3 targetVec = new Vec3(entity1.getX() - getX(), entity1.getY() + entity1.getEyeHeight() - getY(), entity1.getZ() - getZ());
-			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			float angleSpan = Math.abs(THShotLib.getVectorAndVectorAngle(shotVec, targetVec));
-			double toEntity1Distance = Math.sqrt(this.distanceToSqr(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ()));
-			double value = toEntity1Distance * THShotLib.halfAbsSin(angleSpan / 180F * (float)Math.PI);
-			if(nearValue > value)
-			{
-				nearEntity = entity1;
-				nearAngle = angleSpan;
-				nearValue = value;
-				nearDistance = toEntity1Distance;
-			}
-		}
+		// # perf: B1 — 対象選択は getHomingTarget() が 4 tick ごとにだけ行う（この呼び出しは毎 tick、
+		//   ただしキャッシュされた対象への旋回だけを行う）。スキャン内部も「値の小さい順に並べて
+		//   最初に視線が通った 1 体だけを返す」二段構えなので、24 格立方の候補全員に DDA を打たない。
+		LivingEntity nearEntity = getHomingTarget(false);
 
 		//追尾対象がいるならば
 		if(nearEntity != null)
 		{
 			Vec3 targetVec = new Vec3(nearEntity.getX() - getX(), nearEntity.getY() + nearEntity.getEyeHeight() - getY(), nearEntity.getZ() - getZ());
 			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			Vec3 rotate = THShotLib.getOuterProduct(this.getShotVector(), targetVec);
+			Vec3 shotVec = this.getShotVector();
+			Vec3 rotate = THShotLib.getOuterProduct(shotVec, targetVec);
 			float rotateAngle = THShotLib.getVectorAndVectorAngle(shotVec, targetVec);
 			if(rotateAngle > homingLevel)
 			{
@@ -1280,57 +1420,16 @@ public class EntityTHShot extends Entity
 	 */
 	public void homing2(float homingLevel)
 	{
-		//追尾する動きをする
-		List<Entity> list = level().getEntities(this, getBoundingBox().expandTowards(motionX, motionY, motionZ).inflate(24.0D));//指定範囲内のEntityをリストに登録
-
-		LivingEntity nearEntity = null;
-		double nearDistance = 999.9D;
-		float nearAngle = 180F;
-		double nearValue = nearDistance * THShotLib.halfAbsSin(nearAngle / 180F * (float)Math.PI);
-		Vec3 shotVec = this.getShotVector();
-
-		for (int j = 0; j < list.size(); j++)
-		{
-			Entity entitys = list.get(j);
-			//動物や生物でないものなら反応しない
-			if ( !(entitys instanceof LivingEntity) || entitys instanceof Animal || entitys instanceof AbstractVillager || entitys == source || entitys == user)
-			{
-				continue;
-			}
-			LivingEntity entity1 = (LivingEntity)entitys;
-			//生物が死んでいるなら無視する
-			if(!entity1.isAlive())
-			{
-				continue;
-			}
-
-			//始点（現在地）
-			Vec3 vec3d = new Vec3(getX(), getY(), getZ());
-			//終点（対象の目の位置）
-			Vec3 vec3d1 = new Vec3(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ());
-			//始点と終点からブロックとの当たりを取得（homing2は壁を無視するため結果は使わない）
-			clipBlocks(vec3d, vec3d1);
-
-			Vec3 targetVec = new Vec3(entity1.getX() - getX(), entity1.getY() + entity1.getEyeHeight() - getY(), entity1.getZ() - getZ());
-			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			float angleSpan = Math.abs(THShotLib.getVectorAndVectorAngle(shotVec, targetVec));
-			double toEntity1Distance = Math.sqrt(this.distanceToSqr(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ()));
-			double value = toEntity1Distance * THShotLib.halfAbsSin(angleSpan / 180F * (float)Math.PI);
-			if(nearValue > value)
-			{
-				nearEntity = entity1;
-				nearAngle = angleSpan;
-				nearValue = value;
-				nearDistance = toEntity1Distance;
-			}
-		}
+		// # perf: B1 — 壁を無視する版は視線判定そのものが不要（1.7.10 も結果を捨てていた）。
+		LivingEntity nearEntity = getHomingTarget(true);
 
 		//追尾対象がいるならば
 		if(nearEntity != null)
 		{
 			Vec3 targetVec = new Vec3(nearEntity.getX() - getX(), nearEntity.getY() + nearEntity.getEyeHeight() - getY(), nearEntity.getZ() - getZ());
 			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			Vec3 rotate = THShotLib.getOuterProduct(this.getShotVector(), targetVec);
+			Vec3 shotVec = this.getShotVector();
+			Vec3 rotate = THShotLib.getOuterProduct(shotVec, targetVec);
 			float rotateAngle = THShotLib.getVectorAndVectorAngle(shotVec, targetVec);
 			if(rotateAngle > homingLevel)
 			{
@@ -1347,6 +1446,118 @@ public class EntityTHShot extends Entity
 				shotAcceleration();
 			}
 		}
+	}
+
+	/**
+	 * 追尾対象を返す（{@code # perf: B1}）。
+	 *
+	 * <p>1.7.10 は毎 tick「24 格立方の全 Entity 取得 → 候補全員にブロック DDA 線分判定」を、
+	 * 弾ごとに行っていた（{@link #homing} / {@link #homing2} / {@link EntityHomingAmulet}）。
+	 * ここでは
+	 * <ol>
+	 *   <li>対象の再選択を {@link #HOMING_TARGET_INTERVAL} tick ごとに間引き（その間は旋回のみ）、</li>
+	 *   <li>候補は {@code LivingEntity} だけを取得し、</li>
+	 *   <li>まず角度 × 距離の解析値で「値の小さい順」に並べ、最初に視線が通った 1 体だけを返す</li>
+	 * </ol>
+	 * の三段構えにした。1.7.10 の「見えている中で最も値が小さい相手」という選び方は保つ。
+	 *
+	 * <p>挙動差：追尾対象の再選択が毎 tick → 4 tick ごとになる（旋回自体は毎 tick）。
+	 * 対象が消滅・死亡・射程外になった場合は即座に選び直す。
+	 *
+	 * @param ignoreBlocks true なら視線判定を行わない（壁越しホーミング）
+	 * @return 追尾対象。いなければ null
+	 */
+	protected LivingEntity getHomingTarget(boolean ignoreBlocks)
+	{
+		LivingEntity target = this.homingTarget;
+		if(target != null && isHomingTargetInvalid(target))
+		{
+			target = null;
+			this.homingTarget = null;
+			//対象を失った場合は待たずに選び直す（1.7.10 は毎 tick 選び直していた）
+			this.homingTargetSelectedTick = Integer.MIN_VALUE;
+		}
+
+		if(target == null && tickCount - this.homingTargetSelectedTick >= HOMING_TARGET_INTERVAL)
+		{
+			target = scanHomingTarget(ignoreBlocks);
+			this.homingTarget = target;
+			this.homingTargetSelectedTick = tickCount;
+		}
+
+		return target;
+	}
+
+	/**
+	 * キャッシュした追尾対象がもう追尾に適さないかどうか。
+	 */
+	private boolean isHomingTargetInvalid(LivingEntity target)
+	{
+		if(!target.isAlive() || target.isRemoved() || target == this.source || target == this.user)
+		{
+			return true;
+		}
+		return this.distanceToSqr(target) > HOMING_TARGET_RANGE * HOMING_TARGET_RANGE;
+	}
+
+	/**
+	 * 追尾対象を実際に探索する（{@code # perf: B1} の二段式）。
+	 *
+	 * <p>「値（距離 × sin∠）が小さい順に見て最初に視線が通った相手」という 1.7.10 の選び方を、
+	 * 候補を並べ替えずにストリーム処理で再現する。候補の値が「今まで見つかった最良値」を
+	 * 更新しない場合はブロック DDA を打たずに捨てるので、射線の本数は
+	 * 「最良値を更新した回数」まで減る（1.7.10 は候補全員に打っていた）。
+	 */
+	private LivingEntity scanHomingTarget(boolean ignoreBlocks)
+	{
+		AABB searchBox = getBoundingBox().expandTowards(motionX, motionY, motionZ).inflate(HOMING_TARGET_RANGE);
+		//活体だけを対象にする（1.7.10 の「全 Entity を取って instanceof で弾く」と同じ結果で、List が軽い）
+		List<LivingEntity> list = level().getEntitiesOfClass(LivingEntity.class, searchBox);
+
+		Vec3 shotVec = this.getShotVector();
+		LivingEntity nearEntity = null;
+		// 1.7.10 の初期値（nearDistance=999.9 × halfAbsSin(180°)）をそのまま使う
+		double nearValue = 999.9D * THShotLib.halfAbsSin(180F / 180F * (float)Math.PI);
+
+		for(int i = 0; i < list.size(); i++)
+		{
+			LivingEntity candidate = list.get(i);
+			//動物や村人、発射主・持ち主、死んでいる相手は反応しない（1.7.10 と同じ除外条件）
+			if(candidate instanceof Animal || candidate instanceof AbstractVillager
+					|| candidate == this.source || candidate == this.user || !candidate.isAlive())
+			{
+				continue;
+			}
+
+			Vec3 targetVec = new Vec3(candidate.getX() - getX(), candidate.getY() + candidate.getEyeHeight() - getY(), candidate.getZ() - getZ());
+			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
+			float angleSpan = Math.abs(THShotLib.getVectorAndVectorAngle(shotVec, targetVec));
+			double distance = Math.sqrt(this.distanceToSqr(candidate.getX(), candidate.getY() + candidate.getEyeHeight(), candidate.getZ()));
+			double value = distance * THShotLib.halfAbsSin(angleSpan / 180F * (float)Math.PI);
+
+			//第一段：値が最良値を更新しないなら、この時点で捨てる（射線を打たない）
+			if(value >= nearValue)
+			{
+				continue;
+			}
+
+			//第二段：最良値を更新する候補だけ視線判定を行う
+			if(!ignoreBlocks)
+			{
+				Vec3 vec3d = new Vec3(getX(), getY(), getZ());
+				Vec3 vec3d1 = new Vec3(candidate.getX(), candidate.getY() + candidate.getEyeHeight(), candidate.getZ());
+				if(clipBlocks(vec3d, vec3d1) != null)
+				{
+					//見えていない候補は最良値を更新しない（さらに値の大きい候補が見える可能性があるため）
+					continue;
+				}
+			}
+
+			nearEntity = candidate;
+			nearValue = value;
+		}
+
+		return nearEntity;
 	}
 
 	/*拡散アミュレット*/
@@ -1511,7 +1722,16 @@ public class EntityTHShot extends Entity
 	 */
 	public void setShotSize(float size)
 	{
-		this.entityData.set(DATA_SHOT_SIZE, (int)(size * 100F));
+		int newValue = (int)(size * 100F);
+		if(this.entityData.get(DATA_SHOT_SIZE) == newValue)
+		{
+			return;
+		}
+		this.entityData.set(DATA_SHOT_SIZE, newValue);
+		// # perf: A4 — 弾サイズは当たり判定の大きさでもある（1.7.10 の setSize(size, size)）。
+		//   1.21.1 は dimensions が固定値なので、実際に変わったときだけ作り直す
+		//   （クライアント側は同期受信経由なので onSyncedDataUpdated 側で作り直す）。
+		refreshDimensions();
 	}
 
 	/**
@@ -1643,7 +1863,47 @@ public class EntityTHShot extends Entity
 	 */
 	public int getAnimationCount()
 	{
-		return this.entityData.get(DATA_ANIMATION_COUNT) - 1000;
+		// # perf: A2 — クライアントは sync 槽ではなく「基準値 + tickCount の差分」で復元する。
+		//   サーバー／クライアントで弾の tick() は同じ位置にあり、時間停止中は tick() が
+		//   早期 return して tickCount も進まないため、基準値と基準 tick を同時に送れば位相は一致する。
+		//   基準値は遅延フェーズ（毎 tick 同期）と実体化直後＋20 tick ごとの同期で更新される
+		//   （onSyncedDataUpdated → onAnimationCountSynced）。
+		if(level().isClientSide)
+		{
+			// 基準値を受け取る前（パケット到着前の 1 フレーム）は同期槽の値（初期値 0 → -1000）を返す
+			if(!this.clientAnimationSynced)
+			{
+				return getAnimationCountRaw() - 1000;
+			}
+			return this.clientAnimationBase + (tickCount - this.clientAnimationBaseTick) - 1000;
+		}
+		// # perf: A2 — サーバー側は同期槽を毎 tick 書かない代わりに、ここで 1.7.10 と同じ値を導出する。
+		//   原版の「遅延期はカウントダウン（-delay → -1）、実体化後は setAnimationCount(lastTime)」を再現する
+		//   （実体化後は timeProcess() が各 tick で lastTime = tickCount に更新する）。
+		int raw = getAnimationCountRaw();
+		if(raw < 1000)
+		{
+			return raw - 1000;
+		}
+		return this.lastTime;
+	}
+
+	/**
+	 * {@code entityData} のアニメーション基準値（オフセット 1000 込み）を返す。
+	 */
+	private int getAnimationCountRaw()
+	{
+		return this.entityData.get(DATA_ANIMATION_COUNT);
+	}
+
+	/**
+	 * クライアント側のアニメーション基準値を同期データの受信時に更新する。
+	 */
+	private void onAnimationCountSynced()
+	{
+		this.clientAnimationBase = getAnimationCountRaw();
+		this.clientAnimationBaseTick = tickCount;
+		this.clientAnimationSynced = true;
 	}
 
 	/**

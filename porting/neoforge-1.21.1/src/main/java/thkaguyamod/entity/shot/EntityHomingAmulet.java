@@ -1,7 +1,5 @@
 package thkaguyamod.entity.shot;
 
-import java.util.List;
-
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -9,10 +7,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import thkaguyamod.danmaku.ShotData;
@@ -90,55 +85,10 @@ public class EntityHomingAmulet extends EntityTHShot
 			return;
 		}
 
-		//追尾する動きをする
-		List<Entity> list = level().getEntities(this, getBoundingBox().expandTowards(motionX, motionY, motionZ).inflate(24.0D));//指定範囲内のEntityをリストに登録
-
-		LivingEntity nearEntity = null;
-		double nearDistance = 999.9D;
-		float nearAngle = 180F;
-		double nearValue = nearDistance * THShotLib.halfAbsSin(nearAngle / 180F * (float)Math.PI);
-		Vec3 shotVec = this.getShotVector();
-
-		for (int j = 0; j < list.size(); j++)
-		{
-			Entity entitys = list.get(j);//entity1にリストの先端のentityを保存
-			//動物や生物でないものなら反応しない
-			if ( !(entitys instanceof LivingEntity) || entitys instanceof Animal || entitys instanceof AbstractVillager || entitys == source || entitys == user)
-			{
-				continue;
-			}
-			LivingEntity entity1 = (LivingEntity)entitys;
-			//生物が死んでいるなら無視する
-			if(!entity1.isAlive())
-			{
-				continue;
-			}
-
-			//始点（現在地）
-			Vec3 vec3d = new Vec3(getX(), getY(), getZ());
-			//終点（対象の目の位置）
-			Vec3 vec3d1 = new Vec3(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ());
-			//始点と終点からブロックとの当たりを取得
-			HitResult blockHit = clipBlocks(vec3d, vec3d1);
-			//何らかのブロックに当たっているなら
-			if (blockHit != null)
-			{
-				continue;
-			}
-
-			Vec3 targetVec = new Vec3(entity1.getX() - getX(), entity1.getY() + entity1.getEyeHeight() - getY(), entity1.getZ() - getZ());
-			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			float angleSpan = Math.abs(THShotLib.getVectorAndVectorAngle(shotVec, targetVec));
-			double toEntity1Distance = Math.sqrt(this.distanceToSqr(entity1.getX(), entity1.getY() + entity1.getEyeHeight(), entity1.getZ()));
-			double value = toEntity1Distance * THShotLib.halfAbsSin(angleSpan / 180F * (float)Math.PI);
-			if(nearValue > value)
-			{
-				nearEntity = entity1;
-				nearAngle = angleSpan;
-				nearValue = value;
-				nearDistance = toEntity1Distance;
-			}
-		}
+		// # perf: B1 — 24 格立方の全 Entity 取得 → 候補全員に DDA、という 1.7.10 の毎 tick スキャンを、
+		//   親クラス EntityTHShot の共通実装（4 tick ごとの再選択 + 値の小さい順の二段式）に寄せた。
+		//   ここでしか使わない nearDistance/nearAngle は選別に使われていなかったため削除した。
+		LivingEntity nearEntity = getHomingTarget(false);
 
 		//追尾対象がいるならば
 		if(nearEntity != null)
@@ -146,7 +96,8 @@ public class EntityHomingAmulet extends EntityTHShot
 			float homingLevel = 4.0F;
 			Vec3 targetVec = new Vec3(nearEntity.getX() - getX(), nearEntity.getY() + nearEntity.getEyeHeight() - getY(), nearEntity.getZ() - getZ());
 			targetVec = THShotLib.getVectorNomalize(targetVec);//単位ベクトルに変換
-			Vec3 rotate = THShotLib.getOuterProduct(this.getShotVector(), targetVec);
+			Vec3 shotVec = this.getShotVector();
+			Vec3 rotate = THShotLib.getOuterProduct(shotVec, targetVec);
 			float rotateAngle = THShotLib.getVectorAndVectorAngle(shotVec, targetVec);
 			if(rotateAngle > homingLevel)
 			{

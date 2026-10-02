@@ -21,6 +21,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import thkaguyamod.THKaguyaMod;
 import thkaguyamod.config.ModConfig;
 import thkaguyamod.init.ModDataComponents;
 import thkaguyamod.init.ModEntities;
@@ -190,6 +191,7 @@ public class THKaguyaLib
 					//手に持っている符卡が宣言対象そのものか（別の早苗符卡で代用できないようにする）
 					if(!(itemStack.getItem() instanceof ItemTHSpellCard card && card.getSpellCardID() == spellCardNumber))
 					{
+						logFail(user, spellCardNumber, "held item is not the declared spell card");
 						return false;
 					}
 					//NBT "Charge" → データコンポーネント ModDataComponents.CHARGE（無い場合は 0 扱い）。
@@ -200,6 +202,7 @@ public class THKaguyaLib
 						//TODO K3-review: lang キー "thKaguya.msg.sneScCharge"（「奇跡之力」不足の警告）が未登録。
 						//キー追加までは旧版どおり無言で失敗させる（下の 1 行を有効化すれば表示に切り替わる）。
 						//player.displayClientMessage(Component.translatable("thKaguya.msg.sneScCharge"), true);
+						logFail(user, spellCardNumber, "no miracle charge on this Sanae card");
 						return false;//宣言失敗
 					}
 				}
@@ -231,11 +234,15 @@ public class THKaguyaLib
 	    		//プレイヤーのレベルとスペルカードアイテムの総数の合計が、必要レベルを下回るなら
 				if((player.experienceLevel + bombItemNum) < needLevel)
 				{
+					logFail(user, spellCardNumber, "not enough level (xp=" + player.experienceLevel
+							+ " + bomb_item=" + bombItemNum + " < needLevel=" + needLevel + ")");
 					return false;//宣言失敗
 				}
 			}
 		}
 
+		// # 修复: 宣言失敗路径原本完全静默（1.7.10 也如此），导致「右键无反应」无法定位。
+		// 下面的失败分支补 debug 级日志：只进日志、不进聊天栏，玩家可见行为与旧版一致。
 		double angleX = -Math.sin(radTrans(user.getYRot())) * Math.cos(radTrans(user.getXRot()));
     	double angleY = -Math.sin(radTrans(user.getXRot()));
     	double angleZ =  Math.cos(radTrans(user.getYRot())) * Math.cos(radTrans(user.getXRot()));
@@ -294,6 +301,7 @@ public class THKaguyaLib
     			if(entitySpellCard2.user == user)
     			{
     				entity = null;//スペルカード宣言を無効化
+    				logFail(user, spellCardNumber, "this user already has a spell card active within 64 blocks");
     				return false;
     			}
     		}
@@ -302,6 +310,10 @@ public class THKaguyaLib
     	//Entityに当たっていないなら宣言失敗
     	if (entity == null)
         {
+        	// # 修复: 「右键无反应」最常见的原因就是这一条——32 格视线内没有合格目标
+        	// （1.7.10 同样把 Animal / AbstractVillager 排除在外）。日志里直接给出候选数量，便于定位。
+        	logFail(user, spellCardNumber, "no valid target in line of sight (32 blocks); candidates in search box="
+        			+ list.size() + " blockHit=" + movingObjectPosition.getType());
         	return false;
         }
 
@@ -321,6 +333,16 @@ public class THKaguyaLib
         	}
         }
 		return false;
+	}
+
+	/**
+	 * 宣言に失敗した理由を debug ログに残す（1.7.10 は無言で失敗していたため、移植後の診断用に追加）。
+	 * レベルは debug なので通常プレイのログを汚さず、プレイヤーには何も表示しない。
+	 */
+	private static void logFail(LivingEntity user, int spellCardNumber, String reason)
+	{
+		THKaguyaMod.LOGGER.debug("Spell card declaration rejected: card={} user={} reason={}",
+				spellCardNumber, user.getScoreboardName(), reason);
 	}
 
 	/**

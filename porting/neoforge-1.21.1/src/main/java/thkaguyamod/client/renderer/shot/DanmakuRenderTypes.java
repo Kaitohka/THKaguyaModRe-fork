@@ -44,9 +44,24 @@ import net.minecraft.resources.ResourceLocation;
  * <p>深度: {@code glDepthFunc(GL_ALWAYS)} は {@link RenderStateShard#NO_DEPTH_TEST}、
  * {@code glDepthMask(false)} は {@link RenderStateShard#COLOR_WRITE} で再現する。</p>
  *
- * <p>カリングは全モードで {@link RenderStateShard#NO_CULL}。1.7.10 では面ごとに
- * GL_CULL_FACE を切り替えていたが、{@code VertexFormat.Mode.QUADS} は常に全三角形を
- * GPU へ渡すため、NO_CULL が原実装の「両面描画」を最も安全に再現する。</p>
+ * <p><b>カリング（# perf: A5）:</b> 1.7.10 は描画パスごとに
+ * {@code GL11.glEnable/glDisable(GL_CULL_FACE)} を切り替えていた。
+ * 以前は全モードを {@link RenderStateShard#NO_CULL} に固定していたため、
+ * {@code VertexFormat.Mode.QUADS} の quad 表裏が両方ラスタライズされ、
+ * フラグメント量（加算合成のオーバードロー）が 1.7.10 の倍になっていた。
+ * 現在は {@link #getCulled} 系（{@link RenderStateShard#CULL}）と
+ * {@link #get} 系（NO_CULL）を 1.7.10 の分岐どおりに使い分ける:</p>
+ * <ul>
+ *   <li><b>CULL</b>: 通常弾、光弾、気質弾、使い魔、クナイ/矢の下地と色付き本体、
+ *       通常レーザー（母子レーザー含む）、光の予告エフェクト</li>
+ *   <li><b>NO_CULL</b>: 蝶弾、星弾（凹多角形で三角形の向きが揃わない）、結晶弾（板が放射状）、
+ *       幽霊弾、札弾、風弾、アミュレット弾、半楕円（鱗弾の外側）、クナイ/矢の取っ手、
+ *       マスタースパーク、グングニル、レーヴァテイン</li>
+ * </ul>
+ * <p>1.7.10 側の根拠: {@code RenderTHShot.java:431/452(鱗弾)/510/570(蝶弾)/835-843(クナイ取っ手)/
+ * 1024-1031(札弾)/1055-1069(風弾)/1341-1395(半楕円)/1418-1442(アミュレット)}、
+ * {@code RenderTHLaser.java:95-105(マスタースパーク)/110-120(レーヴァテイン)/126-136(グングニル)/
+ * 145-165(母子・通常レーザーは GL_CULL_FACE 有効)}。</p>
  */
 public final class DanmakuRenderTypes
 {
@@ -64,19 +79,33 @@ public final class DanmakuRenderTypes
 	/** 1.7.10: ブレンド無効（通常弾・札・結晶・米/楕円の内側パス等） */
 	public static final String MODE_OPAQUE = "opaque";
 
-	/** (texture, mode, noDepthTest, noDepthWrite) -> RenderType のキャッシュ */
-	private static final Map<String, RenderType> CACHE = new HashMap<>();
+	/**
+	 * キャッシュキー。
+	 *
+	 * <p># perf: A6 — 以前は {@code texture + "|" + mode + "|" + bool + "|" + bool} という
+	 * String キーを描画呼び出しごとに組み立てていた（{@code ResourceLocation.toString()} ＋
+	 * 文字列連結で 2〜5 個の短命 String）。record キーにすることで文字列連結を完全に無くす。
+	 * {@link ResourceLocation} / {@code String} の {@code hashCode()} は各オブジェクト内で
+	 * キャッシュされるため、ルックアップも従来より軽い。</p>
+	 *
+	 * <p>cull もキーに含める: A5 のカリング有無で別の RenderType になるため、
+	 * 同じ (texture, mode, flags) でも取り違えないようにする。</p>
+	 */
+	private record Key(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite, boolean cull) {}
+
+	/** (texture, mode, noDepthTest, noDepthWrite, cull) -> RenderType のキャッシュ */
+	private static final Map<Key, RenderType> CACHE = new HashMap<>();
 
 	private DanmakuRenderTypes() {}
 
-	/** 深度テスト LEQUAL・深度書き込みあり・キャッシュ付き。 */
+	/** 深度テスト LEQUAL・深度書き込みあり・両面（NO_CULL）・キャッシュ付き。 */
 	public static RenderType get(ResourceLocation texture, String mode)
 	{
 		return get(texture, mode, false, false);
 	}
 
 	/**
-	 * 弾テクスチャ用の RenderType を取得する（キャッシュ付き）。
+	 * 弾テクスチャ用の RenderType を取得する（キャッシュ付き・両面 {@link RenderStateShard#NO_CULL}）。
 	 * @param texture     テクスチャ（{@code textures/entity/shot/<name>.png}）
 	 * @param mode        {@link #MODE_ADD_ONE_MINUS_SRC_COLOR} / {@link #MODE_ADD_SRC_ALPHA} / {@link #MODE_ADD_ONE} / {@link #MODE_OPAQUE}
 	 * @param noDepthTest true で {@link RenderStateShard#NO_DEPTH_TEST}（1.7.10 の glDepthFunc(GL_ALWAYS) 相当）。
@@ -84,22 +113,47 @@ public final class DanmakuRenderTypes
 	 */
 	public static RenderType get(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite)
 	{
-		String key = texture + "|" + mode + "|" + noDepthTest + "|" + noDepthWrite;
+		return get(texture, mode, noDepthTest, noDepthWrite, false);
+	}
+
+	/** # perf: A5 — 背面カリング版。深度テスト LEQUAL・深度書き込みあり。 */
+	public static RenderType getCulled(ResourceLocation texture, String mode)
+	{
+		return get(texture, mode, false, false, true);
+	}
+
+	/**
+	 * # perf: A5 — 背面カリング版。
+	 *
+	 * <p>根因: 以前は全モードで {@link RenderStateShard#NO_CULL} だった。1.7.10 は描画パスごとに
+	 * {@code glEnable/glDisable(GL_CULL_FACE)} を切り替えており、通常弾・通常レーザー主チャネルなどは
+	 * カリング有効のまま描かれていた。{@code VertexFormat.Mode.QUADS} では NO_CULL だと quad の
+	 * 表裏が両方ラスタライズされ、フラグメント量（＝加算合成のオーバードロー）が倍になる。
+	 * 1.7.10 で GL_CULL_FACE が有効だったパスだけこの版に切り替える。</p>
+	 */
+	public static RenderType getCulled(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite)
+	{
+		return get(texture, mode, noDepthTest, noDepthWrite, true);
+	}
+
+	private static RenderType get(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite, boolean cull)
+	{
+		Key key = new Key(texture, mode, noDepthTest, noDepthWrite, cull);
 		RenderType type = CACHE.get(key);
 		if (type == null)
 		{
-			type = create(texture, mode, noDepthTest, noDepthWrite);
+			type = create(texture, mode, noDepthTest, noDepthWrite, cull);
 			CACHE.put(key, type);
 		}
 		return type;
 	}
 
-	private static RenderType create(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite)
+	private static RenderType create(ResourceLocation texture, String mode, boolean noDepthTest, boolean noDepthWrite, boolean cull)
 	{
 		RenderType.CompositeState.CompositeStateBuilder builder = RenderType.CompositeState.builder()
 				.setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionTexColorShader))
 				.setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
-				.setCullState(RenderStateShard.NO_CULL)
+				.setCullState(cull ? RenderStateShard.CULL : RenderStateShard.NO_CULL)
 				.setDepthTestState(noDepthTest ? RenderStateShard.NO_DEPTH_TEST : RenderStateShard.LEQUAL_DEPTH_TEST)
 				.setWriteMaskState(noDepthWrite ? RenderStateShard.COLOR_WRITE : RenderStateShard.COLOR_DEPTH_WRITE);
 
@@ -122,8 +176,9 @@ public final class DanmakuRenderTypes
 				break;
 		}
 
+		// # perf: A5 — カリング有無で別 RenderType になるため、名前にも cull を入れて区別する
 		String name = "thkaguyamod_danmaku/" + mode + (noDepthTest ? "_nodepthtest" : "") + (noDepthWrite ? "_nodepthwrite" : "")
-				+ "/" + texture.getPath();
+				+ (cull ? "_cull" : "_nocull") + "/" + texture.getPath();
 		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX_COLOR,
 				VertexFormat.Mode.QUADS, 1536, false, false, builder.createCompositeState(false));
 	}

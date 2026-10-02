@@ -72,6 +72,13 @@
 | 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | ✅ 物品已合并（b252bed）；ModDispenserBehaviors ⏸ 待 SILVER_KNIFE |
 | 数据 JSON | agent-26 | 14 biome_modifier + GLM + ModSpawns + 生成器/校验器 | ✅ 交付（全校验通过），⏸ 待生物批后合并 |
 
+## 批次收尾记录（K3 接管）
+
+| 批次 | 结果 |
+|---|---|
+| agent-32 符卡诊断 | 实质完成（失败分支 debug 日志 + SpellCardDeclarationTest 3 用例，GameTest 实证通过）；根因=宣言需 32 格视线目标（原版设计），可观测性已补 |
+| agent-33 实体性能 | A1 流体短路/A2 脏数据门控/A3 跟踪范围单位修正/A4 弹尺寸动态化/A11 MutableBlockPos 已落主树编译通过；B1 追踪节流未做（旧设计，延期评估） |
+
 ## 事故台账补记
 
 | I5 | 大合并后客户端启动挂起（黑屏，停于 beds 图集） | models2 生成器对所有部件用 root.getChild，忽略 1.7.10 addChild 父子层级 → NoSuchElementException → 被当资源包错误进入重载死循环 | ✅ agent-27 修复 12 模型取件链，连续 5 次启动零模型错误；生成器标记勿重跑 |

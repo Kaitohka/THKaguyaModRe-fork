@@ -1273,8 +1273,8 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 *
 	 * <p>TODO K3-review: 1.7.10 は {@code new ItemStack(THKaguyaItems.spell_card, 1, spellCardNo)} と
 	 * いう単一アイテム + damage 値だった。1.21.1 では符卡が 35 個の独立アイテム
-	 * （{@code spell_card_<name>}）に分割されたため、SpellCardRegistry の name → snake_case で引く。
-	 * 表に無い No（31 = PrincessUndine など 1.7.10 でも未登録）は null を返しドロップしない。
+	 * （{@code spell_card_<name>}）に分割されたため、No → アイテムの表を明示的に持つ。
+	 * 表に無い No（31 = PrincessUndine など 1.7.10 でも未登録）はドロップしない。
 	 */
 	protected ItemStack spellCardStack(int spellCardNo)
 	{

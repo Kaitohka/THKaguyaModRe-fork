@@ -3,7 +3,6 @@ package thkaguyamod.entity.effect;
 import java.util.List;
 import java.util.Optional;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -247,12 +246,5 @@ public class EntityHakureiShield extends Entity
 
 	protected void readAdditionalSaveData(CompoundTag par1NBTTagCompound)
 	{
-	}
-
-	//未使用（1.7.10 でも BlockPos は使っていないが警告回避のため残す）
-	@SuppressWarnings("unused")
-	private BlockPos unusedMarker()
-	{
-		return BlockPos.ZERO;
 	}
 }

@@ -19,6 +19,7 @@ import thkaguyamod.init.ModDataComponents;
 import thkaguyamod.init.ModEntities;
 import thkaguyamod.init.ModItems;
 import thkaguyamod.init.ModMenus;
+import thkaguyamod.init.ModNetworking;
 import thkaguyamod.init.ModSounds;
 import thkaguyamod.init.ModSpellCards;
 
@@ -52,6 +53,8 @@ public class THKaguyaMod {
         modContainer.registerConfig(Type.SERVER, ModConfig.SPEC);
         modEventBus.addListener(ModConfigEvent.Loading.class, event -> ModConfig.sync());
         modEventBus.addListener(ModConfigEvent.Reloading.class, event -> ModConfig.sync());
+        modEventBus.addListener(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent.class,
+                ModNetworking::register);
 
         NeoForge.EVENT_BUS.register(new PlayerDeathEventHandler());
 

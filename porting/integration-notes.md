@@ -23,7 +23,10 @@
 | P5 | `EntityPendulum` 按本地化名称搜方块 → 改注册名比对 | agent-17 批内已要求 | 合并时确认 |
 | P6 | 火鼠裘无限耐久 → 当前无 durability 属性即无限（ArmorItem 构造器会强制材料耐久？需实测） | 阶段3遗留 | 游戏内核对 |
 | P7 | THSC 降级 5 处（EntitySukima/MiniHakkero/SakuyaWatch/DanmakuCreeper/DanmakuMob 依赖） | agent-13 | B4/B5 批合并后恢复注释掉的调用 |
-| P8 | 万宝槌第 4 条外部 MOD 配方删除、`roukanSenpuuzin` 产出暂用 ROUKANKEN | agent-19 预告 | GUI-2 合并时确认 |
+| P8 | 万宝槌外部 MOD 配方删除、`roukanSenpuuzin` 暂用 ROUKANKEN | agent-19 | ✅ 已落实（外部配方删除并注释；ROUKANKEN 占位） |
+| P23 | 商店交易列表下发：vanilla 只认 MerchantMenu | agent-19 阻塞上报 | 裁决方案(a)：新增 clientbound UpdateSanaeOffersPayload（MerchantOffers.STREAM_CODEC），K3 已实现并注册 |
+| P24 | 商店交易预览硬编码（aja_red_stone/护身符×5 与真实交易表不符） | agent-19 风险#4 | 保持原行为（1.7.10 即硬编码），发布说明注明；若判定 bug 后续改 offer.getResult() |
+| P25 | 商店箭头按钮贴图在 1.21.1 villager.png 已不存在 | agent-19 风险#5 | 用默认按钮+文本；阶段 5 美术还原可选 |
 | P9 | 模型层注册（RegisterLayerDefinitions）+ 防具自定义模型钩子（IClientItemExtensions） | agent-20 #5 | 渲染批合并时统一做 |
 | P10 | `ItemOnbashira` 挖掘速度 3.0 恒值在 1.21.1 无 item 覆写点 | agent-10 TODO | 用属性组件或 Tool 规则补，阶段 5 |
 | P11 | `ItemCursedDecoyDoll` 的 OriginalItemID 还原需新组件 ORIGINAL_ITEM（物品注册名字符串） | agent-18 | 合并道具实体批时加组件并对接万宝槌还原 |
@@ -56,7 +59,7 @@
 | 生物实体 | agent-16 | living 16 + DanmakuPatternRegistry | 🏃 |
 | 道具/效果实体 | agent-17 | item 13 + effect 5（含时停） | 🏃 |
 | 武器物品 | agent-18 | 28 类（429 恢复 1 次） | ✅ 交付（stub javac 0错），⏸ 待 agent-17 实体后合并 |
-| 商店/万宝槌 GUI | agent-19 | 2 Menu + Payload | 🏃 |
+| 商店/万宝槌 GUI | agent-19 | 2 Menu + 2 Screen + Payload ×2 | ✅ 合并（编译0错）；打开入口待 EntitySanae/ItemUchide |
 | 人物模型 | agent-21 | 16 模型 | 🏃 |
 | 道具渲染器 | agent-22 | 18 个 | ✅ 交付（javac 0错），⏸ 待实体批后合并；贴图已按其约定归位 entity/shot/ |
 | 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |

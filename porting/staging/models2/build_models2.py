@@ -1319,7 +1319,48 @@ def build_source(cfg):
              ((lambda n: 'part(root, "%s")' % n) if nullable else (lambda n: 'root.getChild("%s")' % n))
 
     out = ["package thkaguyamod.client.model.living;", ""]
-    out.append(IMPORTS_COMMON)
+    body = "\n".join([
+        cfg.get("extra_fields", ""),
+        "\n".join("    public final ModelPart %s;" % f for f in fields),
+        cfg["doc"].strip(),
+        "\n".join(p for p in [
+            G.emit(info) if info["parts"] else (
+                """    /**
+     * 基底は自身の箱を持たない。1.7.10 の {@code getTechneModelData()} が空だった
+     * のと同じで、実際の形状はサブクラス（{@link ModelWriggle#createBodyLayer()}）が持つ。
+     */
+    public static LayerDefinition createBodyLayer()
+    {
+        MeshDefinition mesh = new MeshDefinition();
+        return LayerDefinition.create(mesh, 64, 64);
+    }"""),
+            """    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color)
+    {
+        this.root.render(poseStack, buffer, packedLight, packedOverlay, color);
+    }""",
+            cfg["setup"].strip("\n"),
+        ]),
+    ])
+    needs = {sym for sym in ("PartPose", "CubeListBuilder", "PartDefinition", "MeshDefinition")
+             if sym in body}
+    for sym in ("PoseStack", "VertexConsumer", "ModelPart", "EntityModel", "LayerDefinition"):
+        needs.add(sym)
+    out.append("import com.mojang.blaze3d.vertex.PoseStack;")
+    out.append("import com.mojang.blaze3d.vertex.VertexConsumer;")
+    out.append("")
+    out.append("import net.minecraft.client.model.EntityModel;")
+    out.append("import net.minecraft.client.model.geom.ModelPart;")
+    if "PartPose" in needs:
+        out.append("import net.minecraft.client.model.geom.PartPose;")
+    if "CubeListBuilder" in needs:
+        out.append("import net.minecraft.client.model.geom.builders.CubeListBuilder;")
+    out.append("import net.minecraft.client.model.geom.builders.LayerDefinition;")
+    if "MeshDefinition" in needs:
+        out.append("import net.minecraft.client.model.geom.builders.MeshDefinition;")
+    if "PartDefinition" in needs:
+        out.append("import net.minecraft.client.model.geom.builders.PartDefinition;")
+    out.append("")
     if "Mth." in cfg["setup"] or "Mth." in cfg.get("extra_methods", ""):
         out.append("import net.minecraft.util.Mth;")
         out.append("")

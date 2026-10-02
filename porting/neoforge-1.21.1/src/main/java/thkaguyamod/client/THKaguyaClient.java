@@ -9,6 +9,8 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import thkaguyamod.THKaguyaMod;
 import thkaguyamod.client.gui.screen.DanmakuCraftingScreen;
 import thkaguyamod.client.gui.screen.DanmakuLaserCraftingScreen;
+import thkaguyamod.client.gui.screen.MerchantSanaeScreen;
+import thkaguyamod.client.gui.screen.MiracleMalletScreen;
 import thkaguyamod.client.renderer.NoopRenderer;
 import thkaguyamod.client.renderer.shot.RenderTHLaser;
 import thkaguyamod.client.renderer.shot.RenderTHShot;
@@ -23,6 +25,8 @@ public class THKaguyaClient {
         modEventBus.addListener(RegisterMenuScreensEvent.class, event -> {
             event.register(ModMenus.DANMAKU_CRAFTING.get(), DanmakuCraftingScreen::new);
             event.register(ModMenus.DANMAKU_LASER_CRAFTING.get(), DanmakuLaserCraftingScreen::new);
+            event.register(ModMenus.MERCHANT_SANAE.get(), MerchantSanaeScreen::new);
+            event.register(ModMenus.MIRACLE_MALLET.get(), MiracleMalletScreen::new);
         });
 
         modEventBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> {

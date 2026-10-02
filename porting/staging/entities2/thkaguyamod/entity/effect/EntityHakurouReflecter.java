@@ -2,7 +2,6 @@ package thkaguyamod.entity.effect;
 
 import java.util.List;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -240,12 +239,5 @@ public class EntityHakurouReflecter extends Entity
 
 	protected void readAdditionalSaveData(CompoundTag par1NBTTagCompound)
 	{
-	}
-
-	//未使用（警告回避）
-	@SuppressWarnings("unused")
-	private AABB unusedMarker()
-	{
-		return AABB.ofSize(BlockPos.ZERO.getCenter(), 0.0D, 0.0D, 0.0D);
 	}
 }

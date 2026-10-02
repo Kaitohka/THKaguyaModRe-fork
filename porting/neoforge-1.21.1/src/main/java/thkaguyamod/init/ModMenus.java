@@ -11,6 +11,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import thkaguyamod.THKaguyaMod;
 import thkaguyamod.menu.DanmakuCraftingMenu;
 import thkaguyamod.menu.DanmakuLaserCraftingMenu;
+import thkaguyamod.menu.MerchantSanaeMenu;
+import thkaguyamod.menu.MiracleMalletMenu;
 
 /** Menu registry (1.7.10: numeric GUI ids via IGuiHandler). */
 public final class ModMenus {
@@ -25,6 +27,14 @@ public final class ModMenus {
     public static final Supplier<MenuType<DanmakuLaserCraftingMenu>> DANMAKU_LASER_CRAFTING = MENU_TYPES.register(
             "danmaku_laser_crafting", () -> IMenuTypeExtension.create(
                     (containerId, inventory, data) -> new DanmakuLaserCraftingMenu(containerId, inventory)));
+
+    public static final Supplier<MenuType<MerchantSanaeMenu>> MERCHANT_SANAE = MENU_TYPES.register(
+            "merchant_sanae", () -> IMenuTypeExtension.create(
+                    (containerId, inventory, data) -> new MerchantSanaeMenu(containerId, inventory)));
+
+    public static final Supplier<MenuType<MiracleMalletMenu>> MIRACLE_MALLET = MENU_TYPES.register(
+            "miracle_mallet", () -> IMenuTypeExtension.create(
+                    (containerId, inventory, data) -> new MiracleMalletMenu(containerId, inventory)));
 
     public static void register(IEventBus modEventBus) {
         MENU_TYPES.register(modEventBus);

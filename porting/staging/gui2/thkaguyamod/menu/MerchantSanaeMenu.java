@@ -2,7 +2,6 @@ package thkaguyamod.menu;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.ClientSideMerchant;

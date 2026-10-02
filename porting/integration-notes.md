@@ -41,6 +41,8 @@
 | P20 | 万宝槌地牢注入概率 0.77% vs 原作意图 5% | agent-26 | 保持 GLM 现状（干净、可回退）；发布说明记录偏差 |
 | P21 | iceMountains → #c:is_snowy 略宽 | agent-26 | 接受（21w40a 合并群系所致），文档化 |
 | P22 | 原作 registerChestItem 为空方法（地牢战利品从未生效） | agent-26 | GLM 实现的是设计意图；发布说明注明 |
+| P26 | ModelCursedDecoyDoll 实体包归属：模型批写 entity.living，实体批落 entity.item | agent-21 TODO#2 | 以实体批为准（entity.item）；步骤3合并时改模型 import |
+| P27 | 旧版模型 bug 原样保留（度/弧度混用 3 处：THFairy/SunFlowerFairy 死亡分支、Toziko 臂链、Cirno 翅膀） | agent-21 TODO#5 | 保持（玩家可见行为一致原则）；登记已知怪癖，不单独修 |
 
 ## 批次状态板
 
@@ -60,7 +62,7 @@
 | 道具/效果实体 | agent-17 | item 13 + effect 5（含时停） | 🏃 |
 | 武器物品 | agent-18 | 28 类（429 恢复 1 次） | ✅ 交付（stub javac 0错），⏸ 待 agent-17 实体后合并 |
 | 商店/万宝槌 GUI | agent-19 | 2 Menu + 2 Screen + Payload ×2 | ✅ 合并（编译0错）；打开入口待 EntitySanae/ItemUchide |
-| 人物模型 | agent-21 | 16 模型 | 🏃 |
+| 人物模型 | agent-21 | 14 模型（修正简报笔误：实际 14 个） | ✅ 交付（几何核验 14/14 零偏差），⏸ 待步骤3合并 |
 | 道具渲染器 | agent-22 | 18 个 | ✅ 交付（javac 0错），⏸ 待实体批后合并；贴图已按其约定归位 entity/shot/ |
 | 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |

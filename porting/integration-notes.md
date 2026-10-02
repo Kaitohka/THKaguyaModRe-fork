@@ -75,3 +75,4 @@
 | I1 | 用户客户端"进世界崩溃" | smoke_test.sh 清理步骤按 'neoforge-1.21.1' 宽泛匹配杀进程，误杀用户窗口 | 专用 run 配置 clientSmoke/serverSmoke + 独立 run-smoke/ 目录；MDG 经 argfile 传参致 -D 标记不上命令行 → 改按 argfile 文件名 `SmokeRunVmArgs` 精确匹配（已实测验证） | ✅ 修复 |
 | I2 | 专用服务端无法启动 | 本机 Steamcommunity302 代理 TLS 拦截，Java 信任库不认 libraries.minecraft.net（netty epoll 下载 PKIX 失败） | 构建工程信任库（cacerts+代理CA链）`porting/tools/thkaguya-truststore.jks`，复制到 `~/.gradle/` 并配 `org.gradle.jvmargs` trustStore | ✅ 服务端 Done(5.4s) |
 | I3 | 429 限流 ×3（agent-18/23/25） | 13 路并发超每分钟 21 次请求上限 | 无损恢复；稳态并发 ≤10；批次空位补入 | ✅ 台账 |
+| I4 | 2h 超时 ×6（agent-16/17/19/21/24/26） | 大文件批次分析阶段过长（agent-16/24 超时前零落盘） | 全部无损恢复；简报补"立即逐文件落盘"指令；超大批次今后先拆小 | ✅ 恢复中 |

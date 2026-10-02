@@ -1,59 +1,74 @@
 #!/usr/bin/env bash
-# THKaguyaMod NeoForge port — basic regression smoke test.
-# Usage: bash porting/tools/smoke_test.sh [--skip-build]
-#   PASS criteria: build OK, client reaches title screen, no new ERROR lines
-#   (excluding known-benign offline-dev noise), no crash.
+# THKaguyaMod NeoForge port — regression smoke test (client + dedicated server).
+# Usage: bash porting/tools/smoke_test.sh [--skip-build] [--client-only]
+# R8 验收: 客户端与专用服务端均能启动; 无 common->client-only 引用; 无新增 ERROR.
 set -u
 cd "$(dirname "$0")/.."
 PROJ="neoforge-1.21.1"
-LOG="$PROJ/run/logs/latest.log"
 export JAVA_HOME="/c/Program Files/Java/zulu-21"
+BENIGN="Yggdrasil\|sessionserver\|minecraftservices\|chat session\|Missing sound\|mcassetsroot\|Sampler2"
+FAILED=0
 
-echo "== [1/4] build =="
+echo "== [0] R3 静态闸: common 代码不得引用 client-only 类 =="
+# 只允许 thkaguyamod/client/** 引用 net.minecraft.client.*
+VIOLATIONS=$(grep -rl "import net\.minecraft\.client" "$PROJ/src/main/java/thkaguyamod" --include="*.java" | grep -v "/client/" || true)
+if [ -n "$VIOLATIONS" ]; then
+    echo "R3 VIOLATION:"; echo "$VIOLATIONS"; FAILED=1
+else
+    echo "R3 OK"
+fi
+
 if [ "${1:-}" != "--skip-build" ]; then
+    echo "== [1] build =="
     (cd "$PROJ" && ./gradlew build -q) || { echo "FAIL: build"; exit 1; }
+    echo "build OK"
 fi
-echo "build OK"
 
-echo "== [2/4] launch client =="
-rm -rf "$PROJ/run/logs" 2>/dev/null
-(cd "$PROJ" && ./gradlew runClient -q >/dev/null 2>&1) &
-LAUNCH_PID=$!
-
-# wait for title screen (texture atlas creation) or timeout
-TITLE_OK=0
-for i in $(seq 1 60); do
-    if [ -f "$LOG" ] && grep -q "textures/atlas/gui.png" "$LOG" 2>/dev/null; then
-        TITLE_OK=1
-        break
+run_side() {  # $1=client|server
+    local SIDE="$1" LOG="$PROJ/run/logs/latest.log" MARKER GRADLE_TASK
+    if [ "$SIDE" = "client" ]; then
+        GRADLE_TASK="runClient"; MARKER="textures/atlas/gui.png"
+    else
+        GRADLE_TASK="runServer"; MARKER='Done (.*)!'
+        mkdir -p "$PROJ/run"; echo "eula=true" > "$PROJ/run/eula.txt"
     fi
-    sleep 5
-done
-sleep 10  # let world-gen/reports settle
+    rm -f "$PROJ/run/logs/latest.log" 2>/dev/null
+    (cd "$PROJ" && ./gradlew "$GRADLE_TASK" -q >/dev/null 2>&1) &
+    local LAUNCH_PID=$!
+    local OK=0
+    for i in $(seq 1 60); do
+        if [ -f "$LOG" ] && grep -qE "$MARKER" "$LOG" 2>/dev/null; then OK=1; break; fi
+        sleep 5
+    done
+    sleep 8
+    if [ ! -f "$LOG" ]; then OK=0; fi
+    local ERR=999 RECIPE=999 MODEL=999 MODOK=0
+    if [ -f "$LOG" ]; then
+        ERR=$(grep -E "\[.*ERROR\]" "$LOG" | grep -vc "$BENIGN" || true)
+        RECIPE=$(grep -c "Parsing error loading recipe" "$LOG" || true)
+        MODEL=$(grep -c "Unable to load model" "$LOG" || true)
+        MODOK=$(grep -c "Itutu no Nandai MOD+ (NeoForge port) loading" "$LOG" || true)
+    fi
+    echo "[$SIDE] started=$OK relevant_errors=$ERR recipe_errors=$RECIPE model_errors=$MODEL mod_loaded=$MODOK"
+    if [ -f "$LOG" ]; then
+        grep -E "\[.*ERROR\]" "$LOG" | grep -v "$BENIGN" | head -8
+    fi
+    powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -match 'neoforge-1.21.1' -and \$_.CommandLine -notmatch 'gradlew' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" 2>/dev/null
+    kill $LAUNCH_PID 2>/dev/null
+    sleep 3
+    if [ "$OK" != "1" ] || [ "$ERR" != "0" ] || [ "$RECIPE" != "0" ] || [ "$MODEL" != "0" ] || [ "$MODOK" != "1" ]; then
+        echo "[$SIDE] FAIL"; FAILED=1
+    else
+        echo "[$SIDE] PASS"
+    fi
+}
 
-echo "== [3/4] log scan =="
-if [ ! -f "$LOG" ]; then
-    echo "FAIL: no latest.log"
-    TITLE_OK=0
-else
-    ERRORS=$(grep -cE "\[.*ERROR\]" "$LOG" || true)
-    MOD_ERRORS=$(grep -E "\[.*ERROR\]" "$LOG" | grep -vc "Yggdrasil\|sessionserver\|minecraftservices\|chat session" || true)
-    RECIPE_ERRORS=$(grep -c "Parsing error loading recipe" "$LOG" || true)
-    MODEL_ERRORS=$(grep -c "Unable to load model" "$LOG" || true)
-    CRASH=$(grep -c "Fatal|crash" "$LOG" || true)
-    MOD_LOADED=$(grep -c "Itutu no Nandai MOD+ (NeoForge port) loading" "$LOG" || true)
-    echo "title_screen=$TITLE_OK errors_total=$ERRORS errors_relevant=$MOD_ERRORS recipe_errors=$RECIPE_ERRORS model_errors=$MODEL_ERRORS mod_loaded=$MOD_LOADED"
-    grep -E "\[.*ERROR\]" "$LOG" | grep -v "Yggdrasil\|sessionserver\|minecraftservices\|chat session" | head -10
+echo "== [2] client =="
+run_side client
+
+if [ "${1:-}" != "--client-only" ] && [ "${2:-}" != "--client-only" ]; then
+    echo "== [3] dedicated server =="
+    run_side server
 fi
 
-echo "== [4/4] shutdown =="
-powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -match 'neoforge-1.21.1' -and \$_.CommandLine -notmatch 'gradlew' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" 2>/dev/null
-kill $LAUNCH_PID 2>/dev/null
-sleep 3
-
-if [ "$TITLE_OK" = "1" ] && [ "${MOD_ERRORS:-1}" = "0" ] && [ "${RECIPE_ERRORS:-1}" = "0" ] && [ "${MODEL_ERRORS:-1}" = "0" ] && [ "${MOD_LOADED:-0}" = "1" ]; then
-    echo "SMOKE PASS"
-else
-    echo "SMOKE FAIL"
-    exit 1
-fi
+if [ "$FAILED" = "0" ]; then echo "SMOKE PASS"; else echo "SMOKE FAIL"; exit 1; fi

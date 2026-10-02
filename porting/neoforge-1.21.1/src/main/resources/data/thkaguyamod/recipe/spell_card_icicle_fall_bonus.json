@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "CPC",
+    "C C"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "C": {
+      "item": "thkaguyamod:crystal_shot"
+    },
+    "I": {
+      "item": "minecraft:ice"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_icicle_fall",
+    "count": 1
+  }
+}

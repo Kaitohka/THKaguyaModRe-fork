@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "L",
+    "L",
+    "L"
+  ],
+  "key": {
+    "L": {
+      "item": "thkaguyamod:light_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:middle_laser",
+    "count": 1
+  }
+}

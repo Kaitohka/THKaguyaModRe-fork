@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "thkaguyamod:item/spell_card/spell_card_spear_the_gungnir",
+    "layer1": "thkaguyamod:item/spell_card/spellcard_lv3"
+  }
+}

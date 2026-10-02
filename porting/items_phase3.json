@@ -1,0 +1,557 @@
+{
+  "items": {
+    "jeweled_branch_of_hourai": {
+      "old_lang_key": "houraiJewelBranch",
+      "kind": "bow"
+    },
+    "jewel_from_the_dragons_neck": {
+      "old_lang_key": "dragonNeckJewel",
+      "kind": "item"
+    },
+    "buddhas_stone_bowl": {
+      "old_lang_key": "buddhaStoneBowl",
+      "kind": "item"
+    },
+    "robe_of_the_fire_rat": {
+      "old_lang_key": "fireRatRobe",
+      "kind": "armor:HINEZUMI_ROBE:chest"
+    },
+    "swallows_cowrie_shell": {
+      "old_lang_key": "swallowCowrieShell",
+      "kind": "food:0:always"
+    },
+    "seamless_ceiling_of_kinkakuji": {
+      "old_lang_key": "kinkaku-ji",
+      "kind": "item"
+    },
+    "red_stone_of_aja": {
+      "old_lang_key": "ajaRedStone",
+      "kind": "item"
+    },
+    "red_pearl": {
+      "old_lang_key": "houraiPearl.red",
+      "kind": "item"
+    },
+    "blue_pearl": {
+      "old_lang_key": "houraiPearl.blue",
+      "kind": "item"
+    },
+    "green_pearl": {
+      "old_lang_key": "houraiPearl.green",
+      "kind": "item"
+    },
+    "yellow_pearl": {
+      "old_lang_key": "houraiPearl.yellow",
+      "kind": "item"
+    },
+    "purple_pearl": {
+      "old_lang_key": "houraiPearl.purple",
+      "kind": "item"
+    },
+    "aqua_pearl": {
+      "old_lang_key": "houraiPearl.aqua",
+      "kind": "item"
+    },
+    "orange_pearl": {
+      "old_lang_key": "houraiPearl.orange",
+      "kind": "item"
+    },
+    "white_pearl": {
+      "old_lang_key": "houraiPearl.white",
+      "kind": "item"
+    },
+    "hakurei_shrine_maiden_stick": {
+      "old_lang_key": "hakureiMikoStick",
+      "kind": "item"
+    },
+    "homing_amulet": {
+      "old_lang_key": "homingAmulet.homing",
+      "kind": "item"
+    },
+    "diffusion_amulet": {
+      "old_lang_key": "homingAmulet.diffusion",
+      "kind": "item"
+    },
+    "yin_yang_orb": {
+      "old_lang_key": "yinYangOrb",
+      "kind": "item"
+    },
+    "bloodthirsty_yin_yang_orb": {
+      "old_lang_key": "bloodthirstyYinYangOrb",
+      "kind": "item"
+    },
+    "magic_broom": {
+      "old_lang_key": "magicBroom",
+      "kind": "item"
+    },
+    "mini_hakkero": {
+      "old_lang_key": "miniHakkero",
+      "kind": "item"
+    },
+    "marisas_hat": {
+      "old_lang_key": "marisaHat",
+      "kind": "armor:MARISA:helm"
+    },
+    "icicle_sword": {
+      "old_lang_key": "icicleSword",
+      "kind": "sword:ICICLE"
+    },
+    "silver_knife_blue": {
+      "old_lang_key": "silverKnife.blue",
+      "kind": "item"
+    },
+    "silver_knife_red": {
+      "old_lang_key": "silverKnife.red",
+      "kind": "item"
+    },
+    "silver_knife_green": {
+      "old_lang_key": "silverKnife.green",
+      "kind": "item"
+    },
+    "silver_knife_white": {
+      "old_lang_key": "silverKnife.white",
+      "kind": "item"
+    },
+    "sakuyas_pocket_watch": {
+      "old_lang_key": "sakuyaWatch",
+      "kind": "item"
+    },
+    "sakuyas_stopwatch": {
+      "old_lang_key": "sakuyaStopwatch",
+      "kind": "item"
+    },
+    "spear_the_gungnir": {
+      "old_lang_key": "spearTheGungnir",
+      "kind": "item"
+    },
+    "laevateinn": {
+      "old_lang_key": "laevateinn",
+      "kind": "sword:LAEVATEINN"
+    },
+    "cursed_decoy_doll": {
+      "old_lang_key": "cursedDecoyDoll",
+      "kind": "item"
+    },
+    "hakurouken": {
+      "old_lang_key": "hakurouken",
+      "kind": "sword:HAKUROUKEN"
+    },
+    "roukanken": {
+      "old_lang_key": "roukanken",
+      "kind": "sword:ROUKANKEN"
+    },
+    "yuyukos_fan": {
+      "old_lang_key": "yuyukoFan",
+      "kind": "item"
+    },
+    "soul_torch": {
+      "old_lang_key": "soulTorch",
+      "kind": "item"
+    },
+    "gap": {
+      "old_lang_key": "gap",
+      "kind": "item"
+    },
+    "gap_folding_umbrella": {
+      "old_lang_key": "gapFoldingUmbrella",
+      "kind": "item"
+    },
+    "ibuki_gourd": {
+      "old_lang_key": "ibukiGourd",
+      "kind": "item"
+    },
+    "yuukas_parasol": {
+      "old_lang_key": "yuukaParasol",
+      "kind": "item"
+    },
+    "scythe_of_death": {
+      "old_lang_key": "deathScythe",
+      "kind": "sword:IRON:444"
+    },
+    "rod_of_remorse": {
+      "old_lang_key": "remorseRod",
+      "kind": "item"
+    },
+    "tengus_fan": {
+      "old_lang_key": "tenguFan",
+      "kind": "item"
+    },
+    "kappa_cap": {
+      "old_lang_key": "kappaCap",
+      "kind": "armor:KAPPA:helm"
+    },
+    "kappas_water_pistol": {
+      "old_lang_key": "kappaWaterPistol",
+      "kind": "item"
+    },
+    "wind_shrine_maiden_stick": {
+      "old_lang_key": "windMikoStick",
+      "kind": "item"
+    },
+    "illness_recovery_charm": {
+      "old_lang_key": "byoukiheiyuMamori",
+      "kind": "item"
+    },
+    "onbashira": {
+      "old_lang_key": "onbashira",
+      "kind": "sword:WOOD"
+    },
+    "suwakos_hat": {
+      "old_lang_key": "suwakoHat",
+      "kind": "armor:SUWAKO:helm"
+    },
+    "heavenly_peach": {
+      "old_lang_key": "heavenlyPeach",
+      "kind": "food:2:always"
+    },
+    "sword_of_scarlet_perception": {
+      "old_lang_key": "scarletPerceptionSword",
+      "kind": "sword:HISOU"
+    },
+    "third_eye": {
+      "old_lang_key": "thirdEye",
+      "kind": "item"
+    },
+    "nuclear_control_rod": {
+      "old_lang_key": "nuclearControlRod",
+      "kind": "item"
+    },
+    "closed_third_eye": {
+      "old_lang_key": "closedThirdEye",
+      "kind": "item"
+    },
+    "nazrin_pendulum": {
+      "old_lang_key": "nazrinPendulum",
+      "kind": "item"
+    },
+    "ship_ghosts_dipper_empty": {
+      "old_lang_key": "shipGhostDipperEmpty",
+      "kind": "item"
+    },
+    "ship_ghosts_dipper": {
+      "old_lang_key": "shipGhostDipper",
+      "kind": "item"
+    },
+    "sorcerers_sutra_scroll": {
+      "old_lang_key": "sorcererSutraScroll",
+      "kind": "item"
+    },
+    "wall_passing_chisel": {
+      "old_lang_key": "wallPassingChisel",
+      "kind": "item"
+    },
+    "sacred_sword_of_toyosatomimi": {
+      "old_lang_key": "toyosatomimiSword",
+      "kind": "sword:IRON"
+    },
+    "miracle_mallet": {
+      "old_lang_key": "miracleMallet",
+      "kind": "item"
+    },
+    "spiritual_strike_talisman": {
+      "old_lang_key": "spiritualStrikeTalisman",
+      "kind": "item"
+    },
+    "shot_material": {
+      "old_lang_key": "shotMaterial",
+      "kind": "item"
+    },
+    "power_up_item_small": {
+      "old_lang_key": "thPowerItem.small",
+      "kind": "item"
+    },
+    "power_up_item_big": {
+      "old_lang_key": "thPowerItem.big",
+      "kind": "item"
+    },
+    "point_item": {
+      "old_lang_key": "thPointItem",
+      "kind": "item"
+    },
+    "bomb_item": {
+      "old_lang_key": "thBombItem",
+      "kind": "item"
+    },
+    "extend_item": {
+      "old_lang_key": "thExtendItem",
+      "kind": "item"
+    },
+    "small_shot": {
+      "old_lang_key": "thShot.smallShot",
+      "kind": "item"
+    },
+    "tiny_shot": {
+      "old_lang_key": "thShot.tinyShot",
+      "kind": "item"
+    },
+    "medium_shot": {
+      "old_lang_key": "thShot.mediumShot",
+      "kind": "item"
+    },
+    "big_shot": {
+      "old_lang_key": "thShot.bigShot",
+      "kind": "item"
+    },
+    "star_shot": {
+      "old_lang_key": "thShot.starShot",
+      "kind": "item"
+    },
+    "small_star_shot": {
+      "old_lang_key": "thShot.smallStarShot",
+      "kind": "item"
+    },
+    "circle_shot": {
+      "old_lang_key": "thShot.circleShot",
+      "kind": "item"
+    },
+    "scale_shot": {
+      "old_lang_key": "thShot.scaleShot",
+      "kind": "item"
+    },
+    "butterfly_shot": {
+      "old_lang_key": "thShot.butterflyShot",
+      "kind": "item"
+    },
+    "light_shot": {
+      "old_lang_key": "thShot.lightShot",
+      "kind": "item"
+    },
+    "knife_shot": {
+      "old_lang_key": "thShot.knifeShot",
+      "kind": "item"
+    },
+    "heart_shot": {
+      "old_lang_key": "thShot.heartShot",
+      "kind": "item"
+    },
+    "kunai_shot": {
+      "old_lang_key": "thShot.kunaiShot",
+      "kind": "item"
+    },
+    "talisman_shot": {
+      "old_lang_key": "thShot.talismanShot",
+      "kind": "item"
+    },
+    "big_light_shot": {
+      "old_lang_key": "thShot.bigLightShot",
+      "kind": "item"
+    },
+    "rice_shot": {
+      "old_lang_key": "thShot.riceShot",
+      "kind": "item"
+    },
+    "oval_shot": {
+      "old_lang_key": "thShot.ovalShot",
+      "kind": "item"
+    },
+    "crystal_shot": {
+      "old_lang_key": "thShot.crystalShot",
+      "kind": "item"
+    },
+    "arrow_shot": {
+      "old_lang_key": "thShot.arrowShot",
+      "kind": "item"
+    },
+    "middle_laser": {
+      "old_lang_key": "thLaser.middle",
+      "kind": "item"
+    },
+    "short_laser": {
+      "old_lang_key": "thLaser.short",
+      "kind": "item"
+    },
+    "long_laser": {
+      "old_lang_key": "thLaser.long",
+      "kind": "item"
+    },
+    "spell_card_musou_fuuin": {
+      "old_lang_key": "thSpellCard.0",
+      "kind": "spellcard"
+    },
+    "spell_card_master_spark": {
+      "old_lang_key": "thSpellCard.1",
+      "kind": "spellcard"
+    },
+    "spell_card_kasho_no_eimin": {
+      "old_lang_key": "thSpellCard.2",
+      "kind": "spellcard"
+    },
+    "spell_card_meteonic_shower": {
+      "old_lang_key": "thSpellCard.3",
+      "kind": "spellcard"
+    },
+    "spell_card_nami_to_tubu_no_kyoukai": {
+      "old_lang_key": "thSpellCard.4",
+      "kind": "spellcard"
+    },
+    "spell_card_nijuu_kokushichou": {
+      "old_lang_key": "thSpellCard.5",
+      "kind": "spellcard"
+    },
+    "spell_card_scarlet_shoot": {
+      "old_lang_key": "thSpellCard.6",
+      "kind": "spellcard"
+    },
+    "spell_card_zenzinrui_no_hisouten": {
+      "old_lang_key": "thSpellCard.7",
+      "kind": "spellcard"
+    },
+    "spell_card_satuzin_doll": {
+      "old_lang_key": "thSpellCard.8",
+      "kind": "spellcard"
+    },
+    "spell_card_perfect_freeze": {
+      "old_lang_key": "thSpellCard.9",
+      "kind": "spellcard"
+    },
+    "spell_card_hikouchuu_nest": {
+      "old_lang_key": "thSpellCard.10",
+      "kind": "spellcard"
+    },
+    "spell_card_kappas_pororoca": {
+      "old_lang_key": "thSpellCard.11",
+      "kind": "spellcard"
+    },
+    "spell_card_stardust_reverie": {
+      "old_lang_key": "thSpellCard.12",
+      "kind": "spellcard"
+    },
+    "spell_card_kerochan_fuuu_ni_makezu": {
+      "old_lang_key": "thSpellCard.13",
+      "kind": "spellcard"
+    },
+    "spell_card_miracle_fruit": {
+      "old_lang_key": "thSpellCard.14",
+      "kind": "spellcard"
+    },
+    "spell_card_fafrotskies_no_kiseki": {
+      "old_lang_key": "thSpellCard.15",
+      "kind": "spellcard"
+    },
+    "spell_card_youryoku_spoiler": {
+      "old_lang_key": "thSpellCard.16",
+      "kind": "spellcard"
+    },
+    "spell_card_moses_no_kiseki": {
+      "old_lang_key": "thSpellCard.17",
+      "kind": "spellcard"
+    },
+    "spell_card_yasaka_no_kamikaze": {
+      "old_lang_key": "thSpellCard.18",
+      "kind": "spellcard"
+    },
+    "spell_card_icicle_fall": {
+      "old_lang_key": "thSpellCard.19",
+      "kind": "spellcard"
+    },
+    "spell_card_starbow_break": {
+      "old_lang_key": "thSpellCard.20",
+      "kind": "spellcard"
+    },
+    "spell_card_catadioptric": {
+      "old_lang_key": "thSpellCard.21",
+      "kind": "spellcard"
+    },
+    "spell_card_mishagujisama": {
+      "old_lang_key": "thSpellCard.22",
+      "kind": "spellcard"
+    },
+    "spell_card_red_magic": {
+      "old_lang_key": "thSpellCard.23",
+      "kind": "spellcard"
+    },
+    "spell_card_eternal_meek": {
+      "old_lang_key": "thSpellCard.24",
+      "kind": "spellcard"
+    },
+    "spell_card_non_directional_laser": {
+      "old_lang_key": "thSpellCard.25",
+      "kind": "spellcard"
+    },
+    "spell_card_kachoufuugetu_shoufuurougetu": {
+      "old_lang_key": "thSpellCard.26",
+      "kind": "spellcard"
+    },
+    "spell_card_spear_the_gungnir": {
+      "old_lang_key": "thSpellCard.27",
+      "kind": "spellcard"
+    },
+    "spell_card_moonlight_ray": {
+      "old_lang_key": "thSpellCard.28",
+      "kind": "spellcard"
+    },
+    "spell_card_houka_kenran": {
+      "old_lang_key": "thSpellCard.29",
+      "kind": "spellcard"
+    },
+    "spell_card_saikou_ranbu": {
+      "old_lang_key": "thSpellCard.30",
+      "kind": "spellcard"
+    },
+    "spell_card_fujiyama_volcano": {
+      "old_lang_key": "thSpellCard.33",
+      "kind": "spellcard"
+    },
+    "spell_card_little_bug_storm": {
+      "old_lang_key": "thSpellCard.34",
+      "kind": "spellcard"
+    },
+    "spell_card_meteor_on_earth": {
+      "old_lang_key": "thSpellCard.35",
+      "kind": "spellcard"
+    },
+    "spell_card_gagouji_cyclone": {
+      "old_lang_key": "thSpellCard.40",
+      "kind": "spellcard"
+    }
+  },
+  "blocks": [
+    "danmaku_crafting_table",
+    "danmaku_laser_crafting_table",
+    "divine_spirit_red",
+    "divine_spirit_blue",
+    "divine_spirit_green",
+    "divine_spirit_yellow",
+    "divine_spirit_purple",
+    "divine_spirit_aqua",
+    "divine_spirit_orange",
+    "divine_spirit_white"
+  ],
+  "spell_cards": {
+    "0": "spell_card_musou_fuuin",
+    "1": "spell_card_master_spark",
+    "2": "spell_card_kasho_no_eimin",
+    "3": "spell_card_meteonic_shower",
+    "4": "spell_card_nami_to_tubu_no_kyoukai",
+    "5": "spell_card_nijuu_kokushichou",
+    "6": "spell_card_scarlet_shoot",
+    "7": "spell_card_zenzinrui_no_hisouten",
+    "8": "spell_card_satuzin_doll",
+    "9": "spell_card_perfect_freeze",
+    "10": "spell_card_hikouchuu_nest",
+    "11": "spell_card_kappas_pororoca",
+    "12": "spell_card_stardust_reverie",
+    "13": "spell_card_kerochan_fuuu_ni_makezu",
+    "14": "spell_card_miracle_fruit",
+    "15": "spell_card_fafrotskies_no_kiseki",
+    "16": "spell_card_youryoku_spoiler",
+    "17": "spell_card_moses_no_kiseki",
+    "18": "spell_card_yasaka_no_kamikaze",
+    "19": "spell_card_icicle_fall",
+    "20": "spell_card_starbow_break",
+    "21": "spell_card_catadioptric",
+    "22": "spell_card_mishagujisama",
+    "23": "spell_card_red_magic",
+    "24": "spell_card_eternal_meek",
+    "25": "spell_card_non_directional_laser",
+    "26": "spell_card_kachoufuugetu_shoufuurougetu",
+    "27": "spell_card_spear_the_gungnir",
+    "28": "spell_card_moonlight_ray",
+    "29": "spell_card_houka_kenran",
+    "30": "spell_card_saikou_ranbu",
+    "33": "spell_card_fujiyama_volcano",
+    "34": "spell_card_little_bug_storm",
+    "35": "spell_card_meteor_on_earth",
+    "40": "spell_card_gagouji_cyclone"
+  }
+}

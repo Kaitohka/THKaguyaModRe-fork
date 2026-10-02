@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BBB",
+    "BPB"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "thkaguyamod:star_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_meteonic_shower",
+    "count": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "BBB",
+    "B B"
+  ],
+  "key": {
+    "B": {
+      "item": "thkaguyamod:shot_material"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:small_star_shot",
+    "count": 1
+  }
+}

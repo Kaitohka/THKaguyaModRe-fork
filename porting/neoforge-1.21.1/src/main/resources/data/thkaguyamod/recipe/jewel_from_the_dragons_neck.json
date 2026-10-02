@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GWG",
+    "LDL",
+    "GWG"
+  ],
+  "key": {
+    "D": {
+      "item": "thkaguyamod:aqua_pearl"
+    },
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "W": {
+      "item": "minecraft:water_bucket"
+    },
+    "G": {
+      "item": "minecraft:glowstone"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:jewel_from_the_dragons_neck",
+    "count": 1
+  }
+}

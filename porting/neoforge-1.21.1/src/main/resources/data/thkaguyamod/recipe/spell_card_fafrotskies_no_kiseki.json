@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    "SPS",
+    "   "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "thkaguyamod:star_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_fafrotskies_no_kiseki",
+    "count": 1
+  }
+}

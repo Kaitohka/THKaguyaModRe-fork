@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  I",
+    "II ",
+    "II "
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:packed_ice"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:icicle_sword",
+    "count": 1
+  }
+}

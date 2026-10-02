@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BBB",
+    "BPB",
+    "BBB"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "thkaguyamod:butterfly_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_kasho_no_eimin",
+    "count": 1
+  }
+}

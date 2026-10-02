@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "thkaguyamod:block/danmaku_crafting_table"
+  }
+}

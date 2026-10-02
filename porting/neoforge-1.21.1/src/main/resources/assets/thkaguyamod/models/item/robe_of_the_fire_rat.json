@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "thkaguyamod:item/robe_of_the_fire_rat"
+  }
+}

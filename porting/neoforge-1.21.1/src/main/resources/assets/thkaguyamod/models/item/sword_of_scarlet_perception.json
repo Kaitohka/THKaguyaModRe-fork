@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "thkaguyamod:item/sword_of_scarlet_perception"
+  }
+}

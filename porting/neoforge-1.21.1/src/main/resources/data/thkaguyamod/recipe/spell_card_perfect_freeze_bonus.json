@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IPI",
+    "III"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "I": {
+      "item": "minecraft:ice"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_perfect_freeze",
+    "count": 1
+  }
+}

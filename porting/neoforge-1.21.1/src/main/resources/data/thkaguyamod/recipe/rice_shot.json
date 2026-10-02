@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B",
+    "B "
+  ],
+  "key": {
+    "B": {
+      "item": "thkaguyamod:shot_material"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:rice_shot",
+    "count": 1
+  }
+}

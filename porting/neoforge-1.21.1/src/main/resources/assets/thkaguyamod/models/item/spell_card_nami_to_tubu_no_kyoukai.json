@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "thkaguyamod:item/spell_card/spell_card_nami_to_tubu_no_kyoukai",
+    "layer1": "thkaguyamod:item/spell_card/spellcard_lv5"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BBB",
+    "MPM",
+    "SSS"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "thkaguyamod:small_shot"
+    },
+    "M": {
+      "item": "thkaguyamod:medium_shot"
+    },
+    "B": {
+      "item": "thkaguyamod:big_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_scarlet_shoot",
+    "count": 1
+  }
+}

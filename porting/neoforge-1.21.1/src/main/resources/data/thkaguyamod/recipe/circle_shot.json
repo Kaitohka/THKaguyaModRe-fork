@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "BBB",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "item": "thkaguyamod:shot_material"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:circle_shot",
+    "count": 1
+  }
+}

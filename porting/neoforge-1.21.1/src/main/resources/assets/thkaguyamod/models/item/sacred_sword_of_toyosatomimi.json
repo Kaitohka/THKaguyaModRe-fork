@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "thkaguyamod:item/sacred_sword_of_toyosatomimi"
+  }
+}

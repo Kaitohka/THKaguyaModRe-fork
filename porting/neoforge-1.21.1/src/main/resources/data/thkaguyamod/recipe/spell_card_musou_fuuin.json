@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GOG",
+    "OPO",
+    "GOG"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "O": {
+      "item": "thkaguyamod:big_shot"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_musou_fuuin",
+    "count": 1
+  }
+}

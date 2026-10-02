@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "PPP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "thkaguyamod:power_up_item_small"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:power_up_item_big",
+    "count": 1
+  }
+}

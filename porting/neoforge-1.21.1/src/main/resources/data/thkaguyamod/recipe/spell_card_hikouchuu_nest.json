@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "L",
+    "P",
+    "S"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "L": {
+      "item": "thkaguyamod:middle_laser"
+    },
+    "S": {
+      "item": "thkaguyamod:gap"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_hikouchuu_nest",
+    "count": 1
+  }
+}

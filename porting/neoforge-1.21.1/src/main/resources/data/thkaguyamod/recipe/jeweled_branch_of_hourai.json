@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "YRB",
+    "GEP",
+    " E "
+  ],
+  "key": {
+    "Y": {
+      "item": "thkaguyamod:yellow_pearl"
+    },
+    "R": {
+      "item": "thkaguyamod:red_pearl"
+    },
+    "B": {
+      "item": "thkaguyamod:blue_pearl"
+    },
+    "G": {
+      "item": "thkaguyamod:green_pearl"
+    },
+    "P": {
+      "item": "thkaguyamod:purple_pearl"
+    },
+    "E": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:jeweled_branch_of_hourai",
+    "count": 1
+  }
+}

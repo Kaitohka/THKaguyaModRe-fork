@@ -1,8 +1,15 @@
 package thkaguyamod;
 
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import thkaguyamod.init.ModArmorMaterials;
+import thkaguyamod.init.ModBlockEntities;
+import thkaguyamod.init.ModBlocks;
+import thkaguyamod.init.ModCreativeTabs;
+import thkaguyamod.init.ModItems;
 
 /**
  * 五つの難題MOD+ (Itutu no Nandai MOD+) — NeoForge 1.21.1 port.
@@ -18,7 +25,12 @@ public class THKaguyaMod {
 
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
-    public THKaguyaMod() {
+    public THKaguyaMod(IEventBus modEventBus) {
+        ModArmorMaterials.register(modEventBus);
+        ModBlocks.register(modEventBus);
+        ModItems.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
         LOGGER.info("Itutu no Nandai MOD+ (NeoForge port) loading.");
     }
 }

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "MPM",
+    "BBB"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "thkaguyamod:small_shot"
+    },
+    "M": {
+      "item": "thkaguyamod:medium_shot"
+    },
+    "B": {
+      "item": "thkaguyamod:big_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_catadioptric",
+    "count": 1
+  }
+}

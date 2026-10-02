@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "thkaguyamod:item/jeweled_branch_of_hourai"
+  }
+}

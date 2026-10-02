@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RYR",
+    "YPY",
+    "RYR"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "Y": {
+      "item": "minecraft:dandelion"
+    },
+    "R": {
+      "item": "minecraft:poppy"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_kachoufuugetu_shoufuurougetu",
+    "count": 1
+  }
+}

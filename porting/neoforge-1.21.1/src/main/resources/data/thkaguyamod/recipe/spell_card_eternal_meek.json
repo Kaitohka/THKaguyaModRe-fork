@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "KKK",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "K": {
+      "item": "thkaguyamod:knife_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_eternal_meek",
+    "count": 1
+  }
+}

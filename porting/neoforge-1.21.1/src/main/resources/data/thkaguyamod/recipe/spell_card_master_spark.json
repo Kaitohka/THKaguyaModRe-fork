@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SRS",
+    "SPS",
+    "SHS"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "H": {
+      "item": "thkaguyamod:mini_hakkero"
+    },
+    "S": {
+      "item": "thkaguyamod:star_shot"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_master_spark",
+    "count": 1
+  }
+}

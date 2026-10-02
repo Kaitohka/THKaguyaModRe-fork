@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BB"
+  ],
+  "key": {
+    "B": {
+      "item": "thkaguyamod:light_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:big_light_shot",
+    "count": 1
+  }
+}

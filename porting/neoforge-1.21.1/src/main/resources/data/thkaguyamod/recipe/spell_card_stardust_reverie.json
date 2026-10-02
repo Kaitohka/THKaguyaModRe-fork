@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MSM",
+    "SPS",
+    "MSM"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "M": {
+      "item": "thkaguyamod:small_star_shot"
+    },
+    "S": {
+      "item": "thkaguyamod:star_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_stardust_reverie",
+    "count": 1
+  }
+}

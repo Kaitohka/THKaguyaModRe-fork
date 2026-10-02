@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLR",
+    " RL",
+    "R L"
+  ],
+  "key": {
+    "L": {
+      "item": "thkaguyamod:middle_laser"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spear_the_gungnir",
+    "count": 1
+  }
+}

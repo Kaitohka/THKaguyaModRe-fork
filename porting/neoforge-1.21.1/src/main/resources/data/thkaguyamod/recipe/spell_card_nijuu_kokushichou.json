@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BZB",
+    "ZPZ",
+    "BZB"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "Z": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "B": {
+      "item": "thkaguyamod:butterfly_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_nijuu_kokushichou",
+    "count": 1
+  }
+}

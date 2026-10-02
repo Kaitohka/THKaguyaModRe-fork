@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " Y ",
+    "RCR",
+    " R "
+  ],
+  "key": {
+    "Y": {
+      "item": "thkaguyamod:yellow_pearl"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "minecraft:clock"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:sakuyas_pocket_watch",
+    "count": 1
+  }
+}

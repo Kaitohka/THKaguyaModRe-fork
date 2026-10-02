@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " L ",
+    "LPL",
+    "L L"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "L": {
+      "item": "thkaguyamod:middle_laser"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_non_directional_laser",
+    "count": 1
+  }
+}

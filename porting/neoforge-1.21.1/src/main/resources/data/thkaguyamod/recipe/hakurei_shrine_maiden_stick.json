@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPO",
+    " SP",
+    "S P"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "O": {
+      "item": "thkaguyamod:yin_yang_orb"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:hakurei_shrine_maiden_stick",
+    "count": 1
+  }
+}

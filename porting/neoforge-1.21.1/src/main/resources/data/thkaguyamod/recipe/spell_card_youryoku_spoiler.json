@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " S ",
+    " P ",
+    "S S"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "thkaguyamod:star_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_youryoku_spoiler",
+    "count": 1
+  }
+}

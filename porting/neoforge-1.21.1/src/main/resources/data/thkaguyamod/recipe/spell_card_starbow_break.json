@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " S ",
+    "LPL",
+    "L L"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "thkaguyamod:star_shot"
+    },
+    "L": {
+      "item": "thkaguyamod:light_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_starbow_break",
+    "count": 1
+  }
+}

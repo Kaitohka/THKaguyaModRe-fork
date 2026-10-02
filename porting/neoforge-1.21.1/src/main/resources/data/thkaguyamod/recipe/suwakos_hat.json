@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "E E",
+    " C "
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "C": {
+      "item": "minecraft:leather_helmet"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:suwakos_hat",
+    "count": 1
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " SB",
+    " WS",
+    "W  "
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bowl"
+    },
+    "W": {
+      "item": "minecraft:stick"
+    },
+    "S": {
+      "item": "minecraft:soul_sand"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:ship_ghosts_dipper",
+    "count": 1
+  }
+}

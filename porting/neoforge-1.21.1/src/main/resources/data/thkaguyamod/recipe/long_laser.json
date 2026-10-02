@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "L",
+    "L"
+  ],
+  "key": {
+    "L": {
+      "item": "thkaguyamod:short_laser"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:long_laser",
+    "count": 1
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " K ",
+    "KPK",
+    " C "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "K": {
+      "item": "thkaguyamod:knife_shot"
+    },
+    "C": {
+      "item": "thkaguyamod:sakuyas_pocket_watch"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_satuzin_doll",
+    "count": 1
+  }
+}

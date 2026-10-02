@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " L ",
+    "LPL",
+    "L L"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "L": {
+      "item": "thkaguyamod:light_shot"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_kerochan_fuuu_ni_makezu",
+    "count": 1
+  }
+}

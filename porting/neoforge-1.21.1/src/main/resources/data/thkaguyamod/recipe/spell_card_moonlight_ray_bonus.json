@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "LPL"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "thkaguyamod:big_light_shot"
+    },
+    "L": {
+      "item": "thkaguyamod:long_laser"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:spell_card_moonlight_ray",
+    "count": 1
+  }
+}

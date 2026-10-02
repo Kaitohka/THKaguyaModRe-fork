@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RRR",
+    "RRR",
+    "RRR"
+  ],
+  "key": {
+    "R": {
+      "item": "thkaguyamod:red_pearl"
+    }
+  },
+  "result": {
+    "id": "thkaguyamod:red_stone_of_aja",
+    "count": 1
+  }
+}

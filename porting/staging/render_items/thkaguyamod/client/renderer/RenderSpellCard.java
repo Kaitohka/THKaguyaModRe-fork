@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -58,7 +59,9 @@ public class RenderSpellCard extends EntityRenderer<EntitySpellCard>
 	 *
 	 * <p>TODO K3-review: 1.7.10 は {@code Class.newInstance()} でレベルを読んでいた。
 	 * 1.21.1 は {@link SpellCardRegistry#getSpellCardFactory(int)} のファクトリから
-	 * インスタンスを作って読む（登録済みなら新規インスタンスが返る）。</p>
+	 * インスタンスを作って読む。{@code THSpellCard} はフィールドを共有する
+	 * シングルトン的な設計（{@code THSpellCard.instance}）なので、ここで作った
+	 * インスタンスはレベル読み取りにしか使わない。</p>
 	 */
 	protected int getLevel(int spellCardID)
 	{
@@ -136,13 +139,13 @@ public class RenderSpellCard extends EntityRenderer<EntitySpellCard>
 			float x3, float y3, float z3, float u3, float v3)
 	{
 		buffer.addVertex(poseStack.last().pose(), x0, y0, z0).setColor(255, 255, 255, 255).setUv(u0, v0)
-				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
 		buffer.addVertex(poseStack.last().pose(), x1, y1, z1).setColor(255, 255, 255, 255).setUv(u1, v1)
-				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
 		buffer.addVertex(poseStack.last().pose(), x2, y2, z2).setColor(255, 255, 255, 255).setUv(u2, v2)
-				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
 		buffer.addVertex(poseStack.last().pose(), x3, y3, z3).setColor(255, 255, 255, 255).setUv(u3, v3)
-				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
+				.setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0.0F, 1.0F, 0.0F);
 	}
 
 	/**

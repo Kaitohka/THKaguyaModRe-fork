@@ -56,8 +56,9 @@ public class RenderSakuyaStopWatch extends EntityRenderer<EntitySakuyaStopWatch>
 	@Override
 	public ResourceLocation getTextureLocation(EntitySakuyaStopWatch entity)
 	{
-		// 1.7.10 の RenderSakuyaStopWatch.getEntityTexture は SakuyaStopWatchTexture.png を返していた
-		// （ただし描画は毎回 SakuyaWatchTexture.png を bind していた）
+		// 1.7.10 の RenderSakuyaStopWatch.getEntityTexture は SakuyaStopWatchTexture.png を返していたが、
+		// 実際の bind は描画ごとに SakuyaWatchTexture.png だった。1.21.1 ではテクスチャは
+		// getTextureLocation 経由でしか解決されないため、描画で実際に使われていた方を返す。
 		return TEXTURE;
 	}
 

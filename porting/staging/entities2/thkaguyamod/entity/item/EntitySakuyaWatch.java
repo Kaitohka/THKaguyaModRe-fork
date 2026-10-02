@@ -56,7 +56,7 @@ public class EntitySakuyaWatch extends Entity
 	{
 		super(type, level);
 		noCulling = true;//中心が画面から外れても描画される（1.7.10 の ignoreFrustumCheck に相当）
-		//TODO K3-review: 1.7.10 の preventEntitySpawning / yOffset / shouldRenderInPass(-2) は
+//TODO K3-review: 1.7.10 の preventEntitySpawning / yOffset / shouldRenderInPass(-2) は
 		//1.21.1 に対応するフィールドが無い（MISC カテゴリで自然スポーンせず、y オフセットと描画パスは
 		//Renderer 側の責務になったため）。実害なしと判断して省略。
 		mode = 2;

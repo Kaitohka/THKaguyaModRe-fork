@@ -110,7 +110,10 @@ def parse_spawns(path):
             spawns.append((
                 m.group("cls"),
                 int(m.group("weight")),
-                int(m.group("min")),
+                # 1.21.1 的 SpawnerData.minCount 是 ExtraCodecs.POSITIVE_INT（>=1），
+                # 而旧代码里 sanae/sakuya/rinnosuke 是 0。JSON 里只能写 1，
+                # 与 maxCount 组合后与原 0~1 语义等价（原本受 98% 早退，实际也只会出 1 只）。
+                max(1, int(m.group("min"))),
                 int(m.group("max")),
                 m.group("category"),
                 m.group("biome"),

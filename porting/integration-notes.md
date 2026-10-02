@@ -31,6 +31,9 @@
 | P13 | 早苗符卡 Charge 守卫在 THKaguyaLib.checkSpellCardDeclaration 里恒通过 | agent-18/25 | K3 在库侧补 CHARGE 组件判定（物品侧已有重复判定，库侧补全后删物品侧） |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
+| P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
+| P17 | RenderSpellCard.getLevel 用 SpellCardRegistry 工厂实例化（THSpellCard 有静态 instance 字段） | agent-22 | 复核：工厂每次 new，静态 instance 语义需确认无串扰 |
+| P18 | SakuyaStopWatchTexture.png 原作声明但从未使用 | agent-22 | 保持现状（用 SakuyaWatchTexture），文档化 |
 
 ## 批次状态板
 
@@ -51,7 +54,7 @@
 | 武器物品 | agent-18 | 28 类（429 恢复 1 次） | ✅ 交付（stub javac 0错），⏸ 待 agent-17 实体后合并 |
 | 商店/万宝槌 GUI | agent-19 | 2 Menu + Payload | 🏃 |
 | 人物模型 | agent-21 | 16 模型 | 🏃 |
-| 道具渲染器 | agent-22 | 18 个 | 🏃 |
+| 道具渲染器 | agent-22 | 18 个 | ✅ 交付（javac 0错），⏸ 待实体批后合并；贴图已按其约定归位 entity/shot/ |
 | 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |
 | 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | ✅ 物品已合并（b252bed）；ModDispenserBehaviors ⏸ 待 SILVER_KNIFE |

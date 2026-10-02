@@ -1,0 +1,11 @@
+{
+  "comment": "全局战利品修饰器：地牢箱（minecraft:chests/simple_dungeon）追加小槌。subtable 的权重/数量与 1.7.10 的 DungeonHooks 附魔书条目等价（权重 1、1 个）；rolls 固定 1 会内联进原版单池（rolls 1~3），即每次开箱约 1/3 概率给小槌，与原 DungeonHooks 的 roll count 语义相近。",
+  "type": "neoforge:add_table",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "minecraft:chests/simple_dungeon"
+    }
+  ],
+  "table": "thkaguyamod:miracle_mallet_dungeon_loot"
+}

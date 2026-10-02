@@ -60,9 +60,11 @@ public class RenderSukima extends EntityRenderer<EntitySukima>
 		poseStack.translate(0.0F, 1.0F + Mth.sin((float)sukima.tickCount / 20F) * 0.1F, 0.0F);
 
 		int color = sukima.getColor();
+		// TODO K3-review: 1.7.10 で宣言されているだけで使われていない局所変数
+		//   （color2 / f3〜f9）。原実装の忠実さのためそのまま残す。
 		int color2 = 0;
-		float f3 = (float)(color2 * 16) / 64F;// 1.7.10 でも未使用
-		float f4 = (float)(color2 * 16 + 16) / 64F;// 同上
+		float f3 = (float)(color2 * 16) / 64F;
+		float f4 = (float)(color2 * 16 + 16) / 64F;
 		float f5 = 0.0F;
 		float f6 = 1.0F;
 		float f7 = 1.0F;

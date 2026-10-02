@@ -33,10 +33,12 @@ def fnum(lit):
     lit = re.sub(r'[FfDd]$', '', lit)
     if lit.startswith('+'):
         lit = lit[1:]
+    if re.fullmatch(r'-?\d+', lit):
+        lit += '.0'
     return lit + 'F'
 
 
-def parse(path):
+def parse(path, mirror_pre=None):
     raw = open(path, encoding='utf-8').read()
     src = strip_comments(raw)
     tw, th = None, None
@@ -88,6 +90,10 @@ def parse(path):
                 links.append((m.group(1), m.group(2)))
             else:
                 links.append((m.group(3), m.group(4)))
+    for p in parts:
+        # ModelRenderer.addBox() snapshots renderer.mirror into every ModelBox it
+        # creates, so only a `mirror = true` that precedes the addBox call counts.
+        p['mirror'] = bool(mirror_pre) and p['name'] in mirror_pre
     return dict(name=os.path.basename(path)[:-5], tex=(tw, th), parts=parts, order=order, links=links)
 
 

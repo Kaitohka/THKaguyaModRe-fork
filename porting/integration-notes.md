@@ -47,7 +47,7 @@
 | 商店/万宝槌 GUI | agent-19 | 2 Menu + Payload | 🏃 |
 | 人物模型 | agent-21 | 16 模型 | 🏃 |
 | 道具渲染器 | agent-22 | 18 个 | 🏃 |
-| 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | 🏃 |
+| 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |
 | 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | 🏃 |
 | 数据 JSON | agent-26 | 生成规则 + 战利品 | 🏃 |
@@ -58,3 +58,12 @@
 |---|---|---|
 | 阶段3 | build+runClient | PASS（0 配方/模型错误） |
 | FIX 批后（a976221） | build+runClient（smoke_test.sh） | PASS（主菜单到达、0 相关 ERROR） |
+| 环境修复后 | 双模式 smoke（R3闸+client+server） | **PASS 双端全绿** |
+
+## 事故台账
+
+| # | 事故 | 根因 | 处置 | 状态 |
+|---|---|---|---|---|
+| I1 | 用户客户端"进世界崩溃" | smoke_test.sh 清理步骤按 'neoforge-1.21.1' 宽泛匹配杀进程，误杀用户窗口 | 专用 run 配置 clientSmoke/serverSmoke + 独立 run-smoke/ 目录；MDG 经 argfile 传参致 -D 标记不上命令行 → 改按 argfile 文件名 `SmokeRunVmArgs` 精确匹配（已实测验证） | ✅ 修复 |
+| I2 | 专用服务端无法启动 | 本机 Steamcommunity302 代理 TLS 拦截，Java 信任库不认 libraries.minecraft.net（netty epoll 下载 PKIX 失败） | 构建工程信任库（cacerts+代理CA链）`porting/tools/thkaguya-truststore.jks`，复制到 `~/.gradle/` 并配 `org.gradle.jvmargs` trustStore | ✅ 服务端 Done(5.4s) |
+| I3 | 429 限流 ×3（agent-18/23/25） | 13 路并发超每分钟 21 次请求上限 | 无损恢复；稳态并发 ≤10；批次空位补入 | ✅ 台账 |

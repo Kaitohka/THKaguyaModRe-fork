@@ -64,6 +64,22 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        // Smoke-test run configs: tagged JVMs so the harness can kill only its own
+        // processes and never a client window the user is playing on.
+        clientSmoke {
+            client()
+            gameDirectory = project.file('run-smoke')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'thkaguyamod.smoke', 'true'
+        }
+
+        serverSmoke {
+            server()
+            programArgument '--nogui'
+            gameDirectory = project.file('run-smoke')
+            systemProperty 'thkaguyamod.smoke', 'true'
+        }
+
         // This run config launches GameTestServer and runs all registered gametests, then exits.
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.

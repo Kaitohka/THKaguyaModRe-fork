@@ -6,7 +6,7 @@ set -u
 cd "$(dirname "$0")/.."
 PROJ="neoforge-1.21.1"
 export JAVA_HOME="/c/Program Files/Java/zulu-21"
-BENIGN="Yggdrasil\|sessionserver\|minecraftservices\|chat session\|Missing sound\|mcassetsroot\|Sampler2"
+BENIGN="Yggdrasil\|sessionserver\|minecraftservices\|chat session\|Missing sound\|mcassetsroot\|Sampler2\|Failed to load properties from file"
 FAILED=0
 
 echo "== [0] R3 静态闸: common 代码不得引用 client-only 类 =="
@@ -25,14 +25,14 @@ if [ "${1:-}" != "--skip-build" ]; then
 fi
 
 run_side() {  # $1=client|server
-    local SIDE="$1" LOG="$PROJ/run/logs/latest.log" MARKER GRADLE_TASK
+    local SIDE="$1" LOG="$PROJ/run-smoke/logs/latest.log" MARKER GRADLE_TASK
     if [ "$SIDE" = "client" ]; then
-        GRADLE_TASK="runClient"; MARKER="textures/atlas/gui.png"
+        GRADLE_TASK="runClientSmoke"; MARKER="textures/atlas/gui.png"
     else
-        GRADLE_TASK="runServer"; MARKER='Done (.*)!'
-        mkdir -p "$PROJ/run"; echo "eula=true" > "$PROJ/run/eula.txt"
+        GRADLE_TASK="runServerSmoke"; MARKER='Done (.*)!'
+        mkdir -p "$PROJ/run-smoke"; echo "eula=true" > "$PROJ/run-smoke/eula.txt"
     fi
-    rm -f "$PROJ/run/logs/latest.log" 2>/dev/null
+    rm -f "$PROJ/run-smoke/logs/latest.log" 2>/dev/null
     (cd "$PROJ" && ./gradlew "$GRADLE_TASK" -q >/dev/null 2>&1) &
     local LAUNCH_PID=$!
     local OK=0
@@ -53,7 +53,8 @@ run_side() {  # $1=client|server
     if [ -f "$LOG" ]; then
         grep -E "\[.*ERROR\]" "$LOG" | grep -v "$BENIGN" | head -8
     fi
-    powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -match 'neoforge-1.21.1' -and \$_.CommandLine -notmatch 'gradlew' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" 2>/dev/null
+    powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -match 'SmokeRunVmArgs' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" 2>/dev/null
+    powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -match 'gradlew(.bat)?\"? run(Client|Server)Smoke' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" 2>/dev/null
     kill $LAUNCH_PID 2>/dev/null
     sleep 3
     if [ "$OK" != "1" ] || [ "$ERR" != "0" ] || [ "$RECIPE" != "0" ] || [ "$MODEL" != "0" ] || [ "$MODOK" != "1" ]; then

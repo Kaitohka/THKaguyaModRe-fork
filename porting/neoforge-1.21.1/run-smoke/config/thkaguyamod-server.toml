@@ -1,0 +1,47 @@
+[Limit]
+	"Use Master Spark" = true
+	"Master Spark Destroys Blocks" = true
+	"Can Use Wall-Passing Chisel" = true
+	# Default: 32
+	# Range: 1 ~ 512
+	"Shot Max Number" = 32
+	# Default: 8
+	# Range: 1 ~ 128
+	"Laser Max Number" = 8
+
+[Effect]
+	"Appear Time stop effect" = true
+	"Use default Gap(Sukima)SE" = true
+
+["SE vol"]
+	# Default: 50
+	# Range: 0 ~ 500
+	"Spell Card Vol" = 50
+	# Default: 50
+	# Range: 0 ~ 500
+	"Master Spark Vol" = 50
+	# Default: 20
+	# Range: 0 ~ 500
+	"Hisouten Vol" = 20
+	# Default: 50
+	# Range: 0 ~ 500
+	"Down Vol" = 50
+
+[Danmaku]
+	"Danmaku 1 Kill Mode" = false
+	"Spawn Danmaku Mob" = true
+	"Spawn Fairy" = true
+	"Spawn Phantom" = true
+	"Spawn Danmaku Mob Boss" = true
+	# Default: 50
+	# Range: 0 ~ 100
+	"Fairy Spawn Rate(%)" = 50
+	# Default: 2
+	# Range: 0 ~ 4
+	"Danmaku Level" = 2
+	# Default: 80
+	# Range: 0 ~ 100
+	"Hit Rate of Enemy Danmaku(row=0,high=100)" = 80
+
+[Other]
+	"Spawn Hanabeeper" = false

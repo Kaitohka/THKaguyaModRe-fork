@@ -1,0 +1,21 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "#c:is_plains",
+    "#minecraft:is_forest",
+    "#c:is_desert",
+    "#minecraft:is_hill",
+    "#minecraft:is_mountain",
+    "#minecraft:is_taiga",
+    "#c:is_swamp",
+    "#c:is_snowy_plains",
+    "#c:is_snowy",
+    "#minecraft:is_jungle"
+  ],
+  "spawners": {
+    "type": "thkaguyamod:sunflower_fairy",
+    "weight": 3,
+    "minCount": 1,
+    "maxCount": 1
+  }
+}

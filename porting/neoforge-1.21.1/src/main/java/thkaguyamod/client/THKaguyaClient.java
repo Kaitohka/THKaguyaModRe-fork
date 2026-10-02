@@ -7,6 +7,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import thkaguyamod.THKaguyaMod;
@@ -75,6 +76,8 @@ import thkaguyamod.client.renderer.living.RenderToziko;
 import thkaguyamod.client.renderer.living.RenderWriggle;
 import thkaguyamod.client.renderer.shot.RenderTHLaser;
 import thkaguyamod.client.renderer.shot.RenderTHShot;
+import thkaguyamod.client.renderer.blockentity.DivineSpiritBlockEntityRenderer;
+import thkaguyamod.init.ModBlockEntities;
 import thkaguyamod.init.ModEntities;
 import thkaguyamod.init.ModMenus;
 
@@ -200,6 +203,9 @@ public class THKaguyaClient {
             event.registerEntityRenderer(ModEntities.CURSED_DECOY_DOLL.get(), RenderCursedDecoyDoll::new);
             // 弹幕苦力怕沿用原版渲染器（1.7.10 无自定义渲染器）
             event.registerEntityRenderer(ModEntities.DANMAKU_CREEPER.get(), CreeperRenderer::new);
+            event.registerBlockEntityRenderer(ModBlockEntities.DIVINE_SPIRIT.get(), DivineSpiritBlockEntityRenderer::new);
         });
+
+        modEventBus.addListener(RegisterClientExtensionsEvent.class, ModClientExtensions::register);
     }
 }

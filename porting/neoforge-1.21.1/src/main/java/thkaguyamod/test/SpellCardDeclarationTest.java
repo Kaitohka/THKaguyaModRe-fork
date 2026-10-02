@@ -7,6 +7,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -61,14 +62,7 @@ public final class SpellCardDeclarationTest {
     @GameTest(template = TEMPLATE)
     public static void creativePlayerDeclaresViaItemUse(GameTestHelper helper) {
         Player player = placeUser(helper, GameType.CREATIVE);
-        ArmorStand target = spawnTarget(helper);
-
-        THKaguyaMod.LOGGER.info("DIAG player={} bb={} eye={} target={} targetBb={} alive={} removed={}",
-                player.position(), player.getBoundingBox(), player.getEyeY(),
-                target.position(), target.getBoundingBox(), target.isAlive(), target.isRemoved());
-        List<net.minecraft.world.entity.Entity> near = helper.getLevel().getEntities(player,
-                player.getBoundingBox().inflate(16.0D));
-        THKaguyaMod.LOGGER.info("DIAG nearby entities: {}", near.stream().map(e -> e.getType() + "@" + e.position()).toList());
+        spawnTarget(helper);
 
         ItemStack stack = new ItemStack(ModItems.SPELL_CARD_MUSOU_FUUIN.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, stack);
@@ -158,20 +152,43 @@ public final class SpellCardDeclarationTest {
         helper.succeed();
     }
 
+    /**
+     * 1.7.10 的目标筛选是「LivingEntity 且不是 {@code EntityAnimal} 也不是 {@code EntityVillager}」，
+     * 1.21.1 的等价类是 {@code Animal} / {@code AbstractVillager}。
+     *
+     * <p>这条测试把「猪不是合格目标」写死成回归断言：玩家对着猪右键时，两个版本都是<b>静默失败</b>
+     * （没有任何反馈），这正是「右键无反应」报告里最容易踩到的一种情形。合格目标是
+     * 僵尸 / 骷髅 / 末影人 / 本 mod 的弹幕生物 / 盔甲架这类非 Animal、非村民的生物。
+     */
+    @GameTest(template = TEMPLATE)
+    public static void animalTargetIsRejectedLikeIn1710(GameTestHelper helper) {
+        Player player = placeUser(helper, GameType.CREATIVE);
+        Pig pig = helper.spawnWithNoFreeWill(EntityType.PIG, TARGET_POS);
+        pig.setNoGravity(true);
+
+        ItemStack stack = new ItemStack(ModItems.SPELL_CARD_MUSOU_FUUIN.get());
+        StackUse use = declare(helper, player, stack);
+
+        helper.assertValueEqual(use.cards().size(), 0,
+                "猪属于 Animal，1.7.10 与 1.21.1 都把它排除在符卡目标之外（对着猪右键必然静默失败）");
+        helper.succeed();
+    }
+
     /* ------------------------------------------------------------------ */
 
     private static Player placeUser(GameTestHelper helper, GameType gameType) {
         Player player = helper.makeMockPlayer(gameType);
-        player.moveTo(helper.absoluteVec(USER_POS), FACING_POSITIVE_X, 0.0F);
-        // # 诊断: 最初 PixelBuffer 方式也没测出来 → 怀疑 mock player 不在实体 tick 列表里、
-        // 线段的起点（眼高）一直停在构造时的 (0,0,0)。这里强制把包围盒刷到目标位置再验证。
-        player.setPos(player.getX(), player.getY(), player.getZ());
+        // # 诊断保留: mock player 不在实体 tick 列表里，构造后必须显式 moveTo 才会把包围盒
+        // 刷到目标位置（不刷的话射线起点还停在 (0,0,0)，测试会误报「没有目标」）。
+        Vec3 pos = helper.absoluteVec(USER_POS);
+        player.moveTo(pos, FACING_POSITIVE_X, 0.0F);
+        player.setPos(pos.x, pos.y, pos.z);
         return player;
     }
 
     private static ArmorStand spawnTarget(GameTestHelper helper) {
-        // # 诊断: helper.spawn(type, Vec3) 内部已经调用 absoluteVec；这里必须传相对坐标。
-        // （第一版传了 absoluteVec(TARGET_POS)，坐标被换算两次 → 目标跑到 1400 万格外，射线必然打空。）
+        // # 诊断保留: helper.spawn(type, Vec3) 内部已经调用 absoluteVec，这里必须传相对坐标。
+        // （若再套一层 absoluteVec，坐标会被换算两次 → 目标跑到千万格外，射线必然打空。）
         ArmorStand target = helper.spawn(EntityType.ARMOR_STAND, TARGET_POS);
         target.setNoGravity(true);
         return target;

@@ -56,10 +56,12 @@ public class EntityTHShot extends Entity
 	 * <p># perf: A2 — 1.7.10 は {@code dataWatcher} の更新値が「実際に変化したときだけ」送られていたが、
 	 * 1.21.1 の {@code SynchedEntityData#isDirty()} は「set が呼ばれたら常に true」なので、
 	 * 毎 tick {@code DATA_ANIMATION_COUNT} を書き換えると {@code ServerEntity.sendChanges()} の
-	 * {@code updateInterval} を素通りして毎 tick 位置+データパケットが出ていた
-	 * （{@code ServerEntity:121} の {@code || getEntityData().isDirty()} が interval 判定より後にある）。
-	 * そこでクライアントは同期槽ではなく「受信した基準値 + tickCount の差分」で算出する。
-	 * 基準値は遅延フェーズ・実体化の瞬間・低速同期（{@link #ANIMATION_SYNC_INTERVAL}）でのみ送る。
+	 * {@code updateInterval(1)} 判定を素通りして毎 tick データパケットが出ていた
+	 * （{@code ServerEntity} の送信条件は {@code tickCount % updateInterval == 0 || hasImpulse || isDirty()}、
+	 * {@code updateInterval} が 1 の弾では移動パケット自体は元から毎 tick 出ており、増えていたのは
+	 * {@code ClientboundSetEntityDataPacket} 側）。そこでクライアントは同期槽ではなく
+	 * 「受信した基準値 + tickCount の差分」で算出する。基準値は遅延フェーズ・実体化直後・
+	 * 低速同期（{@link #ANIMATION_SYNC_INTERVAL}）でのみ送る。
 	 */
 	private int clientAnimationBase;
 	/** {@link #clientAnimationBase} を記録したときの tickCount。 */
@@ -714,11 +716,11 @@ public class EntityTHShot extends Entity
 
 		// # perf: A2 — サーバー側のアニメーションカウントをここから先は同期槽に書かない。
 		//   1.7.10 の dataWatcher は「値が実際に変化したときだけ」dirty になったが、
-		//   1.21.1 は set を呼ぶたび isDirty()==true になり、ServerEntity.sendChanges() の
-		//   updateInterval 判定を素通りして毎 tick 位置+データパケットを送ってしまう
-		//   （ServerEntity:121 の `|| getEntityData().isDirty()`）。フライト中の弾のカウントは
-		//   サーバーは lastTime から、クライアントは受信基準値 + tickCount から復元する
-		//   （getAnimationCount() 参照）。
+		//   1.21.1 は set を呼ぶたび isDirty()==true になり、ServerEntity の送信条件
+		//   （tickCount % updateInterval == 0 || hasImpulse || isDirty()）の isDirty() を満たし続ける。
+		//   フライト中の弾のカウントは、サーバーは lastTime から、クライアントは受信基準値 +
+		//   tickCount から復元する（getAnimationCount() 参照）。これで同期槽に書くのは
+		//   遅延フェーズ + 実体化直後 + 約 1/20 tick だけになる。
 		clearFire();//火はつかないようにする
 
 		//時間が進んでいないなら
@@ -746,21 +748,18 @@ public class EntityTHShot extends Entity
 				}
 				// # perf: A2 — 実体化後は同期槽を毎 tick 書き換えない（旧: setAnimationCount(lastTime)）。
 				//   1.7.10 の dataWatcher は「値が実際に変化したときだけ」dirty になったが、1.21.1 は
-				//   set を呼ぶたび isDirty()==true になり、ServerEntity.sendChanges() の updateInterval
-				//   判定を素通りして毎 tick 位置+データパケットを送ってしまう
-				//   （ServerEntity:121 の `|| getEntityData().isDirty()`）。
-				//   サーバー側の値は getAnimationCount() が lastTime から導出するので意味は変わらず、
-				//   同期槽への書き込みは下の「実体化直後 + ANIMATION_SYNC_INTERVAL ごと」だけになる。
+				//   set を呼ぶたび isDirty()==true になり、ServerEntity の送信条件の isDirty() を
+				//   満たし続けてしまう。サーバー側の値は getAnimationCount() が lastTime から
+				//   導出するので意味は変わらず、同期槽への書き込みは下の
+				//   「実体化直後 + ANIMATION_SYNC_INTERVAL ごと」だけになる。
 			}
 		}
 
 		if(!level().isClientSide)
 		{
-			// # perf: A2 — 実体化の瞬間と、その後 ANIMATION_SYNC_INTERVAL tick ごとにだけ基準値を送る。
-			//   発射後のカウントは同期槽に書かない（書くと isDirty() が updateInterval を素通りして
-			//   毎 tick 位置+データパケットが出る）。同期を受けたクライアントは
-			//   「基準値 + tickCount の差分」でカウントを進めるので、標準状態ではサーバーの値と一致する。
-			//   ANIMATION_SYNC_INTERVAL ごとの再同期は、時刻停止やクライアント側の取りこぼしの保険
+			// # perf: A2 — 実体化直後と、その後 ANIMATION_SYNC_INTERVAL tick ごとにだけ基準値を送る。
+			//   同期を受けたクライアントは「基準値 + tickCount の差分」でカウントを進めるので、
+			//   通常時はサーバーの値と一致する。定期的な再同期は時間停止や取りこぼしの保険
 			//   （同期槽に書くのは実体化直後の 1 回 + 約 1/20 tick だけになる）。
 			int animationCount = getAnimationCount();
 			if(animationCount >= 0
@@ -1878,8 +1877,9 @@ public class EntityTHShot extends Entity
 			return this.clientAnimationBase + (tickCount - this.clientAnimationBaseTick) - 1000;
 		}
 		// # perf: A2 — サーバー側は同期槽を毎 tick 書かない代わりに、ここで 1.7.10 と同じ値を導出する。
-		//   原版の「遅延期はカウントダウン（-delay → -1）、実体化後は setAnimationCount(lastTime)」を再現する
-		//   （実体化後は timeProcess() が各 tick で lastTime = tickCount に更新する）。
+		//   原版の「遅延期は -delay → -1 のカウントダウン、実体化以降は setAnimationCount(lastTime)」を
+		//   再現する（raw < 1000 の間は遅延期の値、raw が 1000 に到達したら実体化済みなので
+		//   timeProcess() が更新する lastTime = 送りたかった値、を使う）。
 		int raw = getAnimationCountRaw();
 		if(raw < 1000)
 		{

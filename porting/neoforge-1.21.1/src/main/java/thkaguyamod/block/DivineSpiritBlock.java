@@ -3,6 +3,7 @@ package thkaguyamod.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -22,5 +23,11 @@ public class DivineSpiritBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new DivineSpiritBlockEntity(pos, state);
+    }
+
+    /** 1.7.10: 自定义 renderId + ISBRH 空实现 ⇒ 本体不可见，仅 TESR 面片可见。 */
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
     }
 }

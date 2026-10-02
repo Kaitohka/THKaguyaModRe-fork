@@ -58,8 +58,18 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 
 	public int lostTarget;
 
-	/** 指定移動するときの方向 */
+	/** 指定移動するときの方向（正規化ベクトル。速度は {@link #moveVecSpeed} 側に持つ） */
 	protected Vec3 moveVec;
+
+	/**
+	 * {@link #moveVec} にかける速度。
+	 *
+	 * <p># perf: A12 — 1.7.10 は {@code moveVec} の成分をその場で speed 倍していた（{@code moveVec.xCoord *= speed}）。
+	 * 1.21.1 の {@code Vec3} は不変なので、{@code move()} のたびにスケール済み {@code Vec3} を作ると
+	 * 指示 1 回につき 2 個、指令メソッド経由だと合計 3 個の {@code Vec3} が飛んでいた。
+	 * 方向（正規化ベクトル）と速度を分けて保持し、実際に必要な {@code tick()} の 1 個だけに減らす。
+	 */
+	protected double moveVecSpeed = 1.0D;
 
 	/**
 	 * # perf: A11 — 飛行高さの地面探索で使い回す可変ブロック座標。
@@ -725,10 +735,10 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	protected void move(Vec3 move, double speed, int time)
 	{
 		// # perf: A12 — 1.7.10 は moveVec の成分をその場で speed 倍していた。Vec3 は不変なので
-		//   毎 tick の一時 Vec3 は避けられないが、ここで 1 回だけ正規化した方向ベクトルを作り、
-		//   以後は moveVec を成分で乗算する（moveRight/Left/Forward/Back が moveVec を経由して
-		//   2 回 new していた分を削減。呼び出し側の new Vec3 も moveVec の直接利用に変えてある）。
-		moveVec = speed == 1.0D ? move : new Vec3(move.x * speed, move.y * speed, move.z * speed);
+		//   ここでスケール済みベクトルを作ると指示 1 回につき 2 個の Vec3 が出る。方向と速度を
+		//   分けて保持し、実使用（tick 内の move() 呼び出し）で 1 個だけ作る形にした。
+		moveVec = move;
+		moveVecSpeed = speed;
 		moveTimer = time;
 		moveTimerMax = time;
 	}
@@ -740,8 +750,8 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 */
 	protected void moveRight(double speed, int time)
 	{
-		// # perf: A12 — 元は moveVec に代入してから move() に渡していたため、move() 内の再代入で
-		//   一時 Vec3 が 1 個無駄になっていた。直接渡して 2 個（方向ベクトル + スケール後）に減らす。
+		// # perf: A12 — 元は moveVec に代入してから move() に渡していた（move() 内で再度 moveVec を
+		//   上書き）。方向ベクトルは getVecFromAngle が作る 1 個だけで済むよう直接渡す。
 		move(THShotLib.getVecFromAngle(getYRot() + 90F, getXRot()), speed, time);
 	}
 
@@ -954,14 +964,13 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 
 		if(moveTimer > 0)
 		{
-			double moveRate = Math.cos((double)moveTimer / (double)moveTimerMax * Math.PI / 2.0D);
+			double moveRate = Math.cos((double)moveTimer / (double)moveTimerMax * Math.PI / 2.0D) * moveVecSpeed;
 			if(!level().isClientSide)
 			{
 				// # perf: A12 — 1.7.10 は moveVec をその場で乗算していた。Vec3 は不変なので
-				//   毎 tick の new Vec3 は避けられないが、成分はあらかじめ moveVec に畳んでおき
-				//   （move() 側でスカラー乗算済み）、ここでは「現在の移動量」を 1 回だけ作る。
+				//   実際に動かすこの 1 箇所だけ Vec3 を作り、方向 × 速度 × 時間減衰をまとめて掛ける。
 				this.move(net.minecraft.world.entity.MoverType.SELF,
-						moveVec.scale(moveRate));
+						new Vec3(moveVec.x * moveRate, moveVec.y * moveRate, moveVec.z * moveRate));
 			}
 			moveTimer--;
 		}

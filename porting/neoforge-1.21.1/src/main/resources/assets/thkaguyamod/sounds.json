@@ -2,25 +2,25 @@
   "masterspark": {
     "category": "master",
     "sounds": [
-      {"name": "minecraft:entity.lightning_bolt.impact"}
+      {"name": "minecraft:entity.lightning_bolt.impact", "type": "event"}
     ]
   },
   "spellcard": {
     "category": "master",
     "sounds": [
-      {"name": "minecraft:entity.player.levelup"}
+      {"name": "minecraft:entity.player.levelup", "type": "event"}
     ]
   },
   "sukima": {
     "category": "master",
     "sounds": [
-      {"name": "minecraft:entity.enderman.teleport"}
+      {"name": "minecraft:entity.enderman.teleport", "type": "event"}
     ]
   },
   "down": {
     "category": "master",
     "sounds": [
-      {"name": "minecraft:entity.player.death"}
+      {"name": "minecraft:entity.player.death", "type": "event"}
     ]
   }
 }

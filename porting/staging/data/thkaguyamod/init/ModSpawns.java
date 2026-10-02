@@ -3,11 +3,10 @@ package thkaguyamod.init;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
@@ -23,19 +22,33 @@ import thkaguyamod.config.ModConfig;
  *
  * <p>分工：<b>权重 / 数量 / 群系</b> 由 {@code data/thkaguyamod/biome_modifier/*.json}
  * （{@code neoforge:add_spawns}）表达；<b>落点与生成条件</b>（旧 {@code getCanSpawnHere}）
- * 由本类的 {@link net.minecraft.world.entity.SpawnPlacements.SpawnPredicate} 表达。
+ * 由本类注册的 {@link net.minecraft.world.entity.SpawnPlacements.SpawnPredicate} 表达。
  *
  * <p>本类同时承担 <b>config 开关</b>：{@code spawnDanmakuMob / spawnFairy / spawnPhantom /
  * spawnBoss / spawnHanabeeper} 是运行期配置，JSON 层无法表达，因此放进谓词里读
- * {@link ModConfig}（与 1.7.10 在 {@code registerEntitySpawn()} 里用 if 包住 addSpawn 等价）。
+ * {@link ModConfig}——等价于 1.7.10 在 {@code registerEntitySpawn()} 里用 if 包住 addSpawn。
  * 谓词只在自然生成路径被调用（{@code NaturalSpawner} → {@code SpawnPlacements.checkSpawnRules}），
- * 刷怪笼 / 刷怪蛋不受影响，与原版行为一致。
+ * 刷怪笼 / 刷怪蛋 / {@code /summon} 都不受影响，与原版一致。
+ *
+ * <p><b>⚠ 与生物批（living）的职责边界 —— 唯一一处必须裁决的重复风险</b><br>
+ * 本类的谓词已把旧 {@code getCanSpawnHere} 的全部条件（概率、光照、脚下方块）都实现了。
+ * 若生物批同时在实体里覆写 {@code Mob#checkSpawnRules} 实现同一套判断，两处会 <b>AND 叠加</b>，
+ * 概率类条件会被<b>重复抽样</b>：
+ * <ul>
+ *   <li>妖精的 {@code rand.nextInt(100) < fairySpawnRate}（默认 50%）会变成 25%；</li>
+ *   <li>早苗/咲夜/霖之助的 {@code < 98} 会从 2% 变成 0.04%。</li>
+ * </ul>
+ * <b>建议</b>：条件只保留本类（自然生成必经此处，且 config 门控集中在一处），
+ * 实体侧不要覆写 {@code checkSpawnRules}，或让它直接 {@code return true;}。
+ * 若生物批已经实现，请删除本类对应谓词里的重复判断（保留 config 门控与落点检查即可），
+ * 二选一，不要两边都留。
  *
  * <h2>接线（主控在步骤 2 生物批次合并后执行）</h2>
  * <ol>
  *   <li>本文件落到 {@code thkaguyamod/init/ModSpawns.java}。</li>
  *   <li>{@code THKaguyaMod} 构造器里加 {@code ModSpawns.register(modEventBus);}。</li>
- *   <li>确认 {@link ModEntities} 里存在下列 {@code DeferredHolder} 字段（本类依赖的注册名契约）：
+ *   <li>确认 {@link ModEntities} 里有下列字段（本类依赖的注册名契约，注册名已与
+ *       {@code data/thkaguyamod/biome_modifier/*.json} 对齐）：
  *     <pre>
  * TH_FAIRY          -> thkaguyamod:th_fairy
  * SUNFLOWER_FAIRY   -> thkaguyamod:sunflower_fairy
@@ -49,19 +62,15 @@ import thkaguyamod.config.ModConfig;
  * SAKUYA            -> thkaguyamod:sakuya
  * RINNOSUKE         -> thkaguyamod:rinnosuke
  *     </pre>
- *     字段名不符时改本文件的引用即可（JSON 只依赖注册名，不依赖字段名）。</li>
+ *     字段名不符时改本文件的引用即可（JSON 只依赖注册名，不依赖 Java 字段名）。</li>
  *   <li>MobCategory 必须与 1.7.10 的 {@code EnumCreatureType} 对齐，否则生成时段/上限不同：
- *     妖精·幽灵·花火·Boss 系 = {@code MONSTER}；早苗 / 咲夜 / 霖之助 = {@code AMBIENT}
- *     （旧 {@code EnumCreatureType.ambient}）。</li>
+ *     妖精 / 花之妖精 / 幽灵 / 花火 / 琪露诺 / 露米娅 / 屠自古 / 莉格露 = {@code MONSTER}；
+ *     早苗 / 咲夜 / 霖之助 = {@code AMBIENT}（旧 {@code EnumCreatureType.ambient}）。</li>
  * </ol>
  *
- * <p><b>与生物批的分工</b>：旧 {@code getCanSpawnHere} 的等价实现写在下面的谓词里。
- * 若生物批已在实体 {@code checkSpawnRules} 里实现了同一套判断，两处会 AND 叠加——
- * 结果仍正确（更严格），但请只保留一处；建议保留本类（自然生成路径必经此处，
- * 且 config 门控集中在本类）。
- *
- * <p>已知偏差：旧 {@code super.getCanSpawnHere()} 含「无实体碰撞 + 不在液体中」两项，
- * 前者需要实体实例，{@code SpawnPredicate} 拿不到，用 ON_GROUND 放置类型 + 液体检查近似。
+ * <p>已知偏差：旧 {@code super.getCanSpawnHere()} 还包含「无实体碰撞」一项，
+ * {@code SpawnPredicate} 拿不到实体实例，无法表达；由 {@code ON_GROUND} 放置类型
+ * 与 {@code MobSpawnType} 阶段的 {@code Mob#checkSpawnObstruction} 兜底。
  */
 public final class ModSpawns {
 
@@ -72,8 +81,10 @@ public final class ModSpawns {
     }
 
     private static void onRegisterSpawnPlacements(RegisterSpawnPlacementsEvent event) {
-        // 全部为新增条目，因此必须给出非空 placementType + heightmap（NeoForge 要求）。
-        // 1.7.10 全部是地表生成（EntityCreature / EntityVillager 系），落点用 ON_GROUND。
+        // 这些实体在 vanilla 的 SpawnPlacements 表里没有条目，属「新增注册」，
+        // 因此必须给出非空 placementType + heightmap（NeoForge 会校验），否则抛 NPE。
+        // 1.7.10 全部是地表生成（EntityCreature / EntityVillager 系）→ ON_GROUND。
+        // 谓词签名统一用 EntityType<?>，以便方法引用可适配任意 SpawnPredicate<T>。
         event.register(ModEntities.TH_FAIRY.get(), SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ModSpawns::fairySpawnRules,
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
@@ -116,16 +127,16 @@ public final class ModSpawns {
     /**
      * 妖精 / 花之妖精（EntityTHFairy 及子类 EntitySunFlowerFairy）。
      *
-     * <p>1.7.10 {@code EntityTHFairy#getCanSpawnHere}：
+     * <p>对应 1.7.10 {@code EntityTHFairy#getCanSpawnHere}：
      * <ol>
      *   <li>{@code rand.nextInt(100) < fairySpawnRate} → 拒绝（fairySpawnRate = 100 − 配置百分比）；</li>
      *   <li>{@code y < 64} 时再以 {@code y < rand.nextInt(64)} 概率拒绝（越低越难生成）；</li>
-     *   <li>天空光 − 减光量 ≤ 7 → 拒绝（即要求地表白天）；</li>
+     *   <li>天空光 − 减光量 ≤ 7 → 拒绝（要求地表白天）；</li>
      *   <li>脚下必须是草 / 土 / 沙。</li>
      * </ol>
-     * EntitySunFlowerFairy 未覆写该方法，条件完全相同（仅权重/数量不同）。
+     * EntitySunFlowerFairy 未覆写该方法，条件完全相同（只有权重/数量不同）。
      */
-    private static <T extends Mob> boolean fairySpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean fairySpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnFairy) {
             return false;
@@ -138,7 +149,7 @@ public final class ModSpawns {
         if (pos.getY() < 64 && pos.getY() < random.nextInt(64)) {
             return false;
         }
-        // 1.7.10: getSavedLightValue(Sky) - skylightSubtracted <= 7 → false
+        // 1.7.10: getSavedLightValue(EnumSkyBlock.Sky, x, y, z) - skylightSubtracted <= 7 → false
         if (level.getBrightness(LightLayer.SKY, pos) - level.getSkyDarken() <= 7) {
             return false;
         }
@@ -148,33 +159,32 @@ public final class ModSpawns {
     }
 
     /**
-     * 幽灵（EntityTHPhantom）：1.7.10 直接复用 {@code EntityMob} 的
-     * {@code difficulty != PEACEFUL && isValidLightLevel()}。
-     * 1.21.1 的对应物是 {@link Monster#checkMonsterSpawnRules}（亮度判断已现代化为
-     * {@code isDarkEnoughToSpawn}）。
+     * 幽灵（EntityTHPhantom）：1.7.10 复用了 {@code EntityMob#getCanSpawnHere} 的
+     * {@code difficulty != PEACEFUL && isValidLightLevel()}（EntityTHPhantom 只覆写
+     * getCanSpawnHere 来复用父类实现）。1.21.1 仍沿用同一套「暗处 + 非和平」判定。
      */
-    private static <T extends Mob> boolean phantomSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean phantomSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnPhantom) {
             return false;
         }
-        return Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random);
+        return isDarkEnoughToSpawn(level, pos, random);
     }
 
     /** 花火（EntityDanmakuCreeper）继承 vanilla EntityCreeper 的生成条件，无自定义覆写。 */
-    private static <T extends Mob> boolean creeperSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean creeperSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnHanabeeper) {
             return false;
         }
-        return Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random);
+        return isDarkEnoughToSpawn(level, pos, random);
     }
 
     /**
      * 琪露诺（EntityCirno）：fairySpawnRate 门控 + 生成位置必须是雪层 +
-     * 周围 ±2 格、y−1 处存在冰。
+     * 周围 ±2 格、y−1 处存在冰（1.7.10 逐格扫描，命中冰就通过）。
      */
-    private static <T extends Mob> boolean cirnoSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean cirnoSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnBoss) {
             return false;
@@ -199,31 +209,30 @@ public final class ModSpawns {
      * 露米娅（EntityRumia）：{@code difficulty != PEACEFUL && isValidLightLevel()}，
      * 与幽灵同源；受 spawnBoss 门控。
      */
-    private static <T extends Mob> boolean darkMonsterSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean darkMonsterSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnBoss) {
             return false;
         }
-        return Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random);
+        return isDarkEnoughToSpawn(level, pos, random);
     }
 
     /** 屠自古（EntityToziko）：暗处生成 + 必须正在雷雨（{@code worldObj.isThundering()}）。 */
-    private static <T extends Mob> boolean tozikoSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean tozikoSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnBoss) {
             return false;
         }
-        return level.getLevel().isThundering()
-                && Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random);
+        return level.getLevel().isThundering() && isDarkEnoughToSpawn(level, pos, random);
     }
 
     /** 莉格露（EntityWriggle）：暗处生成 + 周围 ±2 格、y−1 处存在水。 */
-    private static <T extends Mob> boolean wriggleSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean wriggleSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnBoss) {
             return false;
         }
-        if (!Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random)) {
+        if (!isDarkEnoughToSpawn(level, pos, random)) {
             return false;
         }
         for (int dx = -2; dx <= 2; dx++) {
@@ -238,15 +247,15 @@ public final class ModSpawns {
 
     /**
      * 早苗 / 咲夜 / 霖之助（EntitySanae / EntitySakuya / EntityRinnosuke）：
-     * 1.7.10 是 {@code super.getCanSpawnHere()}（无实体碰撞、不在液体中）之后
-     * {@code rand.nextInt(100) < 98 → false}，即约 2% 通过率；
+     * 1.7.10 先调 {@code super.getCanSpawnHere()}（无实体碰撞、不在液体中），
+     * 再 {@code rand.nextInt(100) < 98 → false}（约 2% 通过率），
      * 再要求脚下四邻方块不与正下方同质（避免生成在整片同种地面的正中）。
      *
-     * <p>这三位在 1.7.10 用 {@code EnumCreatureType.ambient} 注册，MobCategory 必须是
-     * AMBIENT 才能落在同一生成时段/上限里。1.7.10 的 ambient 生成本身带「仅夜晚」限制，
-     * 1.21.1 由原版 {@code NaturalSpawner} 自行处理，故此处不再加亮度判断。
+     * <p>这三位在 1.7.10 用 {@code EnumCreatureType.ambient} 注册，因此 MobCategory 必须是
+     * AMBIENT 才能落在同一生成时段 / 上限里；「仅夜晚」限制由原版 {@code NaturalSpawner}
+     * 对 AMBIENT 的处理承担，这里不再重复加亮度判断。
      */
-    private static <T extends Mob> boolean rareVisitorSpawnRules(EntityType<T> type, ServerLevelAccessor level,
+    private static boolean rareVisitorSpawnRules(EntityType<?> type, ServerLevelAccessor level,
             MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (!ModConfig.spawnDanmakuMob || !ModConfig.spawnBoss) {
             return false;
@@ -255,7 +264,7 @@ public final class ModSpawns {
         if (random.nextInt(100) < 98) {
             return false;
         }
-        // 1.7.10: super.getCanSpawnHere() 的「不在液体中」项（碰撞项无法在谓词里表达）
+        // 1.7.10: super.getCanSpawnHere() 的「不在液体中」项（「无碰撞」项谓词层无法表达）
         if (!level.getBlockState(pos).getFluidState().isEmpty()
                 || !level.getBlockState(pos.above()).getFluidState().isEmpty()) {
             return false;
@@ -269,5 +278,29 @@ public final class ModSpawns {
             return false;
         }
         return true;
+    }
+
+    /* ------------------------------------------------------------------ *
+     * 共用判定
+     * ------------------------------------------------------------------ */
+
+    /**
+     * 1.7.10 {@code EntityMob#isValidLightLevel()} 的直译（含和平难度检查，
+     * 即 {@code EntityMob#getCanSpawnHere} 的完整条件）。
+     *
+     * <p>不用 {@code Monster.checkMonsterSpawnRules}：该静态方法要求
+     * {@code EntityType<? extends Monster>}，而本类谓词统一以 {@code EntityType<?>} 签名
+     * 以便方法引用适配任意 {@code SpawnPredicate<T>}；同时逐行直译更贴近旧行为。
+     */
+    private static boolean isDarkEnoughToSpawn(ServerLevelAccessor level, BlockPos pos, RandomSource random) {
+        if (level.getDifficulty() == Difficulty.PEACEFUL) {
+            return false;
+        }
+        if (level.getBrightness(LightLayer.SKY, pos) > random.nextInt(32)) {
+            return false;
+        }
+        // 1.7.10 在雷雨时用 skylightSubtracted = 10 重新取值；1.21.1 的 getSkyDarken()
+        // 已把雷雨/夜晚的减光量算进去，不再手工改写世界状态（旧写法会污染全局字段）。
+        return level.getBrightness(LightLayer.BLOCK, pos) <= random.nextInt(8);
     }
 }

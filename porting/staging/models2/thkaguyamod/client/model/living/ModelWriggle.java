@@ -37,6 +37,7 @@ public class ModelWriggle extends ModelTouhouDefault<EntityWriggle>
 
     public ModelWriggle(ModelPart root)
     {
+        super(root);
         this.root = root;
         this.rightTouch = root.getChild("rightTouch");
         this.leftTouch = root.getChild("leftTouch");
@@ -45,7 +46,7 @@ public class ModelWriggle extends ModelTouhouDefault<EntityWriggle>
         this.Manto3 = root.getChild("Manto3");
         this.rightZubon = root.getChild("rightZubon");
         this.leftZubon = root.getChild("leftZubon");
-this.setTouhouModelData();
+        this.setTouhouModelData();
     }
 
     public static LayerDefinition createBodyLayer()

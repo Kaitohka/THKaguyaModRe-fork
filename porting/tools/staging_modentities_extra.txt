@@ -1,0 +1,13 @@
+//NOTE: このファイルは porting/tools/compile_staging.sh が「一時ビルドディレクトリ内の
+//ModEntities.java コピー」にのみ挿入する追記パッチです。主ソースツリーは変更しません。
+//実ツリーへの反映は人間／後続バッチが行う必要があります（詳細は staging/entities2 のレポート参照）。
+
+// ---- ここから登録エントリ（register() の直前に挿入される） ----
+    public static final Supplier<EntityType<thkaguyamod.entity.item.EntitySilverKnife>> SILVER_KNIFE = ENTITY_TYPES.register(
+            "silver_knife", () -> EntityType.Builder.<thkaguyamod.entity.item.EntitySilverKnife>of(thkaguyamod.entity.item.EntitySilverKnife::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<thkaguyamod.entity.effect.EntityMiracleCircle>> MIRACLE_CIRCLE = ENTITY_TYPES.register(
+            "miracle_circle", () -> EntityType.Builder.<thkaguyamod.entity.effect.EntityMiracleCircle>of(thkaguyamod.entity.effect.EntityMiracleCircle::new, MobCategory.MISC)
+                    .sized(2.0F, 0.0F).clientTrackingRange(40).updateInterval(1).noSave().build(""));
+// ---- ここまで ----

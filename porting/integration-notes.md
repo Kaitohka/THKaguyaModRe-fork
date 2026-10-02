@@ -34,6 +34,10 @@
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
 | P17 | RenderSpellCard.getLevel 用 SpellCardRegistry 工厂实例化（THSpellCard 有静态 instance 字段） | agent-22 | 复核：工厂每次 new，静态 instance 语义需确认无串扰 |
 | P18 | SakuyaStopWatchTexture.png 原作声明但从未使用 | agent-22 | 保持现状（用 SakuyaWatchTexture），文档化 |
+| P19 | 生成条件双采样风险：ModSpawns 谓词 vs 实体 checkSpawnRules | agent-26 | **配置读取集中在 ModSpawns**；生物批（agent-16）实体 checkSpawnRules 不得再读 ModConfig/概率条件——合并时强制审查删除 |
+| P20 | 万宝槌地牢注入概率 0.77% vs 原作意图 5% | agent-26 | 保持 GLM 现状（干净、可回退）；发布说明记录偏差 |
+| P21 | iceMountains → #c:is_snowy 略宽 | agent-26 | 接受（21w40a 合并群系所致），文档化 |
+| P22 | 原作 registerChestItem 为空方法（地牢战利品从未生效） | agent-26 | GLM 实现的是设计意图；发布说明注明 |
 
 ## 批次状态板
 
@@ -58,7 +62,7 @@
 | 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |
 | 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | ✅ 物品已合并（b252bed）；ModDispenserBehaviors ⏸ 待 SILVER_KNIFE |
-| 数据 JSON | agent-26 | 生成规则 + 战利品 | 🏃 |
+| 数据 JSON | agent-26 | 14 biome_modifier + GLM + ModSpawns + 生成器/校验器 | ✅ 交付（全校验通过），⏸ 待生物批后合并 |
 
 ## 回归闸门记录
 

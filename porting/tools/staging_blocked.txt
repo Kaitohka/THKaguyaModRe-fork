@@ -1,4 +1,4 @@
 # 暂存区编译校验时排除的文件（依赖尚未落地的并行移植产物）
 # 每行：相对 porting/staging/<subdir> 的路径 # 原因
 thkaguyamod/entity/item/EntityCursedDecoyDoll.java   # 依赖 thkaguyamod.entity.living.EntityDanmakuMob（并行移植中，主树尚无此类）
-thkaguyamod/entity/item/EntitySilverKnife.java        # 依赖 ModEntities.SILVER_KNIFE（需追加注册条目）
+# (EntitySilverKnife は staging_modentities_extra.txt の暫定 SILVER_KNIFE 登録でコンパイル可能)

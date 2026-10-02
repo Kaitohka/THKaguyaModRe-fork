@@ -17,5 +17,6 @@
     "weight": 30,
     "minCount": 1,
     "maxCount": 6
-  }
+  },
+  "_comment": "1.7.10 CommonProxy.registerEntitySpawn(): EntityTHFairy, weight=30, min=1, max=6, EnumCreatureType=monster, BiomeGenBase=[plains, birchForest, birchForestHills, desert, extremeHills, extremeHillsEdge, extremeHillsPlus, forest, forestHills, taiga, swampland, icePlains, iceMountains, jungle, jungleHills, roofedForest, taigaHills]"
 }

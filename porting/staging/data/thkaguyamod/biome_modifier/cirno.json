@@ -11,5 +11,6 @@
     "weight": 2,
     "minCount": 1,
     "maxCount": 1
-  }
+  },
+  "_comment": "1.7.10 CommonProxy.registerEntitySpawn(): EntityCirno, weight=2, min=1, max=1, EnumCreatureType=monster, BiomeGenBase=[coldTaiga, coldTaigaHills, frozenRiver, iceMountains, icePlains]"
 }

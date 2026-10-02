@@ -75,6 +75,7 @@ M(
     name="ModelTouhouDefault",
     entity="EntityDanmakuMob",
     extends="EntityModel<T>",
+    type_params="<T extends EntityDanmakuMob>",
     nullable=True,
     fields=BASE_FIELDS,
     doc="""/**
@@ -223,6 +224,7 @@ M(
  * <p>モデルレイヤー名（主控が登録）: {@code thkaguyamod:wriggle}</p>
  */
 """,
+    ctor_super="        super(root);",
     ctor_tail="        this.setTouhouModelData();",
     setup="""    @Override
     protected void setTouhouModelData()
@@ -1277,23 +1279,20 @@ M(
     name="ModelCursedDecoyDoll",
     entity="EntityCursedDecoyDoll",
     extends="EntityModel<EntityCursedDecoyDoll>",
-    extra_links=[("bipedBody", "bipedHead"), ("bipedBody", "bipedRightArm"),
-                 ("bipedBody", "bipedLeftArm"), ("bipedBody", "bipedRightLeg"),
-                 ("bipedBody", "bipedLeftLeg"), ("bipedBody", "skirtTop"),
-                 ("bipedHead", "longHair"), ("bipedHead", "leftBraid"),
-                 ("bipedHead", "rightBraid"), ("bipedHead", "leftRibbon"),
-                 ("bipedHead", "rightRibbon")],
+    extra_links=None,
     doc="""/**
  * 呪いのデコイ人形（{@code EntityCursedDecoyDoll}）のモデル。1.7.10
  * {@code ModelCursedDecoyDoll} の移植。1.7.10 の setRotationAngles は
  * super を呼ぶだけの空実装だったので、ここもアニメーションは無い。
  *
- * <p>1.7.10 は 12 個のパーツを個別に render() していた（addChild は一切していない）。
- * 1.21.1 では root 直下にフラットに持つことで同じ描画結果になる。</p>
+ * <p>1.7.10 は 12 個のパーツを addChild せず render() で個別に描いていた
+ * （＝回転点がそのまま絶対位置）。したがって 1.21.1 でも全パーツを root 直下の
+ * フラット構造で持つ。body の下に繋ぐと頭や腕の位置が二重に加算されてしまう。</p>
  *
  * <p>モデルレイヤー名（主控が登録）: {@code thkaguyamod:cursed_decoy_doll}</p>
  */
 """,
+    flat=True,
     setup="""    @Override
     public void setupAnim(EntityCursedDecoyDoll entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
     {
@@ -1306,7 +1305,7 @@ M(
 
 def build_source(cfg):
     info = G.parse(os.path.join(G.SRC, cfg["name"] + ".java"))
-    for link in cfg.get("extra_links", []):
+    for link in cfg.get("extra_links") or []:
         info["links"].append(link)
 
     declared = [p["name"] for p in info["parts"]]
@@ -1327,7 +1326,7 @@ def build_source(cfg):
     out.append("import thkaguyamod.entity.living.%s;" % cfg["entity"])
     out.append("")
     out.append(cfg["doc"].strip())
-    out.append("public class %s extends %s" % (cfg["name"], cfg["extends"]))
+    out.append("public class %s%s extends %s" % (cfg["name"], cfg.get("type_params", ""), cfg["extends"]))
     out.append("{")
     for f in fields:
         out.append("    public final ModelPart %s;" % f)
@@ -1340,13 +1339,15 @@ def build_source(cfg):
     out.append("")
     out.append("    public %s(ModelPart root)" % cfg["name"])
     out.append("    {")
+    if cfg.get("ctor_super"):
+        out.append(cfg["ctor_super"].rstrip("\n"))
     out.append("        this.root = root;")
     if cfg.get("ctor_head"):
-        out.append(cfg["ctor_head"].strip())
+        out.append(cfg["ctor_head"].rstrip("\n"))
     for f in fields:
         out.append("        this.%s = %s;" % (f, getter(f)))
     if cfg.get("ctor_tail"):
-        out.append(cfg["ctor_tail"].strip())
+        out.append(cfg["ctor_tail"].rstrip("\n"))
     out.append("    }")
     out.append("")
     if nullable:
@@ -1377,9 +1378,8 @@ def build_source(cfg):
     }
 """)
     out.append(cfg["setup"].strip("\n"))
-    if not cfg.get("nullable") and not cfg.get("no_rad"):
-        out.append("")
-        out.append(RAD.rstrip("\n"))
+    out.append("")
+    out.append(RAD.rstrip("\n"))
     out.append("}")
     return "\n".join(out) + "\n"
 

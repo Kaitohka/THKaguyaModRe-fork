@@ -36,8 +36,29 @@ if [ -f "$BLOCKED" ]; then
   done < "$BLOCKED"
 fi
 
-MERGED="$NF/build/moddev/artifacts/neoforge-21.1.252-merged.jar"
-LEGACY=$(tr -d '\r\n' < "$NF/build/moddev/clientLegacyClasspath.txt")
+# 暫定エンティティ登録（ModEntities への追記分）を「一時コピーにだけ」挿入する。
+# 主ソースツリーは変更しない。挿入内容は porting/tools/staging_modentities_extra.txt。
+EXTRA="$ROOT/porting/tools/staging_modentities_extra.txt"
+if [ -f "$EXTRA" ]; then
+  python - "$WORK/src/thkaguyamod/init/ModEntities.java" "$EXTRA" <<'PY'
+import io, sys
+target, extra = sys.argv[1], sys.argv[2]
+src = io.open(target, encoding='utf-8').read()
+add = io.open(extra, encoding='utf-8').read()
+add = add.split('----\n', 1)[1].split('// ---- ここまで', 1)[0]
+marker = '    public static void register(IEventBus modEventBus) {'
+assert marker in src, 'ModEntities marker not found'
+src = src.replace(marker, add.strip('\n') + '\n\n' + marker, 1)
+io.open(target, 'w', encoding='utf-8').write(src)
+PY
+fi
+
+# 注意: clientLegacyClasspath.txt は Windows 絶対パス（C:\...）の ';' 区切り。
+# Git Bash から Windows 版 javac に渡すため、各要素を cygpath -w で Windows 形式に正規化し
+# ';' 区切りのまま渡す（':' 区切りにすると javac が /c/... を相対パスと解釈する）。
+MERGED=$(cygpath -w "$NF/build/moddev/artifacts/neoforge-21.1.252-merged.jar")
+LEGACY=$(tr ';' '\n' < "$NF/build/moddev/clientLegacyClasspath.txt" | tr -d '\r' \
+         | while IFS= read -r p; do [ -n "$p" ] && cygpath -w "$p"; done | paste -sd';' -)
 
 javac -nowarn -proc:none -encoding UTF-8 \
   -cp "$MERGED;$LEGACY" \

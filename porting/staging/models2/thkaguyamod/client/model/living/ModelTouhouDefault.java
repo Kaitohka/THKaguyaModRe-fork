@@ -24,7 +24,7 @@ import thkaguyamod.entity.living.EntityDanmakuMob;
  * <p>モデルレイヤー名（呼び出し側）: 未登録。{@link ModelWriggle} が
  * {@code thkaguyamod:wriggle} を使う。</p>
  */
-public class ModelTouhouDefault extends EntityModel<T>
+public class ModelTouhouDefault<T extends EntityDanmakuMob> extends EntityModel<T>
 {
     public final ModelPart bipedHead;
     public final ModelPart bipedBody;
@@ -188,5 +188,11 @@ public class ModelTouhouDefault extends EntityModel<T>
     protected void setTouhouModelData()
     {
         this.shoulderWidth = 3.0F;
+    }
+
+    /** 度数をラジアンに変換（1.7.10 の rad() と同じ） */
+    protected static float rad(float degree)
+    {
+        return degree / 180F * (float)Math.PI;
     }
 }

@@ -213,6 +213,13 @@ def main():
             ("minCount", p["min"]),
             ("maxCount", p["max"]),
         ])
+        # 群系与参数的来源可追溯：1.7.10 的 addSpawn 调用列表（行号 + 类 + 群系字段）。
+        payload["_comment"] = (
+            "1.7.10 CommonProxy.registerEntitySpawn(): %s, weight=%d, min=%d, max=%d, "
+            "EnumCreatureType=%s, BiomeGenBase=[%s]"
+            % (p["old_class"], p["weight"], p["min"], p["max"], p["category"],
+               ", ".join(p["old_biomes"]))
+        )
         write_json(os.path.join(OUT_DIR, p["name"] + ".json"), payload)
     print("\n写出 %d 个文件到 %s" % (len(plan), OUT_DIR))
 

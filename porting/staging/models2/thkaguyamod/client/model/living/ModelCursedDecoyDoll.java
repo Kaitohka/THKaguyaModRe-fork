@@ -18,6 +18,10 @@ import thkaguyamod.entity.living.EntityCursedDecoyDoll;
  * {@code ModelCursedDecoyDoll} の移植。1.7.10 の setRotationAngles は
  * super を呼ぶだけの空実装だったので、ここもアニメーションは無い。
  *
+ * <p>1.7.10 は 12 個のパーツを addChild せず render() で個別に描いていた
+ * （＝回転点がそのまま絶対位置）。したがって 1.21.1 でも全パーツを root 直下の
+ * フラット構造で持つ。body の下に繋ぐと頭や腕の位置が二重に加算されてしまう。</p>
+ *
  * <p>モデルレイヤー名（主控が登録）: {@code thkaguyamod:cursed_decoy_doll}</p>
  */
 public class ModelCursedDecoyDoll extends EntityModel<EntityCursedDecoyDoll>

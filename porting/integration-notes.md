@@ -72,6 +72,12 @@
 | FIX 批后（a976221） | build+runClient（smoke_test.sh） | PASS（主菜单到达、0 相关 ERROR） |
 | 环境修复后 | 双模式 smoke（R3闸+client+server） | **PASS 双端全绿** |
 
+## 代理协调文件
+
+- `porting/tools/staging_modentities_extra.txt`：agent 自建的 ModEntities 追加条目暂存（compile_staging.sh 沙盒用）。**合并时以各代理报告为准，此文件仅供参考**
+- `porting/tools/staging_blocked.txt`：跨批依赖阻塞清单
+- `porting/.staging-build/`：agent 编译验证沙盒（已 .gitignore）
+
 ## 事故台账
 
 | # | 事故 | 根因 | 处置 | 状态 |

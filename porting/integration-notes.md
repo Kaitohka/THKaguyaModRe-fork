@@ -26,6 +26,11 @@
 | P8 | 万宝槌第 4 条外部 MOD 配方删除、`roukanSenpuuzin` 产出暂用 ROUKANKEN | agent-19 预告 | GUI-2 合并时确认 |
 | P9 | 模型层注册（RegisterLayerDefinitions）+ 防具自定义模型钩子（IClientItemExtensions） | agent-20 #5 | 渲染批合并时统一做 |
 | P10 | `ItemOnbashira` 挖掘速度 3.0 恒值在 1.21.1 无 item 覆写点 | agent-10 TODO | 用属性组件或 Tool 规则补，阶段 5 |
+| P11 | `ItemCursedDecoyDoll` 的 OriginalItemID 还原需新组件 ORIGINAL_ITEM（物品注册名字符串） | agent-18 | 合并道具实体批时加组件并对接万宝槌还原 |
+| P12 | `sakuyas_pocket_watch` damage 当模式位 → 需 durability(2)（同 kaigo 处理） | agent-18 | 生成器表改，合并物品批时 |
+| P13 | 早苗符卡 Charge 守卫在 THKaguyaLib.checkSpellCardDeclaration 里恒通过 | agent-18/25 | K3 在库侧补 CHARGE 组件判定（物品侧已有重复判定，库侧补全后删物品侧） |
+| P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
+| P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 
 ## 批次状态板
 
@@ -43,13 +48,13 @@
 | 道具模型 | agent-20 | 10 模型（几何已运行时核验） | ✅ 交付，⏸ 待实体批后合并 |
 | 生物实体 | agent-16 | living 16 + DanmakuPatternRegistry | 🏃 |
 | 道具/效果实体 | agent-17 | item 13 + effect 5（含时停） | 🏃 |
-| 武器物品 | agent-18 | 28 类（429 恢复 1 次） | 🏃 |
+| 武器物品 | agent-18 | 28 类（429 恢复 1 次） | ✅ 交付（stub javac 0错），⏸ 待 agent-17 实体后合并 |
 | 商店/万宝槌 GUI | agent-19 | 2 Menu + Payload | 🏃 |
 | 人物模型 | agent-21 | 16 模型 | 🏃 |
 | 道具渲染器 | agent-22 | 18 个 | 🏃 |
 | 效果渲染器 | agent-23 | 4 个（429 恢复 1 次） | ✅ 交付（javac 验证），⏸ 待实体批后合并；缺贴图已补(miraclecircle/hakuroureflect) |
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |
-| 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | 🏃 |
+| 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | ✅ 物品已合并（b252bed）；ModDispenserBehaviors ⏸ 待 SILVER_KNIFE |
 | 数据 JSON | agent-26 | 生成规则 + 战利品 | 🏃 |
 
 ## 回归闸门记录

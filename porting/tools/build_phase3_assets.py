@@ -35,7 +35,7 @@ ITEMS = [
     # ---- 五つの難題 + 新難題 ----
     ('JEWELED_BRANCH_OF_HOURAI', 'jeweled_branch_of_hourai', 'houraiJewelBranch', 'houraiEda.png', 'bow', {'dur': 301}),
     ('JEWEL_FROM_THE_DRAGONS_NECK', 'jewel_from_the_dragons_neck', 'dragonNeckJewel', 'ryuuTama.png', 'item', {'dur': 300, 'stack': 1}),
-    ('BUDDHAS_STONE_BOWL', 'buddhas_stone_bowl', 'buddhaStoneBowl', 'hotokeHachi.png', 'item', {'dur': 131}),
+    ('BUDDHAS_STONE_BOWL', 'buddhas_stone_bowl', 'buddhaStoneBowl', 'hotokeHachi.png', 'item', {'dur': 131}, 'ItemBuddhaStoneBowl'),
     ('ROBE_OF_THE_FIRE_RAT', 'robe_of_the_fire_rat', 'fireRatRobe', 'hinezumi.png', 'armor:HINEZUMI_ROBE:chest', {}, 'ItemFireRatRobe'),
     ('SWALLOWS_COWRIE_SHELL', 'swallows_cowrie_shell', 'swallowCowrieShell', 'koyasugai.png', 'food:0:always', {}, 'ItemSwallowCowrieShell'),
     ('SEAMLESS_CEILING_OF_KINKAKUJI', 'seamless_ceiling_of_kinkakuji', 'kinkaku-ji', 'kinkakuzi.png', 'item', {'stack': 1}),
@@ -99,8 +99,8 @@ ITEMS = [
     ('CLOSED_THIRD_EYE', 'closed_third_eye', 'closedThirdEye', 'closedThirdEye.png', 'item', {'stack': 1}, 'ItemClosedThirdEye'),
     # ---- 星蓮船 ----
     ('NAZRIN_PENDULUM', 'nazrin_pendulum', 'nazrinPendulum', 'pendulum.png', 'item', {'stack': 1}),
-    ('SHIP_GHOSTS_DIPPER_EMPTY', 'ship_ghosts_dipper_empty', 'shipGhostDipperEmpty', 'hisyaku_1.png', 'item', {'dur': 60, 'stack': 1}),
-    ('SHIP_GHOSTS_DIPPER', 'ship_ghosts_dipper', 'shipGhostDipper', 'hisyaku_0.png', 'item', {'dur': 60, 'stack': 1}),
+    ('SHIP_GHOSTS_DIPPER_EMPTY', 'ship_ghosts_dipper_empty', 'shipGhostDipperEmpty', 'hisyaku_1.png', 'item', {'dur': 60, 'stack': 1}, 'ItemHisyaku:EMPTY'),
+    ('SHIP_GHOSTS_DIPPER', 'ship_ghosts_dipper', 'shipGhostDipper', 'hisyaku_0.png', 'item', {'dur': 60, 'stack': 1}, 'ItemHisyaku:FILL'),
     ('SORCERERS_SUTRA_SCROLL', 'sorcerers_sutra_scroll', 'sorcererSutraScroll', 'mazinKyoukan.png', 'item', {'stack': 1}),
     # ---- 神霊廟 ----
     ('WALL_PASSING_CHISEL', 'wall_passing_chisel', 'wallPassingChisel', 'kabenuke.png', 'item', {'dur': 122}, 'ItemKabenuke'),
@@ -269,7 +269,8 @@ def main():
         card_entries.append((old_id, reg_name, cid, level))
         ITEMS.append(('SPELL_CARD_' + snake(reg_name).upper(), cid,
                       'thSpellCard.%d' % old_id,
-                      'spellCard/%s.png' % reg_name, 'spellcard', {'stack': 1, 'level': level}))
+                      'spellCard/%s.png' % reg_name, 'spellcard', {'stack': 1, 'level': level},
+                      'ItemTHSpellCard:%d' % old_id))
 
     # ---------- textures + item models ----------
     for entry in ITEMS:
@@ -400,7 +401,7 @@ def main():
             p.append('.durability(%d)' % props['dur'])
         prop = ''.join(p)
         if cls:
-            extra_imports.add(cls)
+            extra_imports.add(cls.split(':')[0])
         if kind == 'shotitem':
             body.append('    public static final DeferredItem<ItemTHShot> %s = ITEMS.registerItem("%s", props -> new ItemTHShot(props, %d), %s);' % (const, rid, shot_idx, prop))
             extra_imports.add('ItemTHShot')
@@ -432,9 +433,19 @@ def main():
             factory = (cls + '::new') if cls else 'Item::new'
             rettype = cls if cls else 'Item'
             body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", %s, %s.food(%s));' % (rettype, const, rid, factory, prop, food))
+        elif kind == 'spellcard':
+            clsname, arg = cls.split(':')
+            extra_imports.add(clsname)
+            body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", props -> new %s(props, %s), %s);' % (clsname, const, rid, clsname, arg, prop))
         else:
-            factory = (cls + '::new') if cls else 'Item::new'
-            rettype = cls if cls else 'Item'
+            if cls and ':' in cls:
+                clsname, arg = cls.split(':')
+                factory = 'props -> new %s(props, %s.%s)' % (clsname, clsname, arg)
+                extra_imports.add(clsname)
+                rettype = clsname
+            else:
+                factory = (cls + '::new') if cls else 'Item::new'
+                rettype = cls if cls else 'Item'
             body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", %s, %s);' % (rettype, const, rid, factory, prop))
     body.append('')
 

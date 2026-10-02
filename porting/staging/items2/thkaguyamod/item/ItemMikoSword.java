@@ -3,6 +3,7 @@ package thkaguyamod.item;
 import java.util.List;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
@@ -21,8 +23,6 @@ import net.minecraft.world.level.Level;
 
 import thkaguyamod.entity.EntityDivineSpirit;
 import thkaguyamod.init.ModEntities;
-
-import net.minecraft.tags.EntityTypeTags;
 
 /**
  * 神子の持つ宝剣 — ported from 1.7.10 {@code thKaguyaMod.item.ItemMikoSword}.

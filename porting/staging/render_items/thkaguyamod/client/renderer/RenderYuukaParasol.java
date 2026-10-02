@@ -66,7 +66,7 @@ public class RenderYuukaParasol extends EntityRenderer<EntityYuukaParasol>
 		VertexConsumer buffer = bufferSource.getBuffer(DanmakuRenderTypes.get(TEXTURE, DanmakuRenderTypes.MODE_OPAQUE));
 
 		double stickSideLength = 0.07D;
-		double stickHeight = 2.7D;
+		float stickHeight = 2.7F;
 		float stickUMin = 0.0F;
 		float stickUMax = 5F / 64F;
 		float stickVMin = 0.0F;

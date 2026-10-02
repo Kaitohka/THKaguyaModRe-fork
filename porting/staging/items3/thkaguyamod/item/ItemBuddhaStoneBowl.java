@@ -33,6 +33,12 @@ import net.minecraft.world.level.block.state.BlockState;
  * を追加すると、旧版の攻撃力（ItemTool の 4.0F + ToolMaterial.STONE の 1.0F）を再現できる。
  * 攻撃速度に相当する概念が 1.7.10 に無いため -2.8F（バニラのツルハシ相当）を採用している。
  * 現状の登録（{@code Item.Properties()} のみ）では素手相当の攻撃力になる。
+ *
+ * <p>TODO K3-review: {@code getDestroySpeed} / {@code getEnchantmentValue} /
+ * {@code BlockState.isSolid()} は Mojang の {@code @Deprecated} を踏んでいる。
+ * 前者 2 つは {@code DataComponents.TOOL} で表現するのが 1.21.1 の正道だが、Tool コンポーネントは
+ * タグ単位でしか速度を与えられないため「<b>すべてのブロックで 4F</b>」という旧版の挙動は再現できない。
+ * 旧版挙動の維持を優先して上書きを残している（{@code isSolid} は {@code legacySolid} を返す後方互換 API）。
  */
 public class ItemBuddhaStoneBowl extends Item {
 

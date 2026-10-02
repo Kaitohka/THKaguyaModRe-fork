@@ -1,7 +1,5 @@
 package thkaguyamod.entity.item;
 
-import java.util.List;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;

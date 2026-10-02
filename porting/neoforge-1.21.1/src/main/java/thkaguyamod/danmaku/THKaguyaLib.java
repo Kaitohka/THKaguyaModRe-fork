@@ -22,9 +22,11 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import thkaguyamod.config.ModConfig;
+import thkaguyamod.init.ModDataComponents;
 import thkaguyamod.init.ModEntities;
 import thkaguyamod.init.ModItems;
 import thkaguyamod.init.ModSounds;
+import thkaguyamod.item.ItemTHSpellCard;
 import thkaguyamod.registry.SpellCardRegistry;
 import thkaguyamod.spellcard.EntitySpellCard;
 import thkaguyamod.spellcard.THSpellCard;
@@ -38,6 +40,10 @@ import thkaguyamod.spellcard.THSpellCard;
  */
 public class THKaguyaLib
 {
+
+	/** 早苗のスペルカードの旧 meta 範囲（{@link ItemTHSpellCard} の SANAE_CARD_MIN/MAX と同値）。 */
+	private static final int SANAE_CARD_MIN = 14;
+	private static final int SANAE_CARD_MAX = 18;
 
 	/**
 	 *  持ち主の指定のポジションにぬるぬるついていく処理
@@ -153,6 +159,10 @@ public class THKaguyaLib
 	 * スペルカードを宣言する
 	 * スペルカード宣言は相手を選択（遠くの相手でも可）することで可能
 	 * スペルカードは一人あたり多重には宣言できない
+	 *
+	 * <p>早苗のスペルカード（旧 meta 14..18、{@link #SANAE_CARD_MIN}～{@link #SANAE_CARD_MAX}）は
+	 * 「奇跡の力」（旧 NBT {@code Charge} / 1.21.1 {@link ModDataComponents#CHARGE}）が 0 以下の間は
+	 * 宣言できない（非クリエイティブのみ。1.7.10 と同じ条件）。
 	 * @param world            : 宣言するワールド
 	 * @param itemStack        : スペルカード
 	 * @param user 			: スペルカードの宣言者
@@ -172,11 +182,27 @@ public class THKaguyaLib
 			//プレイヤーがクリエイティブでないなら（クリエイティブは処理不要）
 			if(!player.isCreative())
 			{
-				//TODO K3-review: 1.7.10 は「手に持っているのが早苗のスペルカード(16..17)なら NBT "Charge" が
-				//無い/0以下で宣言失敗」というガードを持っていた。1.21.1 では符卡は spell_card_* の個別アイテム +
-				//DataComponent 化が進んでおり、"Charge" に対応するコンポーネントが未確定。
-				//旧: if(itemStack.getItem() == spell_card && dmg in [14..18]) { nbt "Charge" <= 0 → return false }
-				//確定までガードは設けない（常に通過）。
+				//早苗のスペルカード（旧 meta 14..18）は「奇跡の力」が充填されている間だけ宣言できる。
+				//1.7.10 の itemStack.getItem()==spell_card && damage in [14..18] 判定は、1.21.1 では
+				//符卡が spell_card_* の個別アイテム化されたため spellCardNumber（= 旧 meta）の範囲判定に置換した。
+				if(spellCardNumber >= SANAE_CARD_MIN && spellCardNumber <= SANAE_CARD_MAX)
+				{
+					//手に持っている符卡が宣言対象そのものか（別の早苗符卡で代用できないようにする）
+					if(!(itemStack.getItem() instanceof ItemTHSpellCard card && card.getSpellCardID() == spellCardNumber))
+					{
+						return false;
+					}
+					//NBT "Charge" → データコンポーネント ModDataComponents.CHARGE（無い場合は 0 扱い）。
+					//旧版は「NBT が無い」「Charge <= 0」の双方を宣言失敗にしていたので、getOrDefault(…, 0) <= 0 で同値。
+					if(itemStack.getOrDefault(ModDataComponents.CHARGE.get(), 0) <= 0)
+					{
+						//1.7.10 には宣言失敗時のメッセージが無かったため、専用キーは存在しない。
+						//TODO K3-review: lang キー "thKaguya.msg.sneScCharge"（「奇跡之力」不足の警告）が未登録。
+						//キー追加までは旧版どおり無言で失敗させる（下の 1 行を有効化すれば表示に切り替わる）。
+						//player.displayClientMessage(Component.translatable("thKaguya.msg.sneScCharge"), true);
+						return false;//宣言失敗
+					}
+				}
 
 				Supplier<? extends THSpellCard> factory = SpellCardRegistry.getSpellCardFactory(spellCardNumber);
 				if(factory != null)

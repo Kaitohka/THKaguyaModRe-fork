@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 import thkaguyamod.client.model.living.ModelSunFlowerFairy;
-import thkaguyamod.entity.living.EntityTHFairy;
+import thkaguyamod.entity.living.EntitySunFlowerFairy;
 
 /**
  * ひまわり妖精の描画。1.7.10
@@ -16,10 +16,10 @@ import thkaguyamod.entity.living.EntityTHFairy;
  * 呼ぶだけ（追加描画なし）、貼り先も固定で {@code FairyTexture_10.png} だった。
  * よって 1.21.1 では {@link LivingEntityRenderer} そのままで、貼り先だけ上書きする。</p>
  */
-public class RenderSunFlowerFairy extends LivingEntityRenderer<EntityTHFairy, ModelSunFlowerFairy>
+public class RenderSunFlowerFairy extends LivingEntityRenderer<EntitySunFlowerFairy, ModelSunFlowerFairy>
 {
 	public static final ModelLayerLocation LAYER_LOCATION =
-			new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("thkaguyamod", "sunflower_fairy"), "main");
+			new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("thkaguyamod", "sun_flower_fairy"), "main");
 
 	/** 1.7.10: textures/mob/FairyTexture_10.png */
 	private static final ResourceLocation TEXTURE =
@@ -31,7 +31,7 @@ public class RenderSunFlowerFairy extends LivingEntityRenderer<EntityTHFairy, Mo
 	}
 
 	@Override
-	public ResourceLocation getTextureLocation(EntityTHFairy thFairy)
+	public ResourceLocation getTextureLocation(EntitySunFlowerFairy thFairy)
 	{
 		return TEXTURE;
 	}

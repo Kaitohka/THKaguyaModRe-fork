@@ -704,6 +704,7 @@ public class EntitySilverKnife extends Entity
 			motionZ *= slowDownRate;
 		}
 
+		//1.7.10 の setPosition(posX, posY, posZ) に相当（座標は変わらないため実質は当たり判定の再計算）
 		setPos(getX(), getY(), getZ());
 		setRot(rotationYaw, rotationPitch);
 

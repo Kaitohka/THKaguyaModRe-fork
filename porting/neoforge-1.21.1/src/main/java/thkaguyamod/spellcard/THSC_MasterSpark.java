@@ -5,6 +5,8 @@ import net.minecraft.world.phys.Vec3;
 
 import thkaguyamod.danmaku.ShotData;
 import thkaguyamod.danmaku.THShotLib;
+import thkaguyamod.entity.item.EntityMiniHakkero;
+import thkaguyamod.init.ModEntities;
 
 import static thkaguyamod.danmaku.DanmakuConstants.FORM_STAR;
 import static thkaguyamod.danmaku.THShotLib.gravity;
@@ -30,9 +32,11 @@ public class THSC_MasterSpark extends THSpellCard
 		if(time == 1)
 		{
 			tgVec = user.getLookAngle();
-			// TODO K3-review: 依存実体 EntityMiniHakkero（ミニ八卦炉）待移植。以下3行は移植後に有効化する。
-			// EntityMiniHakkero miniHakkero = new EntityMiniHakkero(level(), user, target);
-			// if(!level().isClientSide) { level().addFreshEntity(miniHakkero); }
+			EntityMiniHakkero miniHakkero = new EntityMiniHakkero(ModEntities.MINI_HAKKERO.get(), level(), user, target);
+			if(!level().isClientSide)
+			{
+				level().addFreshEntity(miniHakkero);//ミニ八卦炉を出す
+			}
 		}
 		if(time >= 30 && time < 99)
 		{

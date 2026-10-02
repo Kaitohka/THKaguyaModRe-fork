@@ -3,7 +3,6 @@ package thkaguyamod.init;
 import java.util.function.Supplier;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
@@ -13,6 +12,39 @@ import thkaguyamod.THKaguyaMod;
 import thkaguyamod.entity.EntityDivineSpirit;
 import thkaguyamod.entity.EntityShotMaterial;
 import thkaguyamod.entity.EntityTHItem;
+import thkaguyamod.entity.effect.EntityAjaRedStoneEffect;
+import thkaguyamod.entity.effect.EntityCirnoIceBox;
+import thkaguyamod.entity.effect.EntityHakureiShield;
+import thkaguyamod.entity.effect.EntityHakurouReflecter;
+import thkaguyamod.entity.effect.EntityMiracleCircle;
+import thkaguyamod.entity.effect.EntitySpellCardCircle;
+import thkaguyamod.entity.item.EntityCursedDecoyDoll;
+import thkaguyamod.entity.item.EntityHisou;
+import thkaguyamod.entity.item.EntityKinkakuzi;
+import thkaguyamod.entity.item.EntityMarisaBroom;
+import thkaguyamod.entity.item.EntityMazinkyoukan;
+import thkaguyamod.entity.item.EntityMiniHakkero;
+import thkaguyamod.entity.item.EntityPendulum;
+import thkaguyamod.entity.item.EntitySakuyaStopWatch;
+import thkaguyamod.entity.item.EntitySakuyaWatch;
+import thkaguyamod.entity.item.EntitySilverKnife;
+import thkaguyamod.entity.item.EntitySpiritualStrikeTalisman;
+import thkaguyamod.entity.item.EntitySukima;
+import thkaguyamod.entity.item.EntityYuukaParasol;
+import thkaguyamod.entity.living.EntityCirno;
+import thkaguyamod.entity.living.EntityDanmakuCreeper;
+import thkaguyamod.entity.living.EntityFamiliar;
+import thkaguyamod.entity.living.EntityMiko;
+import thkaguyamod.entity.living.EntityReimu;
+import thkaguyamod.entity.living.EntityRinnosuke;
+import thkaguyamod.entity.living.EntityRumia;
+import thkaguyamod.entity.living.EntitySakuya;
+import thkaguyamod.entity.living.EntitySanae;
+import thkaguyamod.entity.living.EntitySunFlowerFairy;
+import thkaguyamod.entity.living.EntityTHFairy;
+import thkaguyamod.entity.living.EntityTHPhantom;
+import thkaguyamod.entity.living.EntityToziko;
+import thkaguyamod.entity.living.EntityWriggle;
 import thkaguyamod.entity.shot.EntityDragonNeckJewel;
 import thkaguyamod.entity.shot.EntityHomingAmulet;
 import thkaguyamod.entity.shot.EntityMusouFuuin;
@@ -22,18 +54,16 @@ import thkaguyamod.entity.shot.EntitySanaeWind;
 import thkaguyamod.entity.shot.EntityTHLaser;
 import thkaguyamod.entity.shot.EntityTHSetLaser;
 import thkaguyamod.entity.shot.EntityTHShot;
-import thkaguyamod.entity.effect.EntitySpellCardCircle;
 import thkaguyamod.spellcard.EntitySpellCard;
 
 /**
  * Entity registry. Tracking ranges / update intervals follow the 1.7.10
- * {@code EntityRegistry.registerModEntity} calls. Danmaku entities are marked
- * {@code noSave()} — in 1.7.10 their NBT methods were empty (bullets vanish on
- * chunk reload by design).
+ * {@code EntityRegistry.registerModEntity} calls (CommonProxy.java:158-216).
  *
- * <p>Renamed: 1.7.10 "BrilliantDragonBullet" entity → {@code dragon_neck_jewel}
- * (matching the item that spawns it; the actual BrilliantDragonBullet spell card
- * was commented out in 1.7.10).
+ * <p>1.7.10 registered every mod entity with its own global id and all of them were
+ * saved by default; only {@code miracle_circle} lacked NBT, so it gets {@code noSave()}.
+ * Boss/fairy mobs use {@link MobCategory#MONSTER}; Sanae/Sakuya/Rinnosuke keep 1.7.10's
+ * {@code EnumCreatureType.ambient} (their biome modifiers depend on it).
  */
 public final class ModEntities {
 
@@ -78,10 +108,7 @@ public final class ModEntities {
             "dragon_neck_jewel", () -> EntityType.Builder.<EntityDragonNeckJewel>of(EntityDragonNeckJewel::new, MobCategory.MISC)
                     .sized(0.5F, 0.5F).clientTrackingRange(80).updateInterval(1).noSave().build(""));
 
-    /* ---------------- 弾消しボーナス・ドロップ品（entity/） ----------------
-     * これらはドロップアイテム相当のため永続化が必要。1.7.10 の registerModEntity と同様に
-     * noSave() を付けない（位置・回転は Entity 基底の save/load に任せる）。
-     */
+    /* ---------------- ドロップ品（entity/） ---------------- */
 
     public static final Supplier<EntityType<EntityShotMaterial>> SHOT_MATERIAL_ENTITY = ENTITY_TYPES.register(
             "shot_material", () -> EntityType.Builder.<EntityShotMaterial>of(EntityShotMaterial::new, MobCategory.MISC)
@@ -105,14 +132,142 @@ public final class ModEntities {
             "spell_card_circle", () -> EntityType.Builder.<EntitySpellCardCircle>of(EntitySpellCardCircle::new, MobCategory.MISC)
                     .sized(0.5F, 0.5F).clientTrackingRange(80).updateInterval(1).noSave().build(""));
 
+    /* ---------------- 道具实体（entity/item） ---------------- */
+
+    public static final Supplier<EntityType<EntitySakuyaWatch>> SAKUYA_WATCH = ENTITY_TYPES.register(
+            "private_square", () -> EntityType.Builder.<EntitySakuyaWatch>of(EntitySakuyaWatch::new, MobCategory.MISC)
+                    .sized(1.0F, 1.0F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySakuyaStopWatch>> SAKUYA_STOP_WATCH = ENTITY_TYPES.register(
+            "sakuya_stop_watch", () -> EntityType.Builder.<EntitySakuyaStopWatch>of(EntitySakuyaStopWatch::new, MobCategory.MISC)
+                    .sized(0.2F, 0.2F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySilverKnife>> SILVER_KNIFE = ENTITY_TYPES.register(
+            "silver_knife", () -> EntityType.Builder.<EntitySilverKnife>of(EntitySilverKnife::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityKinkakuzi>> KINKAKUZI = ENTITY_TYPES.register(
+            "kinkakuzi", () -> EntityType.Builder.<EntityKinkakuzi>of(EntityKinkakuzi::new, MobCategory.MISC)
+                    .sized(6.0F, 0.3F).clientTrackingRange(250).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityMarisaBroom>> MARISA_BROOM = ENTITY_TYPES.register(
+            "marisa_broom", () -> EntityType.Builder.<EntityMarisaBroom>of(EntityMarisaBroom::new, MobCategory.MISC)
+                    .sized(0.9F, 0.5F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityMiniHakkero>> MINI_HAKKERO = ENTITY_TYPES.register(
+            "mini_hakkero", () -> EntityType.Builder.<EntityMiniHakkero>of(EntityMiniHakkero::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F).clientTrackingRange(40).updateInterval(5).build(""));
+
+    public static final Supplier<EntityType<EntityHisou>> HISOU = ENTITY_TYPES.register(
+            "hisou", () -> EntityType.Builder.<EntityHisou>of(EntityHisou::new, MobCategory.MISC)
+                    .sized(4.4F, 4.4F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityPendulum>> PENDULUM = ENTITY_TYPES.register(
+            "nazrin_pendulum", () -> EntityType.Builder.<EntityPendulum>of(EntityPendulum::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySukima>> SUKIMA = ENTITY_TYPES.register(
+            "sukima", () -> EntityType.Builder.<EntitySukima>of(EntitySukima::new, MobCategory.MISC)
+                    .sized(0.6F, 1.8F).clientTrackingRange(40).updateInterval(5).build(""));
+
+    public static final Supplier<EntityType<EntityMazinkyoukan>> MAZINKYOUKAN = ENTITY_TYPES.register(
+            "mazinkyoukan", () -> EntityType.Builder.<EntityMazinkyoukan>of(EntityMazinkyoukan::new, MobCategory.MISC)
+                    .sized(2.0F, 2.0F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySpiritualStrikeTalisman>> SPIRITUAL_STRIKE_TALISMAN = ENTITY_TYPES.register(
+            "spiritual_strike_talisman", () -> EntityType.Builder.<EntitySpiritualStrikeTalisman>of(EntitySpiritualStrikeTalisman::new, MobCategory.MISC)
+                    .sized(0.2F, 0.2F).clientTrackingRange(80).updateInterval(10).build(""));
+
+    public static final Supplier<EntityType<EntityYuukaParasol>> YUUKA_PARASOL = ENTITY_TYPES.register(
+            "yuuka_parasol", () -> EntityType.Builder.<EntityYuukaParasol>of(EntityYuukaParasol::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityCursedDecoyDoll>> CURSED_DECOY_DOLL = ENTITY_TYPES.register(
+            "cursed_decoy_doll", () -> EntityType.Builder.<EntityCursedDecoyDoll>of(EntityCursedDecoyDoll::new, MobCategory.MISC)
+                    .sized(1.0F, 1.8F).clientTrackingRange(60).updateInterval(5).build(""));
+
+    /* ---------------- 效果实体（entity/effect） ---------------- */
+
+    public static final Supplier<EntityType<EntityAjaRedStoneEffect>> AJA_RED_STONE_EFFECT = ENTITY_TYPES.register(
+            "aja_red_stone_effect", () -> EntityType.Builder.<EntityAjaRedStoneEffect>of(EntityAjaRedStoneEffect::new, MobCategory.MISC)
+                    .sized(2.0F, 0.0F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityCirnoIceBox>> CIRNO_ICE_BOX = ENTITY_TYPES.register(
+            "cirno_ice_box", () -> EntityType.Builder.<EntityCirnoIceBox>of(EntityCirnoIceBox::new, MobCategory.MISC)
+                    .sized(1.8F, 1.8F).clientTrackingRange(80).updateInterval(10).build(""));
+
+    public static final Supplier<EntityType<EntityHakureiShield>> HAKUREI_SHIELD = ENTITY_TYPES.register(
+            "hakurei_shield", () -> EntityType.Builder.<EntityHakureiShield>of(EntityHakureiShield::new, MobCategory.MISC)
+                    .sized(1.5F, 1.5F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityHakurouReflecter>> HAKUROU_REFLECTER = ENTITY_TYPES.register(
+            "hakurou_reflecter", () -> EntityType.Builder.<EntityHakurouReflecter>of(EntityHakurouReflecter::new, MobCategory.MISC)
+                    .sized(1.5F, 1.5F).clientTrackingRange(40).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityMiracleCircle>> MIRACLE_CIRCLE = ENTITY_TYPES.register(
+            "miracle_circle", () -> EntityType.Builder.<EntityMiracleCircle>of(EntityMiracleCircle::new, MobCategory.MISC)
+                    .sized(2.0F, 0.0F).clientTrackingRange(40).updateInterval(1).noSave().build(""));
+
+    /* ---------------- 生物（entity/living） ---------------- */
+
+    public static final Supplier<EntityType<EntityTHFairy>> TH_FAIRY = ENTITY_TYPES.register(
+            "th_fairy", () -> EntityType.Builder.<EntityTHFairy>of(EntityTHFairy::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.5F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySunFlowerFairy>> SUNFLOWER_FAIRY = ENTITY_TYPES.register(
+            "sunflower_fairy", () -> EntityType.Builder.<EntitySunFlowerFairy>of(EntitySunFlowerFairy::new, MobCategory.MONSTER)
+                    .sized(0.9F, 1.7F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityTHPhantom>> TH_PHANTOM = ENTITY_TYPES.register(
+            "th_phantom", () -> EntityType.Builder.<EntityTHPhantom>of(EntityTHPhantom::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.0F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityFamiliar>> FAMILIAR = ENTITY_TYPES.register(
+            "familiar", () -> EntityType.Builder.<EntityFamiliar>of(EntityFamiliar::new, MobCategory.MONSTER)
+                    .sized(0.6F, 0.6F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityCirno>> CIRNO = ENTITY_TYPES.register(
+            "cirno", () -> EntityType.Builder.<EntityCirno>of(EntityCirno::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityRumia>> RUMIA = ENTITY_TYPES.register(
+            "rumia", () -> EntityType.Builder.<EntityRumia>of(EntityRumia::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityToziko>> TOZIKO = ENTITY_TYPES.register(
+            "toziko", () -> EntityType.Builder.<EntityToziko>of(EntityToziko::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySanae>> SANAE = ENTITY_TYPES.register(
+            "sanae", () -> EntityType.Builder.<EntitySanae>of(EntitySanae::new, MobCategory.AMBIENT)
+                    .sized(0.6F, 1.7F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityReimu>> REIMU = ENTITY_TYPES.register(
+            "reimu", () -> EntityType.Builder.<EntityReimu>of(EntityReimu::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityMiko>> MIKO = ENTITY_TYPES.register(
+            "miko", () -> EntityType.Builder.<EntityMiko>of(EntityMiko::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityWriggle>> WRIGGLE = ENTITY_TYPES.register(
+            "wriggle", () -> EntityType.Builder.<EntityWriggle>of(EntityWriggle::new, MobCategory.MONSTER)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntitySakuya>> SAKUYA = ENTITY_TYPES.register(
+            "sakuya", () -> EntityType.Builder.<EntitySakuya>of(EntitySakuya::new, MobCategory.AMBIENT)
+                    .sized(1.0F, 1.8F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityRinnosuke>> RINNOSUKE = ENTITY_TYPES.register(
+            "rinnosuke", () -> EntityType.Builder.<EntityRinnosuke>of(EntityRinnosuke::new, MobCategory.AMBIENT)
+                    .sized(0.6F, 1.95F).clientTrackingRange(80).updateInterval(1).build(""));
+
+    public static final Supplier<EntityType<EntityDanmakuCreeper>> DANMAKU_CREEPER = ENTITY_TYPES.register(
+            "danmaku_creeper", () -> EntityType.Builder.<EntityDanmakuCreeper>of(EntityDanmakuCreeper::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.7F).clientTrackingRange(80).updateInterval(1).build(""));
+
     public static void register(IEventBus modEventBus) {
         ENTITY_TYPES.register(modEventBus);
-    }
-
-    /** Convenience for subclasses sharing the shot base registration shape. */
-    static <T extends Entity> EntityType.Builder<T> shotBuilder(EntityType.EntityFactory<T> factory, float size) {
-        return EntityType.Builder.of(factory, MobCategory.MISC)
-                .sized(size, size).clientTrackingRange(80).updateInterval(1).noSave();
     }
 
     private ModEntities() {}

@@ -1,0 +1,13 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "#c:is_plains"
+  ],
+  "spawners": {
+    "type": "thkaguyamod:toziko",
+    "weight": 7,
+    "minCount": 1,
+    "maxCount": 1
+  },
+  "_comment": "1.7.10 CommonProxy.registerEntitySpawn(): EntityToziko, weight=7, min=1, max=1, EnumCreatureType=monster, BiomeGenBase=[plains]"
+}

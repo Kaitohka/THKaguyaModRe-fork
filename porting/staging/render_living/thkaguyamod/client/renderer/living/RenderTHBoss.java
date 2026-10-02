@@ -193,6 +193,9 @@ public abstract class RenderTHBoss<T extends EntityDanmakuMob, M extends EntityM
 		// スペルカードを使用中なら、スペルカード名を表示する
 		if(cardNo >= 0)
 		{
+			// 1.7.10: font.drawStringWithShadow(StatCollector.translateToLocal("item.thSpellCard." + cardNo + ".name"), -50, -12, 0xFFFFFF)
+			//         → 1.21.1 の符卡キーは spell_card_<snake>。未訳ならキーそのものが表示される（原作の
+			//            translateToLocal も未訳時はキーを返すので挙動は同じ）
 			font.drawInBatch(Component.translatable(spellCardTranslationKey(cardNo)).getString(),
 					-50.0F, -12.0F, (textAlpha << 24) | 0xFFFFFF, true, matrix, bufferSource,
 					Font.DisplayMode.NORMAL, 0, packedLight);

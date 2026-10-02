@@ -16,7 +16,6 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -169,6 +168,7 @@ public class EntityHakurouReflecter extends Entity
 			}
 		}
 
+		//1.7.10 の setPosition(posX, posY, posZ) に相当（座標は変わらないため実質は当たり判定の再計算）
 		setPos(getX(), getY(), getZ());
 		setRot(getYRot(), getXRot());
 

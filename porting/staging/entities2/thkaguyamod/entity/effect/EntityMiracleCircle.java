@@ -114,6 +114,7 @@ public class EntityMiracleCircle extends Entity
 			setXRot(user.getXRot());
 			befUseCount = getColor() * 30 + count;//1.7.10 の userPlayer.getItemInUseCount() 相当
 		}
+		//1.7.10 の setPosition(posX, posY, posZ) に相当（座標は変わらないため実質は当たり判定の再計算）
 		setPos(getX(), getY(), getZ());
 
 		if(count > 30)

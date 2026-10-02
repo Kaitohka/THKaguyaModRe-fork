@@ -427,9 +427,7 @@ public abstract class THSpellCard {
 		return shot(form, color, 0, 80, 0);
 	}
 
-	//TODO K3-review: 1.7.10 からの既知のバグ。このオーバーロードは自分自身を再帰呼び出ししており、
-	//呼ぶと StackOverflowError になる。同名・同シグネチャを保つため移植時もそのまま残している。
-	//1.7.10 では `return shot(form, color, delay);` の自己再帰（呼ぶと StackOverflowError）だった。
+	//1.7.10 では自己再帰バグだった（呼ぶと StackOverflowError）。移植時に修正済み：
 	//ShotData.shot(form,color,delay) の既定 end=80 に合わせる。
 	public static ShotData shot(int form, int color, int delay)
 	{

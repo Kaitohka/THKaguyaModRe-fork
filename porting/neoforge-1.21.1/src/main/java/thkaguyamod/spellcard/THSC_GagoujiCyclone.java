@@ -8,6 +8,7 @@ import thkaguyamod.config.ModConfig;
 import thkaguyamod.danmaku.ISpecialShot;
 import thkaguyamod.danmaku.ShotData;
 import thkaguyamod.danmaku.THShotLib;
+import thkaguyamod.entity.living.EntityDanmakuMob;
 import thkaguyamod.entity.shot.EntityTHShot;
 import thkaguyamod.registry.SpecialShotRegistry;
 
@@ -112,13 +113,14 @@ public class THSC_GagoujiCyclone extends THSpellCard implements ISpecialShot
 			case SPECIAL_TOZIKO01:
 				if(shot.tickCount >= shot.getDeadTime())
 				{
-					// TODO K3-review: EntityDanmakuMob（弾幕 MOB）待移植。Target 追尾部は移植後に有効化する。
-					// if(shot.user instanceof EntityDanmakuMob danmakuMob) {
-					//   if(danmakuMob.getTarget() != null) {
-					//     shot.angle = THShotLib.angle_ToPos(danmakuMob.pos(), pos(danmakuMob.getTarget().getX(), danmakuMob.getTarget().getY(), danmakuMob.getTarget().getZ()));
-					//     shot.setMotion();
-					//   }
-					// }
+					if(shot.user instanceof EntityDanmakuMob danmakuMob)
+					{
+						if(danmakuMob.getTarget() != null)
+						{
+							shot.angle = THShotLib.angle_ToPos(danmakuMob.pos(), pos(danmakuMob.getTarget().getX(), danmakuMob.getTarget().getY(), danmakuMob.getTarget().getZ()));
+							shot.setMotion();
+						}
+					}
 					shot.setDeadTime(90);
 					shot.shotSpeed = 0.01D;
 					shot.shotAcceleration = 0.03D;

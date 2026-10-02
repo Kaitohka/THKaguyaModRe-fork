@@ -260,10 +260,15 @@ public class EntitySpellCard extends Entity
     	//使用者がいるなら
     	if(user != null)
     	{
-    		//TODO K3-review: 1.7.10 は使用者が EntityDanmakuMob の場合に isSpellCardMode を確認して
-    		//スペルカードモードでなければ消滅させていた。EntityDanmakuMob はまだ移植されていないため、
-    		//移植後に以下の分岐を復元すること。
-    		//if(user instanceof EntityDanmakuMob danmakuMob) { if(!danmakuMob.isSpellCardMode) { finish(); return; } }
+    		//使用者が弾幕MOBの場合、スペルカードモードでなければ消滅させる（1.7.10 同様）
+    		if(user instanceof thkaguyamod.entity.living.EntityDanmakuMob danmakuMob)
+    		{
+    			if(!danmakuMob.isSpellCardMode)
+    			{
+    				finish();
+    				return;
+    			}
+    		}
     	}
 
 

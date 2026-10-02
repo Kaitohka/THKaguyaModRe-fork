@@ -5,6 +5,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import thkaguyamod.entity.item.EntitySukima;
+import thkaguyamod.init.ModEntities;
+
 /** 幻巣「飛光虫ネスト」 */
 public class THSC_HikouchuuNest extends THSpellCard
 {
@@ -47,9 +50,11 @@ public class THSC_HikouchuuNest extends THSpellCard
 				xPos = user.getX() + xVector;
 				yPos = user.getY() + yVector;
 				zPos = user.getZ() + zVector;
-				// TODO K3-review: 依存実体 EntitySukima（隙間）待移植。以下2行は移植後に有効化する。
-				// EntitySukima entitySukima = new EntitySukima(level(), user, xPos, yPos, zPos, user.getYRot(), 17);
-				// if(!level().isClientSide) { level().addFreshEntity(entitySukima); }
+				EntitySukima entitySukima = new EntitySukima(ModEntities.SUKIMA.get(), level(), user, xPos, yPos, zPos, user.getYRot(), 17);
+				if(!level().isClientSide)
+				{
+					level().addFreshEntity(entitySukima);
+				}
 				flag = true;
 			}
 		}

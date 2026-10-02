@@ -33,13 +33,13 @@ JAVA_INIT = os.path.join(PROJ, 'src', 'main', 'java', 'thkaguyamod', 'init')
 # ---------------------------------------------------------------------------
 ITEMS = [
     # ---- 五つの難題 + 新難題 ----
-    ('JEWELED_BRANCH_OF_HOURAI', 'jeweled_branch_of_hourai', 'houraiJewelBranch', 'houraiEda.png', 'bow', {'dur': 301}),
-    ('JEWEL_FROM_THE_DRAGONS_NECK', 'jewel_from_the_dragons_neck', 'dragonNeckJewel', 'ryuuTama.png', 'item', {'dur': 300, 'stack': 1}),
+    ('JEWELED_BRANCH_OF_HOURAI', 'jeweled_branch_of_hourai', 'houraiJewelBranch', 'houraiEda.png', 'bow', {'dur': 301}, 'ItemHouraiJeweledBranch'),
+    ('JEWEL_FROM_THE_DRAGONS_NECK', 'jewel_from_the_dragons_neck', 'dragonNeckJewel', 'ryuuTama.png', 'item', {'dur': 300, 'stack': 1}, 'ItemDragonNeckJewel'),
     ('BUDDHAS_STONE_BOWL', 'buddhas_stone_bowl', 'buddhaStoneBowl', 'hotokeHachi.png', 'item', {'dur': 131}, 'ItemBuddhaStoneBowl'),
     ('ROBE_OF_THE_FIRE_RAT', 'robe_of_the_fire_rat', 'fireRatRobe', 'hinezumi.png', 'armor:HINEZUMI_ROBE:chest', {}, 'ItemFireRatRobe'),
     ('SWALLOWS_COWRIE_SHELL', 'swallows_cowrie_shell', 'swallowCowrieShell', 'koyasugai.png', 'food:0:always', {}, 'ItemSwallowCowrieShell'),
-    ('SEAMLESS_CEILING_OF_KINKAKUJI', 'seamless_ceiling_of_kinkakuji', 'kinkaku-ji', 'kinkakuzi.png', 'item', {'stack': 1}),
-    ('RED_STONE_OF_AJA', 'red_stone_of_aja', 'ajaRedStone', 'AjaRedStone.png', 'item', {'stack': 1}),# 8 pearls
+    ('SEAMLESS_CEILING_OF_KINKAKUJI', 'seamless_ceiling_of_kinkakuji', 'kinkaku-ji', 'kinkakuzi.png', 'item', {'stack': 1}, 'ItemKinkakuzi'),
+    ('RED_STONE_OF_AJA', 'red_stone_of_aja', 'ajaRedStone', 'AjaRedStone.png', 'item', {'stack': 1}, 'ItemAjaRedStone'),# 8 pearls
     ('RED_PEARL',    'red_pearl',    'houraiPearl.red',    'material/RedPearl.png',    'item', {}),
     ('BLUE_PEARL',   'blue_pearl',   'houraiPearl.blue',   'material/BluePearl.png',   'item', {}),
     ('GREEN_PEARL',  'green_pearl',  'houraiPearl.green',  'material/GreenPearl.png',  'item', {}),
@@ -49,44 +49,44 @@ ITEMS = [
     ('ORANGE_PEARL', 'orange_pearl', 'houraiPearl.orange', 'material/OrangePearl.png', 'item', {}),
     ('WHITE_PEARL',  'white_pearl',  'houraiPearl.white',  'material/WhitePearl.png',  'item', {}),
     # ---- 霊夢・魔理沙 ----
-    ('HAKUREI_SHRINE_MAIDEN_STICK', 'hakurei_shrine_maiden_stick', 'hakureiMikoStick', 'HakureiOharaibou.png', 'item', {'dur': 89}),
-    ('HOMING_AMULET', 'homing_amulet', 'homingAmulet.homing', 'homingAmulet.png', 'item', {}),
-    ('DIFFUSION_AMULET', 'diffusion_amulet', 'homingAmulet.diffusion', 'diffusionAmulet.png', 'item', {}),
-    ('YIN_YANG_ORB', 'yin_yang_orb', 'yinYangOrb', 'material/Onmyoudama.png', 'item', {}),
-    ('BLOODTHIRSTY_YIN_YANG_ORB', 'bloodthirsty_yin_yang_orb', 'bloodthirstyYinYangOrb', 'material/Onmyoudama.png', 'item', {'dur': 150}),
-    ('MAGIC_BROOM', 'magic_broom', 'magicBroom', 'magicBroom.png', 'item', {'stack': 1}),
-    ('MINI_HAKKERO', 'mini_hakkero', 'miniHakkero', 'miniHakkero.png', 'item', {'stack': 1}),
+    ('HAKUREI_SHRINE_MAIDEN_STICK', 'hakurei_shrine_maiden_stick', 'hakureiMikoStick', 'HakureiOharaibou.png', 'item', {'dur': 89}, 'ItemOharaibouR'),
+    ('HOMING_AMULET', 'homing_amulet', 'homingAmulet.homing', 'homingAmulet.png', 'item', {}, 'ItemHomingAmulet'),
+    ('DIFFUSION_AMULET', 'diffusion_amulet', 'homingAmulet.diffusion', 'diffusionAmulet.png', 'item', {}, 'ItemHomingAmulet'),
+    ('YIN_YANG_ORB', 'yin_yang_orb', 'yinYangOrb', 'material/Onmyoudama.png', 'item', {}, 'ItemOnmyoudama'),
+    ('BLOODTHIRSTY_YIN_YANG_ORB', 'bloodthirsty_yin_yang_orb', 'bloodthirstyYinYangOrb', 'material/Onmyoudama.png', 'item', {'dur': 150}, 'ItemBloodthirstyOnmyoudama'),
+    ('MAGIC_BROOM', 'magic_broom', 'magicBroom', 'magicBroom.png', 'item', {'stack': 1}, 'ItemMarisaBroom'),
+    ('MINI_HAKKERO', 'mini_hakkero', 'miniHakkero', 'miniHakkero.png', 'item', {'stack': 1}, 'ItemMiniHakkero'),
     ('MARISAS_HAT', 'marisas_hat', 'marisaHat', 'MarisaHat.png', 'armor:MARISA:helm', {'dur': 40}, 'ItemMarisaHat'),
     # ---- 紅魔郷 ----
     ('ICICLE_SWORD', 'icicle_sword', 'icicleSword', 'IcicleSword.png', 'sword:ICICLE', {}),
-    ('SILVER_KNIFE_BLUE', 'silver_knife_blue', 'silverKnife.blue', 'shot/SilverKnife_Blue.png', 'item', {}),
-    ('SILVER_KNIFE_RED', 'silver_knife_red', 'silverKnife.red', 'shot/SilverKnife_Red.png', 'item', {}),
-    ('SILVER_KNIFE_GREEN', 'silver_knife_green', 'silverKnife.green', 'shot/SilverKnife_Green.png', 'item', {}),
-    ('SILVER_KNIFE_WHITE', 'silver_knife_white', 'silverKnife.white', 'shot/SilverKnife_White.png', 'item', {'stack': 1}),
-    ('SAKUYAS_POCKET_WATCH', 'sakuyas_pocket_watch', 'sakuyaWatch', 'sakuyaWatch.png', 'item', {'stack': 1}),
-    ('SAKUYAS_STOPWATCH', 'sakuyas_stopwatch', 'sakuyaStopwatch', 'SakuyaStopWatch.png', 'item', {'stack': 1}),
-    ('SPEAR_THE_GUNGNIR', 'spear_the_gungnir', 'spearTheGungnir', 'Gungnir.png', 'item', {'dur': 95}),
+    ('SILVER_KNIFE_BLUE', 'silver_knife_blue', 'silverKnife.blue', 'shot/SilverKnife_Blue.png', 'item', {}, 'ItemSilverKnife'),
+    ('SILVER_KNIFE_RED', 'silver_knife_red', 'silverKnife.red', 'shot/SilverKnife_Red.png', 'item', {}, 'ItemSilverKnife'),
+    ('SILVER_KNIFE_GREEN', 'silver_knife_green', 'silverKnife.green', 'shot/SilverKnife_Green.png', 'item', {}, 'ItemSilverKnife'),
+    ('SILVER_KNIFE_WHITE', 'silver_knife_white', 'silverKnife.white', 'shot/SilverKnife_White.png', 'item', {'stack': 1}, 'ItemSilverKnife'),
+    ('SAKUYAS_POCKET_WATCH', 'sakuyas_pocket_watch', 'sakuyaWatch', 'sakuyaWatch.png', 'item', {'stack': 1, 'dur': 2}, 'ItemSakuyaWatch'),
+    ('SAKUYAS_STOPWATCH', 'sakuyas_stopwatch', 'sakuyaStopwatch', 'SakuyaStopWatch.png', 'item', {'stack': 1}, 'ItemSakuyaStopWatch'),
+    ('SPEAR_THE_GUNGNIR', 'spear_the_gungnir', 'spearTheGungnir', 'Gungnir.png', 'item', {'dur': 95}, 'ItemSpearTheGungnir'),
     ('LAEVATEINN', 'laevateinn', 'laevateinn', 'Laevateinn.png', 'sword:LAEVATEINN', {}),
     # ---- 妖々夢 ----
-    ('CURSED_DECOY_DOLL', 'cursed_decoy_doll', 'cursedDecoyDoll', 'cursedDecoyDoll.png', 'item', {'dur': 30}),
+    ('CURSED_DECOY_DOLL', 'cursed_decoy_doll', 'cursedDecoyDoll', 'cursedDecoyDoll.png', 'item', {'dur': 30}, 'ItemCursedDecoyDoll'),
     ('HAKUROUKEN', 'hakurouken', 'hakurouken', 'hakurouken.png', 'sword:HAKUROUKEN', {}),
     ('ROUKANKEN', 'roukanken', 'roukanken', 'roukanSword.png', 'sword:ROUKANKEN', {}),
-    ('YUYUKOS_FAN', 'yuyukos_fan', 'yuyukoFan', 'yuyukoOugi.png', 'item', {'dur': 444, 'stack': 1}),
-    ('SOUL_TORCH', 'soul_torch', 'soulTorch', 'soulTorch.png', 'item', {}),
-    ('GAP', 'gap', 'gap', 'sukima.png', 'item', {}),
-    ('GAP_FOLDING_UMBRELLA', 'gap_folding_umbrella', 'gapFoldingUmbrella', 'GapFoldingUmbrella_base.png|GapFoldingUmbrella_ribbon.png', 'item', {'dur': 30}),
+    ('YUYUKOS_FAN', 'yuyukos_fan', 'yuyukoFan', 'yuyukoOugi.png', 'item', {'dur': 444, 'stack': 1}, 'ItemYuyukoFan'),
+    ('SOUL_TORCH', 'soul_torch', 'soulTorch', 'soulTorch.png', 'item', {}, 'ItemSoulTorch'),
+    ('GAP', 'gap', 'gap', 'sukima.png', 'item', {}, 'ItemSukima'),
+    ('GAP_FOLDING_UMBRELLA', 'gap_folding_umbrella', 'gapFoldingUmbrella', 'GapFoldingUmbrella_base.png|GapFoldingUmbrella_ribbon.png', 'item', {'dur': 30}, 'ItemGapFoldingUmbrella'),
     # ---- 萃夢想 ----
     ('IBUKI_GOURD', 'ibuki_gourd', 'ibukiGourd', 'ibukihyou.png', 'item', {'dur': 11, 'stack': 1}, 'ItemIbukihyou'),
     # ---- 花映塚 ----
-    ('YUUKAS_PARASOL', 'yuukas_parasol', 'yuukaParasol', 'yuukaParasol.png', 'item', {'dur': 60}),
+    ('YUUKAS_PARASOL', 'yuukas_parasol', 'yuukaParasol', 'yuukaParasol.png', 'item', {'dur': 60}, 'ItemYuukaParasol'),
     ('SCYTHE_OF_DEATH', 'scythe_of_death', 'deathScythe', 'deathScythe.png', 'sword:IRON:444', {}, 'ItemDeathScythe'),
     ('ROD_OF_REMORSE', 'rod_of_remorse', 'remorseRod', 'kaigoStick_0.png', 'sword:KAIGO', {'dur': 2}, 'ItemKaigo'),
     # ---- 文花帖 ----
-    ('TENGUS_FAN', 'tengus_fan', 'tenguFan', 'tenguFan.png', 'item', {'dur': 40}),
+    ('TENGUS_FAN', 'tengus_fan', 'tenguFan', 'tenguFan.png', 'item', {'dur': 40}, 'ItemTenguFan'),
     # ---- 風神録 ----
     ('KAPPA_CAP', 'kappa_cap', 'kappaCap', 'kappaCap.png', 'armor:KAPPA:helm', {'dur': 500}, 'ItemKappaCap'),
-    ('KAPPAS_WATER_PISTOL', 'kappas_water_pistol', 'kappaWaterPistol', 'kappaWaterPistol.png', 'item', {'dur': 39}),
-    ('WIND_SHRINE_MAIDEN_STICK', 'wind_shrine_maiden_stick', 'windMikoStick', 'mikoStick_S.png', 'item', {'dur': 50}),
+    ('KAPPAS_WATER_PISTOL', 'kappas_water_pistol', 'kappaWaterPistol', 'kappaWaterPistol.png', 'item', {'dur': 39}, 'ItemKappaWaterPistol'),
+    ('WIND_SHRINE_MAIDEN_STICK', 'wind_shrine_maiden_stick', 'windMikoStick', 'mikoStick_S.png', 'item', {'dur': 50}, 'ItemOharaibouS'),
     ('ILLNESS_RECOVERY_CHARM', 'illness_recovery_charm', 'byoukiheiyuMamori', 'ByoukiheiyuMamori.png', 'item', {}, 'ItemByoukiheiyuMamori'),
     ('ONBASHIRA', 'onbashira', 'onbashira', 'onbashira.png', 'sword:WOOD', {}, 'ItemOnbashira'),
     ('SUWAKOS_HAT', 'suwakos_hat', 'suwakoHat', 'Kerobou.png', 'armor:SUWAKO:helm', {'dur': 620}, 'ItemKerobou'),
@@ -95,20 +95,20 @@ ITEMS = [
     ('SWORD_OF_SCARLET_PERCEPTION', 'sword_of_scarlet_perception', 'scarletPerceptionSword', 'hisousword.png', 'sword:HISOU', {}),
     # ---- 地霊殿 ----
     ('THIRD_EYE', 'third_eye', 'thirdEye', 'thirdEye_0.png', 'item', {'dur': 150, 'stack': 1}, 'ItemThirdEye'),
-    ('NUCLEAR_CONTROL_ROD', 'nuclear_control_rod', 'nuclearControlRod', 'nuclearControlRod.png', 'item', {'dur': 36}),
+    ('NUCLEAR_CONTROL_ROD', 'nuclear_control_rod', 'nuclearControlRod', 'nuclearControlRod.png', 'item', {'dur': 36}, 'ItemNuclearControlRod'),
     ('CLOSED_THIRD_EYE', 'closed_third_eye', 'closedThirdEye', 'closedThirdEye.png', 'item', {'stack': 1}, 'ItemClosedThirdEye'),
     # ---- 星蓮船 ----
-    ('NAZRIN_PENDULUM', 'nazrin_pendulum', 'nazrinPendulum', 'pendulum.png', 'item', {'stack': 1}),
+    ('NAZRIN_PENDULUM', 'nazrin_pendulum', 'nazrinPendulum', 'pendulum.png', 'item', {'stack': 1}, 'ItemPendulum'),
     ('SHIP_GHOSTS_DIPPER_EMPTY', 'ship_ghosts_dipper_empty', 'shipGhostDipperEmpty', 'hisyaku_1.png', 'item', {'dur': 60, 'stack': 1}, 'ItemHisyaku:EMPTY'),
     ('SHIP_GHOSTS_DIPPER', 'ship_ghosts_dipper', 'shipGhostDipper', 'hisyaku_0.png', 'item', {'dur': 60, 'stack': 1}, 'ItemHisyaku:FILL'),
-    ('SORCERERS_SUTRA_SCROLL', 'sorcerers_sutra_scroll', 'sorcererSutraScroll', 'mazinKyoukan.png', 'item', {'stack': 1}),
+    ('SORCERERS_SUTRA_SCROLL', 'sorcerers_sutra_scroll', 'sorcererSutraScroll', 'mazinKyoukan.png', 'item', {'stack': 1}, 'ItemMazinKyoukan'),
     # ---- 神霊廟 ----
     ('WALL_PASSING_CHISEL', 'wall_passing_chisel', 'wallPassingChisel', 'kabenuke.png', 'item', {'dur': 122}, 'ItemKabenuke'),
-    ('SACRED_SWORD_OF_TOYOSATOMIMI', 'sacred_sword_of_toyosatomimi', 'toyosatomimiSword', 'toyosatomimiSword.png', 'sword:IRON', {}),
+    ('SACRED_SWORD_OF_TOYOSATOMIMI', 'sacred_sword_of_toyosatomimi', 'toyosatomimiSword', 'toyosatomimiSword.png', 'sword:IRON', {}, 'ItemMikoSword'),
     # ---- 輝針城 ----
-    ('MIRACLE_MALLET', 'miracle_mallet', 'miracleMallet', 'UchidenoKoduchi.png', 'item', {'dur': 100}),
+    ('MIRACLE_MALLET', 'miracle_mallet', 'miracleMallet', 'UchidenoKoduchi.png', 'item', {'dur': 100}, 'ItemUchide'),
     # ---- 分類外 ----
-    ('SPIRITUAL_STRIKE_TALISMAN', 'spiritual_strike_talisman', 'spiritualStrikeTalisman', 'SpiritualStrikeTalisman.png', 'item', {}),
+    ('SPIRITUAL_STRIKE_TALISMAN', 'spiritual_strike_talisman', 'spiritualStrikeTalisman', 'SpiritualStrikeTalisman.png', 'item', {}, 'ItemSpiritualStrikeTalisman'),
     # ---- 基本アイテム ----
     ('SHOT_MATERIAL', 'shot_material', 'shotMaterial', 'material/ShotMaterial.png', 'item', {}, 'ItemShotMaterial'),
     ('POWER_UP_ITEM_SMALL', 'power_up_item_small', 'thPowerItem.small', 'material/SmallPowerUpItem.png', 'item', {}),
@@ -373,6 +373,18 @@ def main():
         for color in DIVINE_COLORS:
             ok = 'tile.divineSpirit.%s.name' % color
             new['block.thkaguyamod.divine_spirit_%s' % color] = old.get(ok, old.get('tile.divineSpirit.name', 'divine_spirit_' + color))
+        # entity names: entity.THKaguyaMod.<Camel>.name -> entity.thkaguyamod.<snake>
+        ENTITY_LANG = {
+            'THFairy': 'th_fairy', 'SunflowerFairy': 'sunflower_fairy', 'THPhantom': 'th_phantom',
+            'Familiar': 'familiar', 'Cirno': 'cirno', 'Rumia': 'rumia', 'Toziko': 'toziko',
+            'Sanae': 'sanae', 'Reimu': 'reimu', 'Miko': 'miko', 'Wriggle': 'wriggle',
+            'Sakuya': 'sakuya', 'Rinnosuke': 'rinnosuke', 'Hanabeeper': 'danmaku_creeper',
+            'CursedDecoyDoll': 'cursed_decoy_doll',
+        }
+        for camel, nid in ENTITY_LANG.items():
+            ok = 'entity.THKaguyaMod.%s.name' % camel
+            if ok in old:
+                new['entity.thkaguyamod.%s' % nid] = old[ok]
         # GUI labels and misc message keys pass through unchanged
         for k, v in old.items():
             if k.startswith(('danmakuCrafting.', 'laserCrafting.', 'thKaguya.')):
@@ -419,7 +431,10 @@ def main():
             else:
                 body.append('    public static final DeferredItem<SwordItem> %s = ITEMS.registerItem("%s", props -> new SwordItem(ModTiers.%s, props), %s);' % (const, rid, tier, prop))
         elif kind == 'bow':
-            body.append('    public static final DeferredItem<BowItem> %s = ITEMS.registerItem("%s", BowItem::new, %s);' % (const, rid, prop))
+            if cls:
+                body.append('    public static final DeferredItem<%s> %s = ITEMS.registerItem("%s", %s::new, %s);' % (cls, const, rid, cls, prop))
+            else:
+                body.append('    public static final DeferredItem<BowItem> %s = ITEMS.registerItem("%s", BowItem::new, %s);' % (const, rid, prop))
         elif kind.startswith('armor:'):
             _, mat, slot = kind.split(':')
             atype = 'ArmorItem.Type.HELMET' if slot == 'helm' else 'ArmorItem.Type.CHESTPLATE'

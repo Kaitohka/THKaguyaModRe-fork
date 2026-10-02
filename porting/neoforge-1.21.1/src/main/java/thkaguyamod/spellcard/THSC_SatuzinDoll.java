@@ -6,7 +6,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 import thkaguyamod.danmaku.THShotLib;
+import thkaguyamod.entity.item.EntitySakuyaWatch;
 import thkaguyamod.entity.shot.EntityTHShot;
+import thkaguyamod.init.ModEntities;
 
 import static thkaguyamod.danmaku.DanmakuConstants.*;
 
@@ -52,14 +54,18 @@ public class THSC_SatuzinDoll extends THSpellCard
 			List<Entity> list = level().getEntities(card, card.getBoundingBox().inflate(20.0D));
 			for(Entity entity : list)
 			{
-				// TODO K3-review: 依存実体 EntitySakuyaWatch（時間停止空間）待移植。以下判定は移植後に有効化する。
-				// if (entity instanceof EntitySakuyaWatch entityPrivateSquare && entityPrivateSquare.userEntity == user) { flag = false; }
+				if(entity instanceof EntitySakuyaWatch entityPrivateSquare && entityPrivateSquare.userEntity == user)
+				{
+					flag = false;
+				}
 			}
 			if(flag)
 			{
-				// TODO K3-review: 依存実体 EntitySakuyaWatch（時間停止空間）待移植。以下2行は移植後に有効化する。
-				// EntitySakuyaWatch entityPrivateSquare = new EntitySakuyaWatch(level(), user, 1);
-				// if(!level().isClientSide) { level().addFreshEntity(entityPrivateSquare); }
+				EntitySakuyaWatch entityPrivateSquare = new EntitySakuyaWatch(ModEntities.SAKUYA_WATCH.get(), level(), user, 1);
+				if(!level().isClientSide)
+				{
+					level().addFreshEntity(entityPrivateSquare);//時間停止空間を生み出す
+				}
 			}
 		}
 	}

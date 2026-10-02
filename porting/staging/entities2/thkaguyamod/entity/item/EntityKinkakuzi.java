@@ -512,7 +512,4 @@ public class EntityKinkakuzi extends Entity
 	{
 		return this.entityData.get(DATA_FORWARD_DIRECTION);
 	}
-
-	/** TODO K3-review: このいんナーくらすは書きかけの遺物。削除予定。 */
-	private static final class EntityLivingBasePlaceholder {}
 }

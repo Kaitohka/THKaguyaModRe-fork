@@ -1,3 +1,6 @@
+# !!! 警告（K3）：本生成器的取部件代码（root.getChild）忽略 1.7.10 的 addChild 父子层级，
+# 会生成导致客户端启动挂起的错误链（事故 I5）。主树模型已手工修正取件链，为权威版本。
+# 除非先修复本生成器按 info["links"] 生成父链，否则禁止重跑本脚本覆盖主树模型。
 """models2 batch builder — 1.7.10 living-entity models -> NeoForge 1.21.1 (Mojmap).
 
 Geometry (box coords / sizes / texture offsets / rotation points / part hierarchy) is
@@ -38,18 +41,6 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 BASE_FIELDS = ["bipedHead", "bipedBody", "bipedRightArm", "bipedLeftArm",
                "bipedRightLeg", "bipedLeftLeg", "skirtTop", "skirtBottom",
                "longHair", "rightBraid", "leftBraid"]
-
-IMPORTS_COMMON = """import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-
-import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.client.model.geom.builders.MeshDefinition;
-import net.minecraft.client.model.geom.builders.PartDefinition;
-"""
 
 RAD = """    /** 度数をラジアンに変換（1.7.10 の rad() と同じ） */
     protected static float rad(float degree)

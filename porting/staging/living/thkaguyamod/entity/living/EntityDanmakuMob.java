@@ -369,9 +369,13 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 
 	/**
 	 * 移動速度を返す
+	 *
+	 * <p>1.7.10 は EntityCreature の移動速度属性（movementSpeed）を返していた。1.21.1 の
+	 * {@code LivingEntity#getSpeed()} は「今の移動速度（float）」で意味が異なるため、
+	 * 属性値を返すこのメソッドは別名にする（旧 getSpeed() は double を返していた）。
 	 * @return 移動速度
 	 */
-	public double getSpeed()
+	public double getMovementSpeed()
 	{
 		return this.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).getBaseValue();
 	}
@@ -784,6 +788,12 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 		attackInterval = invincibleTime;
 		THShotLib.danmakuRemove(this, 40.0D, "Enemy", true);
 		isSpellCardMode = false;
+		//TODO K3-review: 1.21.1 では HP が 0 になると die() が走り LivingEntity.dead = true と
+		//Pose.DYING が立つ。ここで HP を戻しても dead / Pose は戻らないため、多段階ボスは
+		//「死んだ姿勢のまま」tick し続ける（当たり判定の寸法・描画に影響しうる）。
+		//1.7.10 は同じ構造でも isDead/dead が進行に影響しなかったため挙動差が出る。
+		//確定した対処（dead = false / setPose(Pose.STANDING) をここで戻すか、die() を握るか）は要判断。
+		this.setPose(net.minecraft.world.entity.Pose.STANDING);
 		if(circle != null)
 		{
 			circle.discard();
@@ -1040,7 +1050,7 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 
 			if(moveTimer <= 0 && lostTarget > 0)
 			{
-				move(THShotLib.getVecFromAngle(random.nextFloat() + 360F, random.nextFloat() * 360F), getSpeed(), 30);
+				move(THShotLib.getVecFromAngle(random.nextFloat() + 360F, random.nextFloat() * 360F), getMovementSpeed(), 30);
 			}
 
 			if(moveTimer <= 0 && getTarget() != null && getAttackDistance() > 0)
@@ -1051,12 +1061,12 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 				if(toTargetDistance < getAttackDistance())
 				{
 					rate = 1.0D -  (toTargetDistance / getAttackDistance());
-					moveBack(getSpeed() * 0.3D * rate, 15);
+					moveBack(getMovementSpeed() * 0.3D * rate, 15);
 				}
 				else
 				{
 					rate = (toTargetDistance / getAttackDistance());
-					moveForward(getSpeed() * 0.5D * rate, 15);
+					moveForward(getMovementSpeed() * 0.5D * rate, 15);
 				}
 			}
 		}
@@ -1571,7 +1581,7 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 			warpY = this.getY() + (double)(this.random.nextInt((int)range) - (int)(range / 2.0D));
 			warpZ = this.getZ() + (this.random.nextDouble() - 0.5D) * range;
 			count++;
-		}while(!this.teleportTo(warpX, warpY, warpZ) && count < 10);
+		}while(!this.danmakuTeleportTo(warpX, warpY, warpZ) && count < 10);
 		return true;
 	}
 
@@ -1588,7 +1598,7 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 		double d1 = this.getX() + (this.random.nextDouble() - 0.5D) * 8.0D - vec3.x * d0;
 		double d2 = this.getY() + (double)(this.random.nextInt(16) - 8) - vec3.y * d0;
 		double d3 = this.getZ() + (this.random.nextDouble() - 0.5D) * 8.0D - vec3.z * d0;
-		return this.teleportTo(d1, d2, d3);
+		return this.danmakuTeleportTo(d1, d2, d3);
 	}
 
 	/**
@@ -1597,7 +1607,7 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 	 * <p>1.7.10 は Forge の {@code EnderTeleportEvent} を投げていた。1.21.1 の対応イベントは
 	 * {@link EntityTeleportEvent}（EnderTeleportEvent は削除された）。
 	 */
-	protected boolean teleportTo(double par1, double par3, double par5)
+	private boolean danmakuTeleportTo(double par1, double par3, double par5)
 	{
 		EntityTeleportEvent event = new EntityTeleportEvent(this, par1, par3, par5);
 		if (NeoForge.EVENT_BUS.post(event).isCanceled()){

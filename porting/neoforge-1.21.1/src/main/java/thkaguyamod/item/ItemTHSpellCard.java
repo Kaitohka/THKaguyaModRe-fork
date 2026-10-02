@@ -79,21 +79,13 @@ public class ItemTHSpellCard extends Item {
     /**
      * 右クリックでスペルカードを宣言する（1.7.10 {@code onItemRightClick}）。
      *
-     * <p>TODO K3-review: 1.7.10 は「早苗のスペルカード (meta 14..18) を手に持っていて
-     * NBT "Charge" が無い/0 以下なら宣言失敗」というガードを {@code THKaguyaLib.checkSpellCardDeclaration}
-     * の中に持っていた。1.21.1 の {@code THKaguyaLib} 移植版はそのガードを持っていない
-     * （同メソッド内の TODO 参照）ため、ここで同じガードを張っている。
-     * {@code THKaguyaLib} 側にガードが入ったら、このブロックは削除すること。
+     * <p>早苗のスペルカード (旧 meta 14..18) の「奇跡の力」（{@link ModDataComponents#CHARGE}）不足判定は
+     * {@link THKaguyaLib#checkSpellCardDeclaration} 側に一本化した（1.7.10 と同じ位置）。
+     * ここで重複判定は行わない。
      */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-
-        if (!player.isCreative()
-                && this.spellCardId >= SANAE_CARD_MIN && this.spellCardId <= SANAE_CARD_MAX
-                && stack.getOrDefault(ModDataComponents.CHARGE.get(), 0) <= 0) {
-            return InteractionResultHolder.fail(stack);// 宣言失敗
-        }
 
         // 1.7.10: プレイヤーの宣言レベルは常に Normal(2)、firstAttack = true
         THKaguyaLib.checkSpellCardDeclaration(level, stack, player, this.spellCardId, DanmakuConstants.NORMAL, true);

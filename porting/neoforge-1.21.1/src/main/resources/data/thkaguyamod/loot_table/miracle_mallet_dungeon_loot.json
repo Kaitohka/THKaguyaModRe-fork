@@ -1,0 +1,17 @@
+{
+  "comment": "打出小槌（miracle_mallet）的地牢战利品子表。1.7.10 里 ChestGenHooks 通过 ItemUchide#getChestGenBase 把地牢箱中的附魔书改写成小槌（沿用附魔书的权重，数量 1）。1.21.1 用“权重 1、1 个”的等价子表配合 neoforge:add_table 全局战利品修饰器注入。",
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "thkaguyamod:miracle_mallet",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

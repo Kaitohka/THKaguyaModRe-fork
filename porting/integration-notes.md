@@ -31,7 +31,7 @@
 | P10 | `ItemOnbashira` 挖掘速度 3.0 恒值在 1.21.1 无 item 覆写点 | agent-10 TODO | 用属性组件或 Tool 规则补，阶段 5 |
 | P11 | `ItemCursedDecoyDoll` 的 OriginalItemID 还原需新组件 ORIGINAL_ITEM（物品注册名字符串） | agent-18 | 合并道具实体批时加组件并对接万宝槌还原 |
 | P12 | `sakuyas_pocket_watch` damage 当模式位 → 需 durability(2)（同 kaigo 处理） | agent-18 | 生成器表改，合并物品批时 |
-| P13 | 早苗符卡 Charge 守卫在 THKaguyaLib.checkSpellCardDeclaration 里恒通过 | agent-18/25 | K3 在库侧补 CHARGE 组件判定（物品侧已有重复判定，库侧补全后删物品侧） |
+| P13 | 早苗符卡 Charge 守卫闭环 | agent-29 | ✅ 已落实并合并（库侧守卫+物品侧去重；提示文案键缺失→保持旧版静默失败，待补键后可启用 displayClientMessage） |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
@@ -68,6 +68,11 @@
 | 生物渲染器 | agent-24 | 14 个 | 🏃 |
 | 符卡物品+杂项+发射器 | agent-25 | （429 恢复 1 次） | ✅ 物品已合并（b252bed）；ModDispenserBehaviors ⏸ 待 SILVER_KNIFE |
 | 数据 JSON | agent-26 | 14 biome_modifier + GLM + ModSpawns + 生成器/校验器 | ✅ 交付（全校验通过），⏸ 待生物批后合并 |
+
+## 事故台账补记
+
+| I5 | 大合并后客户端启动挂起（黑屏，停于 beds 图集） | models2 生成器对所有部件用 root.getChild，忽略 1.7.10 addChild 父子层级 → NoSuchElementException → 被当资源包错误进入重载死循环 | ✅ agent-27 修复 12 模型取件链，连续 5 次启动零模型错误；生成器标记勿重跑 |
+| I6 | 替身人偶右键即崩（Can't find attribute follow_range） | 我接属性时误用 LivingEntity.createLivingAttributes（无 follow_range） | ✅ 改 PathfinderMob.createMobAttributes |
 
 ## 回归闸门记录
 

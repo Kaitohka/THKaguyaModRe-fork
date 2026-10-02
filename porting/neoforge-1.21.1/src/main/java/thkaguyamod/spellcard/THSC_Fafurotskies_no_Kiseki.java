@@ -16,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 import thkaguyamod.danmaku.ISpecialShot;
 import thkaguyamod.danmaku.ShotData;
 import thkaguyamod.danmaku.THShotLib;
+import thkaguyamod.entity.living.EntityDanmakuCreeper;
 import thkaguyamod.entity.shot.EntityNuclearShot;
 import thkaguyamod.entity.shot.EntityTHShot;
 import thkaguyamod.init.ModEntities;
@@ -72,10 +73,14 @@ public class THSC_Fafurotskies_no_Kiseki extends THSpellCard implements ISpecial
 
 					if(now.getMonthValue() == 12 && now.getDayOfMonth() == 25)
 					{
-						// TODO K3-review: 依存実体 EntityDanmakuCreeper（弾幕クリーパー）待移植。以下は移植後に有効化する。
-						// EntityDanmakuCreeper entityCreeper = new EntityDanmakuCreeper(world);
-						// entityCreeper.setPos((int)shot.getX(), (int)shot.getY(), (int)shot.getZ());
-						// if(!world.isClientSide) { world.addFreshEntity(entityCreeper); shot.discard(); }
+						EntityDanmakuCreeper entityCreeper = new EntityDanmakuCreeper(ModEntities.DANMAKU_CREEPER.get(), world);
+						// 1.7.10 の setLocationAndAngles に相当（位置と向きを同時に設定）
+						entityCreeper.moveTo((int)shot.getX(), (int)shot.getY(), (int)shot.getZ(), rand.nextFloat() * 360F, 0.0F);
+						if(!world.isClientSide)
+						{
+							world.addFreshEntity(entityCreeper);
+							shot.discard();
+						}
 						return;
 					}
 

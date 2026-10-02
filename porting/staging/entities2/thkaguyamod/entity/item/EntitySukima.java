@@ -3,7 +3,6 @@ package thkaguyamod.entity.item;
 import java.util.List;
 import java.util.Set;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -370,26 +369,5 @@ public class EntitySukima extends Entity
 				warp = false;
 			}
 		}
-	}
-
-	//未使用フィールドの警告回避（1.7.10 でも count は代入のみ）
-	@SuppressWarnings("unused")
-	private int unusedCount()
-	{
-		return count;
-	}
-
-	//未使用フィールドの警告回避
-	@SuppressWarnings("unused")
-	private int unusedPattern()
-	{
-		return pattern;
-	}
-
-	//未使用フィールドの警告回避
-	@SuppressWarnings("unused")
-	private BlockPos unusedMarker()
-	{
-		return BlockPos.ZERO;
 	}
 }

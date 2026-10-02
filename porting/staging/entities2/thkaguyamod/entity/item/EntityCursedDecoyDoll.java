@@ -3,7 +3,6 @@ package thkaguyamod.entity.item;
 import java.util.List;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -52,9 +51,11 @@ public class EntityCursedDecoyDoll extends EntityDanmakuMob
 		this.attackInterval = 0;
 	}
 
-	/** 当たり判定の大きさ（1.7.10 の setSize(1.0F, 1.8F) に相当） */
+	/** 当たり判定の大きさ（1.7.10 の setSize(1.0F, 1.8F) に相当）
+	 *  TODO K3-review: LivingEntity.getDimensions(Pose) は 1.21.1 で final のため、
+	 *  1.7.10 の setSize 相当は getDefaultDimensions をオーバーライドして指定する。 */
 	@Override
-	public net.minecraft.world.entity.EntityDimensions getDimensions(net.minecraft.world.entity.Pose pose)
+	protected net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose)
 	{
 		return net.minecraft.world.entity.EntityDimensions.fixed(1.0F, 1.8F);
 	}

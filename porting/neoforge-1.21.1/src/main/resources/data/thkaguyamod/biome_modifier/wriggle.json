@@ -1,0 +1,15 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "#minecraft:is_forest",
+    "#minecraft:is_jungle",
+    "#minecraft:is_river"
+  ],
+  "spawners": {
+    "type": "thkaguyamod:wriggle",
+    "weight": 20,
+    "minCount": 1,
+    "maxCount": 3
+  },
+  "_comment": "1.7.10 CommonProxy.registerEntitySpawn(): EntityWriggle, weight=20, min=1, max=3, EnumCreatureType=monster, BiomeGenBase=[birchForest, birchForestHills, forest, forestHills, jungle, jungleEdge, jungleHills, river]"
+}

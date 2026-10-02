@@ -54,6 +54,11 @@ public class EntityTHFairy extends EntityDanmakuMob
 		this.setFlyingHeight(2);
 	}
 
+	/** 妖精の攻撃モーション（1.7.10 は dataWatcher 17 を流用していた） */
+	private static final net.minecraft.network.syncher.EntityDataAccessor<Byte> DATA_FAIRY_ATTACK_MOTION =
+			net.minecraft.network.syncher.SynchedEntityData.defineId(EntityTHFairy.class,
+					net.minecraft.network.syncher.EntityDataSerializers.BYTE);
+
 	/** 属性（1.7.10 の applyEntityAttributes に相当） */
 	public static AttributeSupplier.Builder createAttributes()
 	{
@@ -62,6 +67,17 @@ public class EntityTHFairy extends EntityDanmakuMob
 				.add(Attributes.MOVEMENT_SPEED, 0.25D)
 				.add(Attributes.KNOCKBACK_RESISTANCE, 0.0D)
 				.add(Attributes.FOLLOW_RANGE, 30.0D);
+	}
+
+	/**
+	 * 生成時に一度だけ呼ばれる（1.7.10 の entityInit は EntityDanmakuMob 側にあるため、
+	 * ここでは妖精固有の同期データのみ定義する）。
+	 */
+	@Override
+	protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder)
+	{
+		super.defineSynchedData(builder);
+		builder.define(DATA_FAIRY_ATTACK_MOTION, (byte)0);
 	}
 
 	/**
@@ -359,8 +375,18 @@ public class EntityTHFairy extends EntityDanmakuMob
 			}
 		}
 
-		//1.7.10 の getSavedLightValue(Sky) - skylightSubtracted <= 7 に相当
-		if(level.getBrightness(LightLayer.SKY, new BlockPos(xPosition, yPosition, zPosition)) - level.getSkyDarken() <= 7)
+		//1.7.10 の getSavedLightValue(Sky) - skylightSubtracted <= 7 に相当。
+		//getBrightness は BlockAndTintGetter のメソッドのため、実体が Level のときだけ引く。
+		int skyLight;
+		if(level instanceof net.minecraft.world.level.BlockAndTintGetter tint)
+		{
+			skyLight = tint.getBrightness(LightLayer.SKY, new BlockPos(xPosition, yPosition, zPosition));
+		}
+		else
+		{
+			skyLight = level.getMaxLocalRawBrightness(new BlockPos(xPosition, yPosition, zPosition));
+		}
+		if(skyLight - level.getSkyDarken() <= 7)
 		{
 			return false;
 		}

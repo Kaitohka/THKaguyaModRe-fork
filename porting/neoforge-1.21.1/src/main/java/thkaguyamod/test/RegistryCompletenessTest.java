@@ -63,9 +63,8 @@ public final class RegistryCompletenessTest {
     /** 结构名 = {@code thkaguyamod:empty}（见 {@code data/thkaguyamod/structure/empty.nbt}）。 */
     private static final String TEMPLATE = "empty";
 
-    private static final int EXPECTED_MOD_ITEMS = 126;
-    private static final int EXPECTED_BLOCK_ITEMS = 10;
-    private static final int EXPECTED_ITEM_REGISTRY_ENTRIES = EXPECTED_MOD_ITEMS + EXPECTED_BLOCK_ITEMS;
+    private static final int EXPECTED_MOD_ITEMS = 136; // 126 items + 10 BlockItems（ModBlocks 的方块物品也注册进 ModItems.ITEMS）
+    private static final int EXPECTED_ITEM_REGISTRY_ENTRIES = EXPECTED_MOD_ITEMS; // BuiltInRegistries.ITEM 的 thkaguyamod 条目 = 同一批，不重复计数
     private static final int EXPECTED_BLOCKS = 10;
     private static final int EXPECTED_ENTITY_TYPES = 46;
     private static final int EXPECTED_MENUS = 4;

@@ -246,6 +246,8 @@ public class EntityMarisaBroom extends Entity
 				//原作 665-687: 無人の箒は緩やかに減速・降下する。
 				//move() より前に移動量へ反映させること（後段でローカル変数に書くだけでは
 				//setDeltaMovement に届かず、下騎後も動き続けていた）。
+				//接地中の垂直成分は主樹 I13 の修正（motionY を -0.03 に固定）を
+				//BroomSteer.stepEmpty 内で反映している（EMPTY_GROUNDED_VERTICAL の javadoc 参照）。
 				Vec3 next = BroomSteer.stepEmpty(this.getDeltaMovement(), this.onGround(), this.isInWater());
 				this.setDeltaMovement(next);
 				this.setXRot(BroomSteer.decayEmptyPitch(this.getXRot()));

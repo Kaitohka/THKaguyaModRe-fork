@@ -88,7 +88,7 @@
  	//Entityに攻撃されたときに呼ばれる
  	@Override
  	public boolean hurt(DamageSource damageSource, float par2)
-@@ -171,96 +219,51 @@
+@@ -171,112 +219,53 @@
  		this.yo = this.getY();
  		this.zo = this.getZ();
  
@@ -125,26 +125,14 @@
 -			{
 -				pitch = -90F;
 -			}
-+		if(this.isControlledByLocalInstance())
-+		{
-+			//この側だけが運動を積分する（バニラの乗り物と同じ）。
-+			//注意: BroomSteer に渡す角度は「前 tick の箒の角度」でなければならない
-+			//（原作も入力演算 395-479 の後に角度を更新する 481-507）。
-+			float prevYaw = this.getYRot();
-+			float prevPitch = this.getXRot();
- 
+-
 -			if(pitch < 0F)
-+			if(this.getFirstPassenger() instanceof Player rider)
- 			{
+-			{
 -				pitch *= 0.1F;
 -			}
-+				//原作 483。読み出しの無い死コードだが、フィールド互換のため維持する。
-+				this.speedMultiplier = 0.6D;
- 
+-
 -			this.setYRot(yaw - 90F);
-+				Vec3 next = BroomSteer.step(this.getDeltaMovement(), this.steerMask, prevYaw, prevPitch, this.isInWater());
-+				this.setDeltaMovement(next);
- 
+-
 -			double moveSpeed = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
 -			if(moveSpeed > 0.8D)
 -			{
@@ -154,12 +142,12 @@
 -			}
 -		}
 -		else
--		{
++		if(this.isControlledByLocalInstance())
+ 		{
 -			//無人の箒は緩やかに減速・降下する（1.7.10 と同じ挙動。
 -			//move() より前に移動量へ反映させること。後段でローカル変数に書くだけでは
 -			//setDeltaMovement に届かず、下騎後も動き続けていた）
 -			motionX *= 0.9D;
--			motionY -= 0.03D;
 -			motionZ *= 0.9D;
 -			if(this.getXRot() > 1.0F)
 -			{
@@ -168,19 +156,51 @@
 -			else if(this.getXRot() < -1.0F)
 -			{
 -				this.setXRot(this.getXRot() + 1.0F);
+-			}
+-			if(this.onGround())
+-			{
+-				//接地中は沈降分を一定値に固定する。
+-				//TODO K3-review: 1.7.10 はここで motionY += 0.06D としていた（-0.03 の沈降を
+-				//+0.06 で打ち消し、接地中は差の +0.03 が上向きに残る設計）。
+-				//しかし 1.21.1 の Entity.move() は着地時に deltaMovement の垂直成分を 0 にしない
+-				//（実測: 接地中も motionY ≈ -0.019 が残る）。そのため +0.06 をそのまま移植すると
+-				//「+0.03 の浮き上がり → 落下 → 着地」の 2 tick 周期の上下動（実測 振幅 0.0141 ブロック、
+-				//motionY は -0.022 / +0.007 を往復）が永久に続く。しかも deltaMovement が毎 tick
+-				//変わるので運動量パケットと補間が絶えず発火し、静止した箒が細かく震えて見える。
+-				//ここでは沈降分 -0.03 をそのまま維持する: 下行きが毎 tick 地面に阻まれるので位置は
+-				//一切動かず（振幅 0）、摩擦後も値が常に一定（-0.0285）になるため運動量パケットも出ない。
+-				//なお「垂直移動量が 0」にすると当たり判定が衝突を報告しなくなり onGround が
+-				//false に落ちて次 tick で再び沈降する（1 tick おきの振動が残る）ので、0 ではなく
+-				//-0.03 を維持するのが要点。
+-				motionY = -0.03D;
++			//この側だけが運動を積分する（バニラの乗り物と同じ）。
++			//注意: BroomSteer に渡す角度は「前 tick の箒の角度」でなければならない
++			//（原作も入力演算 395-479 の後に角度を更新する 481-507）。
++			float prevYaw = this.getYRot();
++			float prevPitch = this.getXRot();
++
++			if(this.getFirstPassenger() instanceof Player rider)
++			{
++				//原作 483。読み出しの無い死コードだが、フィールド互換のため維持する。
++				this.speedMultiplier = 0.6D;
++
++				Vec3 next = BroomSteer.step(this.getDeltaMovement(), this.steerMask, prevYaw, prevPitch, this.isInWater());
++				this.setDeltaMovement(next);
++
 +				//原作 486-487 / 507: 箒の向きは騎手に合わせる。
 +				//pitch のクランプと減衰（原作 489-504）はローカル変数への代入で無効なため再現しない
 +				//（BroomSteer のクラス javadoc §2.2 参照）。
 +				this.setXRot(rider.getXRot());
 +				this.setYRot(rider.getYRot() - 90.0F);
  			}
--			if(this.onGround())
-+			else
+ 			else
  			{
--				motionY += 0.06D;
+-				motionY -= 0.03D;
 +				//原作 665-687: 無人の箒は緩やかに減速・降下する。
 +				//move() より前に移動量へ反映させること（後段でローカル変数に書くだけでは
 +				//setDeltaMovement に届かず、下騎後も動き続けていた）。
++				//接地中の垂直成分は主樹 I13 の修正（motionY を -0.03 に固定）を
++				//BroomSteer.stepEmpty 内で反映している（EMPTY_GROUNDED_VERTICAL の javadoc 参照）。
 +				Vec3 next = BroomSteer.stepEmpty(this.getDeltaMovement(), this.onGround(), this.isInWater());
 +				this.setDeltaMovement(next);
 +				this.setXRot(BroomSteer.decayEmptyPitch(this.getXRot()));
@@ -192,16 +212,16 @@
 -			motionX *= 0.5D;
 -			motionY *= 0.5D;
 -			motionZ *= 0.5D;
--		}
--
--		this.setDeltaMovement(motionX, motionY, motionZ);
--		this.move(MoverType.SELF, this.getDeltaMovement());
 +			this.move(MoverType.SELF, this.getDeltaMovement());
- 
++
 +			//原作 584-587: move() の後の減衰（常に実行される）
 +			this.setDeltaMovement(BroomSteer.dampAfterMove(this.getDeltaMovement()));
 +			this.setRot(this.getYRot(), this.getXRot());
-+		}
+ 		}
+-
+-		this.setDeltaMovement(motionX, motionY, motionZ);
+-		this.move(MoverType.SELF, this.getDeltaMovement());
+-
 +		else
  		{
 -			motionX *= 0.9900000095367432D;
@@ -218,7 +238,7 @@
  		if(!this.level().isClientSide)
  		{
  			List<Entity> list = this.level().getEntities(this, this.getBoundingBox().inflate(0.20000000298023224D, 0.0D, 0.20000000298023224D));
-@@ -293,6 +296,20 @@
+@@ -309,6 +298,20 @@
  	}
  
  	/**
@@ -239,7 +259,7 @@
  	 * 乗っているEntityの位置を更新
  	 */
  	@Override
-@@ -403,4 +420,4 @@
+@@ -419,4 +422,4 @@
  	{
  		return speedMultiplier;
  	}

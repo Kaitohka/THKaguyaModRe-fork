@@ -37,6 +37,10 @@ import net.minecraft.world.phys.Vec3;
  *   <li><b>入水時の AABB 走査（原作 283-296）</b>は結果 {@code d0/d4} が使われない死コードのため移植しない。</li>
  *   <li><b>速度係数 {@code speedMultiplier}（原作 483 の 0.6）</b>は書き込みのみで読み出しが無い死コード。
  *       {@code EntityMarisaBroom#getSpeedMultiplier()} の互換のためフィールドは残すが、ここでは扱わない。</li>
+ *   <li><b>無人の接地補正（原作 683-686 の {@code motionY += 0.06D}）</b>は主樹 I13 の
+ *       実測結論に合わせて {@link #EMPTY_GROUNDED_VERTICAL}（= {@code -0.03}）へ置き換える。
+ *       詳細はその javadoc を参照（1.21.1 は着地時に垂直成分を 0 にしないため、
+ *       原作どおり {@code +0.06} だと 2 tick 周期の上下動と運動量パケットの連続発火になる）。</li>
  * </ol>
  */
 public final class BroomSteer
@@ -74,8 +78,20 @@ public final class BroomSteer
 	public static final double EMPTY_DRAG = 0.9D;
 	/** 無人の箒の降下量（原作 673）。 */
 	public static final double EMPTY_SINK = 0.03D;
-	/** 無人の箒が接地しているときの浮き上がり（原作 685）。 */
-	public static final double EMPTY_GROUND_LIFT = 0.06D;
+	/**
+	 * 無人の箒が接地しているときの垂直移動量（本移植の I13 修正。
+	 * 原作 683-686 の {@code motionY += 0.06D} の置き換え）。
+	 *
+	 * <p>原作は接地中に毎 tick {@code motionY -= 0.03D} の沈降へ {@code +0.06D} を足し、
+	 * 差の {@code +0.03} を上向きに残していた。しかし 1.21.1 の {@code Entity#move()} は
+	 * 着地時に {@code deltaMovement} の垂直成分を 0 にしないため、そのまま移植すると
+	 * 「浮き上がる → 落ちる → 着地」の 2 tick 周期の上下動（実測 振幅 0.0141 ブロック）と
+	 * 運動量パケットの連続発火が起きる（主樹 I13 の実測結論）。
+	 * 接地中は沈降分の {@code -0.03} をそのまま維持する: 下降が毎 tick 地面に阻まれるので
+	 * 位置は一切動かず、摩擦後も値が常に一定（{@code -0.03 × 0.95 = -0.0285}）になる。
+	 * 「0 に固定」は不可（衝突判定が動きを報告せず {@code onGround} が落ちて 1 tick おきの振動に変わる）。
+	 */
+	public static final double EMPTY_GROUNDED_VERTICAL = -EMPTY_SINK;
 
 	private BroomSteer()
 	{
@@ -221,6 +237,9 @@ public final class BroomSteer
 	 * 1.21.1 では {@code isControlledByLocalInstance()} が同じ役割を果たす
 	 * （乗員なしのときは {@code isEffectiveAi()} に委譲され、サーバーのみ true）。
 	 *
+	 * <p>接地中の垂直成分のみ主樹 I13 の修正を反映している
+	 * （{@link #EMPTY_GROUNDED_VERTICAL} の javadoc 参照）。それ以外は原作 672-674 のまま。
+	 *
 	 * @param motion   現在の移動量
 	 * @param onGround 接地しているか（原作 683）
 	 * @param inWater  入水中かどうか
@@ -228,13 +247,8 @@ public final class BroomSteer
 	public static Vec3 stepEmpty(Vec3 motion, boolean onGround, boolean inWater)
 	{
 		double mx = motion.x * EMPTY_DRAG;// 原作 672
-		double my = motion.y - EMPTY_SINK;// 原作 673
+		double my = onGround ? EMPTY_GROUNDED_VERTICAL : motion.y - EMPTY_SINK;
 		double mz = motion.z * EMPTY_DRAG;// 原作 674
-
-		if(onGround)
-		{
-			my += EMPTY_GROUND_LIFT;// 原作 683-686
-		}
 
 		if(inWater)
 		{

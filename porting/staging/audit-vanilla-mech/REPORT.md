@@ -1,0 +1,24 @@
+# 第三轮严重性普查：1.21.1 有 / 1.7.10 无（或语义大变）的原版机制 × 本模组干涉面
+
+批次：audit-vanilla-mech　　编写：Flash 子代理（基于 verify-fix 批建立的主树认知）
+范围：**只读**。不改任何既有文件、不跑 gradlew、不跑 git、不杀进程。
+目标：找出「与 I14（1.21.1 姿势自动匍匐，已修）同类」的原版机制变化点 —— 即
+「1.21.1 引入了新机制 / 改变了既有语义，而 1.7.10 移植代码按旧语义书写」导致的实际缺陷。
+
+## 判定口径
+
+- **P0**：玩家正常游玩即可触发，表现为功能失效/崩溃/数值错误/资金或物品损失。
+- **P1**：需要特定组合或较窄条件触发，或表现为与 1.7.10 行为明显不一致（但不致命）。
+- **P2/信息**：语义差异存在但被本模组现有写法天然规避，或影响仅为观感/边界。
+- **零发现**：机制存在但与本模组无接触面（grep 无命中），或接触面已正确使用 1.21.1 语义。
+
+## 进度表（逐机制一行，随查随写）
+
+| # | 机制 | 变化点 | 接触点（grep 证据） | 严重度 | 结论 |
+|---|---|---|---|---|---|
+| 1 | **实体挤压伤害 maxEntityCramming** | 1.7.10 无此机制；MC 1.11 起 `LivingEntity.pushEntities()` 每 tick 统计同 AABB 内 `EntitySelector.pushableBy(this)` 的实体，>23 且 `random.nextInt(4)==0` 时造成 **6 点 cramming 伤害**（`GameRules.maxEntityCramming` 默认 24） | ① 计数条件是 `isPushable()`：`LivingEntity.isPushable()` = `isAlive && !isSpectator && !onClimbable`（`LivingEntity.java:3071`）→ **本模组所有 DanmakuMob 系（妖精/向日葵妖精/幽灵/使魔/琪露诺/露米娅/屠自古/莉格露/花田尖叫者）天然计入**；② 本模组不覆写任何 LivingEntity 的 `isPushable`（grep：`isPushable` 覆写仅 16 处，全部是 `extends Entity` 的道具/效果实体，见进度表下方证据块）；③ 妖精 AI 会朝玩家聚拢，符卡 `THSC_Fafurotskies_no_Kiseki` 还会 `addFreshEntity` 生成苦力怕/鸡（`spellcard/THSC_Fafurotskies_no_Kiseki.java:81,130,140`）；④ 模组弹幕 `EntityTHShot extends Entity` → `isPushable()==false`，**不参与计数**（排除） | **P1** | 真实存在且属 I14 同类：1.7.10 时代一堆妖精贴在一起不会掉血，1.21.1 里 24 只以上叠在一起会每 4 tick 吃 6 点伤害 —— 妖精血量低（原作妖精 20 血以内），密集弹幕战/符卡群刷时会「凭空成片死亡」。**不构成 P0**（需要 24 只 pushable 实体挤进同一 AABB；浸泡 36 实体因坐标间隔 ≥3 格未触发）。建议 K3 裁决：模组怪物是否在 `EntityDanmakuMob` 覆写 `isPushable()` 返回 false（妖精设定上是飞行灵体，不推挤也更贴合原作），或维持原版语义并在文档记录 |
+| 2 | **横扫之刃 / 盾牌格挡 / 鞘翅 / 激流三叉戟**（近战与附魔/属性交互） | 1.21.1 用**数据驱动附魔**（`data/minecraft/enchantment/*.json`）+ `ItemAbilities.SWORD_SWEEP` + `isDamageSourceBlocked`；1.7.10 是硬编码 `Enchantment` 类 | ① 模组近战武器全部是 `extends SwordItem`（`ItemDeathScythe:28`、`ItemKaigo:38`、`ItemMikoSword:55`、`ItemOnbashira:20`，以及注册表里 `new SwordItem(ModTiers.X, props)` 的 `LAEVATEINN/HAKUROUKEN/ROUKANKEN`）→ **横扫/格挡/附魔全部走原版通路，无需移植代码**；② 模组主动附魔只有两处，均为数据驱动 ID：`ItemFireRatRobe.java:73` `Enchantments.FIRE_PROTECTION, 5`、`ItemKerobou.java:38` `Enchantments.THORNS, 10`；③ grep `Elytra|Trident|isAutoSpinAttack|Riptide` → **零命中** | **P2** | 无 P0/P1：`ItemKerobou` 的荆棘 10 级是 1.7.10 原样照搬（原版荆棘上限 3，超出部分只是效果按级数线性放大，**不崩溃、不报错**，与旧版一致）；火鼠裘 V→IV 已记录在 `USER_MIGRATION.md §5 #16`。**唯一值得记一句**：`ItemMikoSword` 用 `EntityTypeTags.UNDEAD/ARTHROPOD` 替代旧 `EnumCreatureAttribute`（`ItemMikoSword.java:158,160`），而模组自身的"妖怪/妖精/幽灵"生物**不在**这两个原版标签里 → 模组怪不会被亡灵/节肢杀手加成（与 1.7.10 的"种族系统恒为其他"结果一致，属保持等价） |
+| 3 | **弹射物偏转（1.21 旋风人 ProjectileDeflection / canBeDeflected）** | 1.21.1 新增 `Projectile.hitTargetOrDeflectSelf` → 命中实体时先问 `entity.deflection(projectile)`；只有 `Projectile` 子类才走这条路，且有 `EntityTypeTags.REDIRECTABLE_PROJECTILE` 白名单 | grep `deflect\|Deflection\|canBeDeflected` 全树 → **零命中**；模组弹幕 `EntityTHShot extends Entity`（不是 `Projectile`），自己实现 `hitCheck()/hitEntityCheck()`，**完全不经过原版偏转通路** | **P2（零接触）** | 无缺陷。模组的"打拳反弹弹幕"是自实现的 `EntityTHShot.hurt()`（`EntityTHShot.java:1609`），随 I8 补的 `isPickable()` 恢复，与原版偏转机制互不干扰 |
+| 4 | **爆炸 BlockInteraction 语义**（TNT/苦力怕 受 mobGriefing，模组配置 Master Spark Destroys Blocks） | 1.21.1 的 `Level.explode` 有 5 种 `ExplosionInteraction`：`NONE/BLOCK/MOB/TNT/TRIGGER`；**只有 `MOB` 会检查 `EventHooks.canEntityGrief`（mobGriefing）**，`BLOCK` 无条件破块（`Level.java:769-773, 797-799`） | **发现不一致**：`EntityTHShot.java:1266-1267, 1323-1324` 与 `THSC_FujiyamaVolcano.java:70` 正确地把配置映射成 `BLOCK/NONE`；但 **`EntityNuclearShot.java:89,99,114,124` 四处硬写 `Level.ExplosionInteraction.BLOCK`，完全不看 `ModConfig.MasterSparkDestroysBlocks`**，而 1.7.10 原作在线爆炸写法相同（`EntityNuclearShot.java:129,139,156,166`: `createExplosion(..., true)` 恒破块）—— 语义确实**与原作一致** | **P2（非缺陷，但配置语义易被误解）** | 结论：`Master Spark Destroys Blocks` 在 1.7.10 里**只覆盖 `EntityTHShot` 的两处爆炸**，核弹（`EntityNuclearShot`）从来不受它控制；`USER_MIGRATION.md §4.3` 把该配置描述为"魔炮 / 爆炸类弹幕是否破坏地形"，读者很容易以为核弹也受控。**属文档措辞可澄清项，非代码缺陷**（另注：`BLOCK` 不受 mobGriefing 影响 → 玩家把 `mobGriefing=false` 也挡不住核弹炸地形，与 1.7.10 相同） |
+| 5 | **怪物 griefing / mobGriefing / 袭击·巡逻队卷入模组怪** | 1.21.1：`mobGriefing` 管苦力怕/末影人/村民种地等；袭击由 `Raid` 按 `Raider` 接口组织，巡逻队硬编码 `Pillager/Vindicator/Evoker` | ① 模组实体**没有任何 `setBlock/destroyBlock`**（grep `thkaguyamod/entity/` 零命中）→ 模组怪本来就不 grief；② 模组怪不实现 `Raider`、不继承 `Monster`（基类是 `PathfinderMob`，`EntityDanmakuMob.java:47`）→ **不会被 `Raid`/巡逻队/`PatrolSpawner` 纳入**；③ `spellcard/THSC_Fafurotskies_no_Kiseki` 生成的**原版**苦力怕仍受 mobGriefing 管辖（正确行为） | **P2（零发现）** | 无干涉面 |
+| 6 | **亡灵杀手/节肢杀手等附魔 × 模组 BOSS（原作种族系统）** | 1.21.1 用 `EntityTypeTags.UNDEAD/ARTHROPOD/ILLAGER/SENSITIVE_TO_SMITE...` 数据标签 + 数据驱动附魔；1.7.10 用 `getCreatureAttribute()`（原作**没有任何模组实体覆写**它 → 全部返回 `UNDEFINED`） | ① 模组只把旧判定搬到了物品侧：`ItemAjaRedStone.java:111`、`ItemMikoSword.java:158,160` 用 `EntityTypeTags.UNDEAD/ARTHROPOD`（与旧版结果等价，模组怪本就不在标签里）；② 模组怪 `getType()` 不带任何 SENSITIVE_TO_* 标签 → **亡灵杀手对妖精/BOSS 无加成**，与 1.7.10 一致 | **P2（保持等价）** | 无 P0/P1。唯一副作用：玩家给模组 BOSS 起 `EntityTypeTags.UNDEAD` 名字没用（标签是数据包级，不是名字）—— 与旧版同样 |

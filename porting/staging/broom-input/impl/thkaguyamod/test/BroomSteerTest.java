@@ -35,8 +35,10 @@ import thkaguyamod.init.ModEntities;
  *   <li>{@link #stepWaterHalvesMotion}：入水で三軸とも半分。</li>
  *   <li>{@link #fullMaskStaysBounded}：全キー同時押しでも速度が暴走しない
  *       （原作 437-443 / 510-516 の発散バグを修正したことの回帰テスト）。</li>
- *   <li>{@link #emptyBroomSinksAndDecays}：無人の箒は水平 0.9 倍・垂直 −0.03、俯仰は 1° ずつ 0 へ。</li>
- *   <li>{@link #emptyBroomLiftsWhenOnGround}：接地中は +0.06 の浮き上がりが入る。</li>
+ *   <li>{@link #emptyBroomSinksAndDecays}：無人の箒は水平 0.9 倍・空中の垂直 −0.03、俯仰は 1° ずつ 0 へ。</li>
+ *   <li>{@link #emptyBroomGroundedVerticalIsFixed}：接地中の垂直成分は {@code -0.03} に固定され、
+ *       摩擦後も tick ごとに変化しない（主樹 I13 の回帰。原作の {@code +0.06} は
+ *       1.21.1 では 2 tick 周期の上下動と運動量パケット連続発火になるため置き換えた）。</li>
  *   <li>{@link #controlGateFollowsPlayerPassenger}：{@code getControllingPassenger()} が
  *       プレイヤー乗員にだけ反応する（通信経路の前提）。</li>
  *   <li>{@link #mountedBroomMovesServerSide}：無人の箒がサーバー tick で実際に沈む（実体側の結合確認）。</li>
@@ -239,7 +241,7 @@ public final class BroomSteerTest
 		helper.succeed();
 	}
 
-	/** 無人の箒：水平 0.9 倍・垂直 −0.03（原作 672-674）、俯仰は 1° ずつ 0 へ（原作 675-682）。 */
+	/** 無人の箒：水平 0.9 倍・空中は垂直 −0.03（原作 672-674）、俯仰は 1° ずつ 0 へ（原作 675-682）。 */
 	@GameTest(template = TEMPLATE)
 	public static void emptyBroomSinksAndDecays(GameTestHelper helper)
 	{
@@ -248,7 +250,7 @@ public final class BroomSteerTest
 
 		helper.assertTrue(close(empty.x, start.x * BroomSteer.EMPTY_DRAG), "無人の水平抵抗が 0.9 でない: " + empty.x);
 		helper.assertTrue(close(empty.z, start.z * BroomSteer.EMPTY_DRAG), "無人の水平抵抗が 0.9 でない: " + empty.z);
-		helper.assertTrue(close(empty.y, start.y - BroomSteer.EMPTY_SINK), "無人の降下量が 0.03 でない: " + empty.y);
+		helper.assertTrue(close(empty.y, start.y - BroomSteer.EMPTY_SINK), "無人の空中降下量が 0.03 でない: " + empty.y);
 
 		helper.assertTrue(close(BroomSteer.decayEmptyPitch(30.0F), 29.0F), "無人の俯仰が 1° 減っていない");
 		helper.assertTrue(close(BroomSteer.decayEmptyPitch(-30.0F), -29.0F), "無人の俯仰が 1° 増えていない");
@@ -257,16 +259,42 @@ public final class BroomSteerTest
 		helper.succeed();
 	}
 
-	/** 接地中は +0.06 の浮き上がりが入る（原作 683-686）。 */
+	/**
+	 * 接地中の垂直成分が沈降分に固定されること（主樹 I13 の回帰）。
+	 *
+	 * <p>原作 683-686 は {@code motionY += 0.06D} で「浮き上がらせる」設計だったが、
+	 * 1.21.1 の {@code Entity#move()} が着地時に垂直成分を 0 にしないため、
+	 * 主樹側では接地中 {@code motionY = -0.03} に固定する形へ変更された
+	 * （実測: 2 tick 周期 振幅 0.0141 ブロックの上下動と運動量パケット連続発火を解消）。
+	 *
+	 * <p>ここでは ① 入力の垂直成分に依らず一定値へ固定されること、
+	 * ② 摩擦後も値が振動しない（毎 tick 同じ）であることを検査する。
+	 */
 	@GameTest(template = TEMPLATE)
-	public static void emptyBroomLiftsWhenOnGround(GameTestHelper helper)
+	public static void emptyBroomGroundedVerticalIsFixed(GameTestHelper helper)
 	{
-		Vec3 start = new Vec3(0.0D, 0.0D, 0.0D);
-		Vec3 airborne = BroomSteer.stepEmpty(start, false, false);
-		Vec3 grounded = BroomSteer.stepEmpty(start, true, false);
+		// 空中の値を何にしても、接地中は同じ値へ固定される
+		Vec3 fromZero = BroomSteer.stepEmpty(new Vec3(0.0D, 0.0D, 0.0D), true, false);
+		Vec3 fromFalling = BroomSteer.stepEmpty(new Vec3(0.0D, -0.5D, 0.0D), true, false);
+		Vec3 fromRising = BroomSteer.stepEmpty(new Vec3(0.0D, 0.4D, 0.0D), true, false);
 
-		helper.assertTrue(close(grounded.y, airborne.y + BroomSteer.EMPTY_GROUND_LIFT),
-				"接地時の浮き上がりが +0.06 でない: " + (grounded.y - airborne.y));
+		helper.assertTrue(close(fromZero.y, BroomSteer.EMPTY_GROUNDED_VERTICAL),
+				"接地中の垂直成分が -0.03 に固定されていない: " + fromZero.y);
+		helper.assertTrue(close(fromFalling.y, BroomSteer.EMPTY_GROUNDED_VERTICAL),
+				"下降中に着地したケースで固定されていない: " + fromFalling.y);
+		helper.assertTrue(close(fromRising.y, BroomSteer.EMPTY_GROUNDED_VERTICAL),
+				"上昇中に着地したケースで固定されていない: " + fromRising.y);
+
+		// 摩擦後（dampAfterMove）も毎 tick 同じ値になる → 運動量パケットが出ない条件
+		double damped = BroomSteer.dampAfterMove(fromZero).y;
+		double nextTick = BroomSteer.dampAfterMove(BroomSteer.stepEmpty(new Vec3(0.0D, damped, 0.0D), true, false)).y;
+		helper.assertTrue(close(damped, nextTick),
+				"接地中の垂直成分が tick ごとに変化している（運動量パケットが止まらない）: "
+						+ damped + " -> " + nextTick);
+
+		// 空中では従来どおり沈降し続ける
+		Vec3 airborne = BroomSteer.stepEmpty(new Vec3(0.0D, 0.0D, 0.0D), false, false);
+		helper.assertTrue(close(airborne.y, -BroomSteer.EMPTY_SINK), "空中の沈降が -0.03 でない: " + airborne.y);
 
 		helper.succeed();
 	}

@@ -59,6 +59,9 @@ public final class BroomPhysicsTest {
     /** 降車後の観測 tick 数（0.9^6 ≒ 0.53 まで落ちる）。 */
     private static final int POST_DISMOUNT_TICKS = 6;
 
+    /** 1 tick あたりの無人時水平減衰（無人ブロックの 0.9 × 移動後抵抗 0.99）。 */
+    private static final double DECAY_PER_TICK = 0.9D * 0.99D;
+
     private BroomPhysicsTest() {}
 
     /**
@@ -211,6 +214,12 @@ public final class BroomPhysicsTest {
      * 1 tick に 1 回入っていれば、水平速度は {@code 0.9 × 0.99 = 0.891} 倍/tick で
      * 単調減少する。0.8 格/tick（原作の上限）から出発した場合、
      * {@code Σ 0.8 × 0.891^n = 0.8 / (1 - 0.891) ≈ 7.34 格} で停止する。
+     *
+     * <p>断言は<b>サンプル数に依存しない</b>形にしてある: 最終 tick では
+     * {@link GameTestHelper#onEachTick} のサンプラと {@link GameTestHelper#runAtTickTime} の
+     * アサートが同じ {@code tickCount} で発火し、その順序が
+     * {@code GameTestInfo} 内 {@code Object2LongOpenHashMap} の反復順に依存して
+     * 非決定（サンプルが 6 個 or 7 個）になるため、期待値を固定指数で書くと偶発的に赤くなる。
      */
     @GameTest(template = TEMPLATE)
     public static void unriddenBroomGlideDistanceMatchesLegacy(GameTestHelper helper) {
@@ -225,7 +234,7 @@ public final class BroomPhysicsTest {
         });
 
         helper.runAtTickTime(POST_DISMOUNT_TICKS, () -> {
-            helper.assertTrue(speeds.size() > 3, "サンプルが取れていない: " + speeds.size());
+            helper.assertTrue(speeds.size() >= 6, "サンプルが取れていない: " + speeds.size());
 
             StringBuilder detail = new StringBuilder("speeds=");
             for (double s : speeds) {
@@ -237,15 +246,37 @@ public final class BroomPhysicsTest {
                         "無人の水平速度が増加した tick がある（index " + i + "）: " + detail);
             }
 
+            double first = speeds.get(0);
             double last = speeds.get(speeds.size() - 1);
-            helper.assertTrue(last < v0, "水平速度が落ちていない: " + detail);
+            helper.assertTrue(last < first, "水平速度が落ちていない: " + detail);
 
-            // 減衰率: 0.9 × 0.99 = 0.891 倍/tick
-            double observed = last / v0;
-            double expected = Math.pow(0.9D * 0.99D, POST_DISMOUNT_TICKS);
-            helper.assertTrue(Math.abs(observed - expected) < 0.02D,
-                    "無人時の水平減衰率が 0.9×0.99 と一致しない: observed=" + observed
-                            + " expected=" + expected + " " + detail);
+            // 減衰率: 0.9 × 0.99 = 0.891 倍/tick。
+            // サンプル数は 6 に固定できない: 最終 tick では「サンプラ（onEachTick）」と
+            // 「このアサート（runAtTickTime）」が<b>同じ tickCount</b> で発火し、その順序は
+            // GameTestInfo の runAtTickTimeMap（Object2LongOpenHashMap）の反復順に依存して
+            // 非決定（サンプラが先なら 7 個、後なら 6 個）。旧実装は期待値の指数を
+            // POST_DISMOUNT_TICKS = 6 に固定していたため、6 個しか取れなかった実行では
+            // observed = 0.891^5 と expected = 0.891^6 を比べてしまい偶発的に赤くなっていた
+            // （差分 0.061 > 許容 0.02）。
+            //
+            // ⇒ 期待値は「実際に取れたサンプル数」から導き、さらに<b>隣接サンプルの比</b>
+            //    （= 1 tick ぶんの減衰そのもの）を直接見る。これでサンプル数の揺れに依存せず、
+            //    0.9 と 0.99 の両方が 1 tick に 1 回ずつ入っていることだけを厳密に固定できる。
+            final int steps = speeds.size() - 1;
+            for (int i = 1; i < speeds.size(); i++) {
+                double ratio = speeds.get(i) / speeds.get(i - 1);
+                helper.assertTrue(Math.abs(ratio - DECAY_PER_TICK) < 5.0E-3D,
+                        "無人時の水平減衰率が 0.9×0.99 と一致しない（step " + i + "）: ratio=" + ratio
+                                + " expected=" + DECAY_PER_TICK + " " + detail);
+            }
+
+            // 端点でも確認する。許容帯は ±1 tick ぶん（サンプル数の揺れ幅）に限定。
+            double observed = last / first;
+            double expectedLo = Math.pow(DECAY_PER_TICK, steps + 1);
+            double expectedHi = Math.pow(DECAY_PER_TICK, Math.max(0, steps - 1));
+            helper.assertTrue(observed <= expectedHi + 0.02D && observed >= expectedLo - 0.02D,
+                    "無人時の水平減衰率が 0.9×0.99 の ±1 tick 帯から外れている: observed=" + observed
+                            + " band=[" + expectedLo + ", " + expectedHi + "] steps=" + steps + " " + detail);
 
             broom.discard();
             helper.succeed();

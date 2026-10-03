@@ -45,7 +45,7 @@
 | P41 | （已落实为 soak-v2，见批次收尾记录） | — | — |
 | P42 | 伤害路径回归测试第三批：EntityTHSetLaser / EntityNuclearShot / EntityTHHenyoriLaser / EntityDanmakuMob 4 处 I8 修复点未覆盖 | agent-2 建议 | 下一窗口派批 |
 | P43 | 游戏内教程/指引（用户询问）：原作即无，FAQ 即手册；若做指引书物品或 Patchouli 手册属**超出移植范围的新内容** | 用户反馈 | 可选立项；USER_MIGRATION §6 FAQ 可直接作底稿 |
-| P44 | BroomPhysicsTest.unriddenBroomGlideDistanceMatchesLegacy 偶发红（采样差 1 tick；隔离实验证与 diag-pose 批无因果） | agent-5 归因 | 下一窗口修采样容差 |
+| P44 | BroomPhysicsTest.unriddenBroomGlideDistanceMatchesLegacy 偶发红（采样差 1 tick；隔离实验证与 diag-pose 批无因果） | agent-5 归因 | ✅ 已修（agent-4）：根因=onEachTick 采样器与 runAtTickTime 同 tick 触发顺序取决于 HashMap 迭代序→样本数 6/7 不定；改逐相邻样本比断言消除样本数依赖；6 连跑 64/64 全绿 + 变异验证有效 |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
@@ -106,6 +106,7 @@
 | audit-common 二轮深化 | 35/35 符卡逐行读 + 与 1.7.10 逐行 diff：**转录笔误 0**、P0=0；P1-latent×1（SatuzinDoll/SakuyaWatch/SakuyaStopWatch 的 spellCard.user 客户端 NPE 潜伏，已并入 P36）；登记原作即如此 8 条；除零/越界/死循环逐项查空 |
 | diag-broom 乱窜三源鉴别 | A 无人弹跳=移植缺陷（1.21.1 move 不清零垂直速度，I9 补偿回归 → I13 修复）；B 骑乘抖动=已知 Phase1 缺口（staging 方案）；C 滑距=与原作同式同值。+3 物理由例 61/61 |
 | diag-pose 姿势异常 | 根因=原版自动匍匐被模组实体碰撞盒触发（1.7.10 无姿势拟合故原作无）；5 实体 canBeCollidedWith→false + isPickable 契约保留；+3 姿势回归用例 64/64；首轮超时后按落盘纪律 30 分钟出活 |
+| broom-impl I13 对齐 | Phase1 impl 吸收 I13（EMPTY_GROUNDED_VERTICAL=-0.03，删 +0.06）；patch 对 159ede0 可干净应用；javac 沙盒 267 文件 0 错；修正 DESIGN 巡航数值错误（原作 W 单押均值 ≈0.717，实现恒定 0.792 +10%）；IMPL-NOTES 增合并决策事实表（玩家可见变化 7 条 + 回归闸门 5 条） |
 | gametest-edge2 回归测试二批 | 3 类 8 例（激光/银刀伤害路径、弹相殺数值、12 实体 isPickable 断言、扫帚物理）合并主树；首跑 3 例败 → agent-2 鉴别**全部为测试构造缺陷**（动画计数存储语义/相对绝对坐标混用/几何与靶选择），产品零改动，变异验证 5+1 红证效 → **58/58 PASS**；第 4 处伤害路径（SetLaser/NuclearShot/HenyoriLaser/DanmakuMob）建议第三批 → P42 |
 
 ## 事故台账补记

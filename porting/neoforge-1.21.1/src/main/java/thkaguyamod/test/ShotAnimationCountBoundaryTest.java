@@ -31,7 +31,8 @@ import thkaguyamod.init.ModEntities;
  *   <li>{@code setAnimationCount(-n)} した直後の {@code getAnimationCount()} が {@code -n} を返す
  *       （= 遅延期に負値が漏れ出る経路そのもの。ここが 0 以上に化けると描画の分岐が壊れる）；</li>
  *   <li>遅延期の代表値（0 / 1 / 5 / 80 / 200）で「負値 → 0 方向に単調」が保たれる；</li>
- *   <li>遅延期は当たり判定なし（{@code canBeCollidedWith() == false}）；</li>
+ *   <li>遅延期は狙えない（{@code isPickable() == false}。diag-pose 以降 {@code canBeCollidedWith()} は
+ *       常に false なので、遅延フェーズを観測する窓口は {@code isPickable()} 側になった）；</li>
  *   <li>NBT 保存/読み込みを経ても例外を出さず、同期槽の値（オフセット 1000）は
  *       {@code EntityType#noSave + addAdditionalSaveData() 空実装} の既存仕様どおり NBT に載らない、を明示的に記録する。</li>
  * </ol>
@@ -72,8 +73,8 @@ public final class ShotAnimationCountBoundaryTest {
 
         helper.assertValueEqual(shot.getAnimationCount(), -80,
                 "遅延 80 tick の弾は生成直後 -80 のはず（setAnimationCount(-delay) → stored count+1000 → 920-1000）");
-        helper.assertFalse(shot.canBeCollidedWith(),
-                "遅延期（getAnimationCount() < 0）は当たり判定を持たない（1.7.10 と同じ）");
+        helper.assertFalse(shot.isPickable(),
+                "遅延期（getAnimationCount() < 0）は狙えない（＝弾丸命中の対象外。1.7.10 の canBeCollidedWith 相当）");
 
         for (int expected : new int[] {-1, -2, -80, -1000, -1001}) {
             shot.setAnimationCount(expected);
@@ -109,10 +110,17 @@ public final class ShotAnimationCountBoundaryTest {
     }
 
     /**
-     * 実体化（カウント 0 到達）後は負値から抜けること。
+     * 実体化（カウント 0 到達）後は負値から抜け、狙えるようになること。
+     *
      * <p>{@code THShotLib.createShot} で実世界に入れた弾を遅延 tick 数だけ進め、
-     * {@code getAnimationCount() >= 0} になり {@code canBeCollidedWith()} が true へ変わることを見る
+     * {@code getAnimationCount() >= 0} になり {@code isPickable()} が true へ変わることを見る
      * （I7 の修理対象そのもの：負値のまま固定されると弾が永久に当たらない／描画も遅延のまま）。
+     *
+     * <p>diag-pose 以降、「実体化したかどうかを弾の性質として観測する」窓口は
+     * {@code canBeCollidedWith()} から {@code isPickable()}/{@code canBeHitByProjectile()} へ移った
+     * （{@code canBeCollidedWith()} は常に false に固定。理由は
+     * {@code EntityTHShot#canBeCollidedWith} の Javadoc = プレイヤーの自動匍匐を避けるため）。
+     * ここで {@code canBeCollidedWith()} を true と期待してはいけない（姿势フィットを再点火してしまう）。
      */
     @GameTest(template = TEMPLATE)
     public static void delayPhaseEndsAndCollisionTurnsOn(GameTestHelper helper) {
@@ -129,8 +137,10 @@ public final class ShotAnimationCountBoundaryTest {
             int count = shot.getAnimationCount();
             helper.assertTrue(count >= 0,
                     "遅延期を過ぎたらカウントは 0 以上になるはず（負値のまま = 弾が実体化しない）: count=" + count);
-            helper.assertTrue(shot.canBeCollidedWith(),
-                    "実体化後（getAnimationCount() >= 1）は当たり判定が有効になるはず: count=" + count);
+            helper.assertTrue(shot.isPickable(),
+                    "実体化後（getAnimationCount() >= 1）は狙える＝弾丸命中の対象になるはず: count=" + count);
+            helper.assertFalse(shot.canBeCollidedWith(),
+                    "canBeCollidedWith() は diag-pose 以降つねに false（プレイヤーの自動匍匐を避けるため）: count=" + count);
             shot.discard();
             helper.succeed();
         });

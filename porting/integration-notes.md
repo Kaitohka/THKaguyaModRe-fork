@@ -44,6 +44,8 @@
 | P40 | 1.7.10 `canBeCollidedWith` 三职拆分（碰撞/准星/弹丸命中）→ 1.21.1 的映射规则 | I8/I9 | **已立项为移植规则**：见 MIGRATION_RULES 增补建议（命中扫描→canBeHitByProjectile；准星交互→isPickable；推挤→canBeCollidedWith） |
 | P41 | （已落实为 soak-v2，见批次收尾记录） | — | — |
 | P42 | 伤害路径回归测试第三批：EntityTHSetLaser / EntityNuclearShot / EntityTHHenyoriLaser / EntityDanmakuMob 4 处 I8 修复点未覆盖 | agent-2 建议 | 下一窗口派批 |
+| P43 | 游戏内教程/指引（用户询问）：原作即无，FAQ 即手册；若做指引书物品或 Patchouli 手册属**超出移植范围的新内容** | 用户反馈 | 可选立项；USER_MIGRATION §6 FAQ 可直接作底稿 |
+| P44 | BroomPhysicsTest.unriddenBroomGlideDistanceMatchesLegacy 偶发红（采样差 1 tick；隔离实验证与 diag-pose 批无因果） | agent-5 归因 | 下一窗口修采样容差 |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
@@ -102,6 +104,8 @@
 | audit-render 二轮深化 | 首轮 32 个模式扫描文件全部逐行精读（含 12 模型 +1.7.10 逐行对照）：**零新增 P0/P1**；2 条初判候选经原作逐字复核撤回（ModelRinnosuke 臂姿/ModelWriggle root.render，均原作即如此）；client 包至此无未覆盖文件 |
 | soak-v2 闸门增强 + doc-sync | P39 落实：soak_test.sh 升级——summon 失败/异常/IOOB 纳入 FAIL 判定 + 36 条实体存活回执断言；用 I11 污染日志回放实证旧闸门假绿→新闸门必红；已合并 porting/tools/。doc-sync：USER_MIGRATION 与 I8/I9 修复逐条核查**零矛盾**（修复=恢复文档所述原作行为） |
 | audit-common 二轮深化 | 35/35 符卡逐行读 + 与 1.7.10 逐行 diff：**转录笔误 0**、P0=0；P1-latent×1（SatuzinDoll/SakuyaWatch/SakuyaStopWatch 的 spellCard.user 客户端 NPE 潜伏，已并入 P36）；登记原作即如此 8 条；除零/越界/死循环逐项查空 |
+| diag-broom 乱窜三源鉴别 | A 无人弹跳=移植缺陷（1.21.1 move 不清零垂直速度，I9 补偿回归 → I13 修复）；B 骑乘抖动=已知 Phase1 缺口（staging 方案）；C 滑距=与原作同式同值。+3 物理由例 61/61 |
+| diag-pose 姿势异常 | 根因=原版自动匍匐被模组实体碰撞盒触发（1.7.10 无姿势拟合故原作无）；5 实体 canBeCollidedWith→false + isPickable 契约保留；+3 姿势回归用例 64/64；首轮超时后按落盘纪律 30 分钟出活 |
 | gametest-edge2 回归测试二批 | 3 类 8 例（激光/银刀伤害路径、弹相殺数值、12 实体 isPickable 断言、扫帚物理）合并主树；首跑 3 例败 → agent-2 鉴别**全部为测试构造缺陷**（动画计数存储语义/相对绝对坐标混用/几何与靶选择），产品零改动，变异验证 5+1 红证效 → **58/58 PASS**；第 4 处伤害路径（SetLaser/NuclearShot/HenyoriLaser/DanmakuMob）建议第三批 → P42 |
 
 ## 事故台账补记
@@ -128,6 +132,9 @@
 | 阶段5（gametest-edge2 合并 + 败例修复后） | GameTest 全量 | **58/58 PASS**（3 败例均鉴别为测试构造缺陷，产品零改动；变异验证 5+1 红证效） |
 | 阶段5 | 最终全量 smoke（build+client+server） | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR / 0 配方 / 0 模型） |
 | 阶段5 | 最终构建 jar（842 文件，含 16 测试类）+ 快照提交 | PASS；**git a03a4ee** |
+| 阶段5 后续（I13 修复） | diag-broom：compile + GameTest（+扫帚物理 3 例） | **61/61 PASS + compile 0 错** |
+| 阶段5 后续（I14 修复） | diag-pose：compile + GameTest（+PlayerPoseRegressionTest 3 例） | **64/64 PASS + compile 0 错**（I8 契约零回归：isPickable/canBeHitByProjectile 不动） |
+| 阶段5 后续 | I13+I14 统一全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
 
 ## 代理协调文件
 
@@ -149,3 +156,5 @@
 | I10 | 用户实测 crash（10:24）：魔人镜冠在视野内客户端必崩 `IllegalStateException: Not building!` | RenderMazinkyoukan 同一 BufferSource 上 A→B→A 重取渲染类型后复用旧 VertexConsumer（中间 getBuffer 触发 endBatch 把旧 builder 置 building=false）；转录自 1.7.10 三次 tessellator.draw() 时丢了对应用语义 | ✅ FIX-2 批修复（右取手前重新 getBuffer，javap 复核 3 getBuffer+3 quad；A→B→A 同型全树扫描零残留）；附带项 RenderTHLaser:608 延迟期 `% 2`→`& 1` 硬化（与 I7 同法）；其上报的 RenderTHShot:304/320/462 同类疑点经 K3 核实**不可达**（调用点均在实体化分支，animationCount≥0），无需处理 | ✅ 修复（compile 0 错） |
 | I11 | 妖精/向日葵妖精/幽灵/使魔全部无法生成（召唤与自然生成均失效） | `DanmakuPatternRegistry.setDanmakuPattern()` 全树零调用（原作 THKaguyaCore.java:95 有）→ 样式表恒空 → EntityTHFairy.setPattern:96 必抛 IndexOutOfBoundsException；浸泡日志 18 次异常但因 summon 失败不走 ERROR 级被闸门漏报（P39） | ✅ FIX 批：主类在 ModConfig Loading/Reloading（sync 之后）补调用（样式表依赖 danmakuLevel，SERVER config 此时才就绪）；setDanmakuPattern 开头 clear 五表保幂等；原作有 default 兜底故 level=0 不崩（新增测试钉死）；新增 danmakuPatternsAreRegistered + DanmakuMobSpawnTest 3 例；**GameTest 50/50 + smoke 双 PASS**；同数据包复跑浸泡日志 0 异常 | ✅ 修复 |
 | I12 | （过程教训）首轮 audit 双批 2h 超时零落盘 | 大分析批在内存攒报告（I4 模式复发） | resume 补「下一步必须写文件 + 限时收尾」→ 135s/144s 出完整报告；该指令模板已固化进后续批次简报 | ✅ 台账 |
+| I13 | 用户实测"扫帚乱窜"：无人时 2 tick 周期永久微颤（I9 修复的回归） | 1.21.1 `Entity.move()` 着地**不清零**垂直 deltaMovement（1.7.10 moveEntity 会吃掉被阻运动）→ I9 照抄的"着地 motionY+0.06"在新版变净上浮 +0.03/tick（实测振幅 0.0141 格、motionY -0.022/+0.007 往复） | diag-broom 批：着地时 `motionY = -0.03`（取 0 会让 onGround 掉 false 变交替振动，实测排除）；新增 3 物理由例（静止振幅/衰减 0.891/滑距与原作同式同值）；**61/61 + compile 0 错**。骑乘抖动另线（无 getControllingPassenger 双侧积分，Phase1 staging 方案覆盖） | ✅ 修复 |
+| I14 | 用户实测"右键符卡/物品人物趴下（鞘翅状趴平+视角下移）" | **原版自动匍匐被触发**：1.21.1 `Player.updatePlayerPose()` 站/蹲放不下时兜底 Pose.SWIMMING（0.6 高/眼高 0.4），拟合把实体碰撞盒算入；弹幕/效果实体生成在使用者胸口高度（脚底+1.12）且 canBeCollidedWith==true → 站蹲均相交 → 自动按趴。1.7.10 无姿势拟合机制故原作无此现象（机制判定=SWIMMING 匍匐，非鞘翅/非潜行） | diag-pose 批：5 实体（THShot/SanaeWind/SilverKnife/DivineSpirit/ShotMaterial）canBeCollidedWith→false（isPickable 不动，I8 瞄准/命中/打拳反弹零回归——全树产品码对该方法零读取）；新增 PlayerPoseRegressionTest 3 例（含原版船机理对照）；**64/64 + compile 0 错**。**裁决**：代价=弹幕不再参与实体推挤（不可感知），登记为行为差异 | ✅ 修复 |

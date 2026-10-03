@@ -841,12 +841,17 @@ public class EntitySilverKnife extends Entity
 		}
 	}
 
+	//diag-pose: 常に false。银刀は使用者の前方 0.28 格（プレイヤー半幅 0.3 以内）に
+	// 0.1 格の box で生まれるため、true だと原版の姿勢フィット判定が
+	// プレイヤーの立ち姿勢を「収まらない」と見なし、自動で Pose.SWIMMING（匍匐）へ落とす。
+	// 詳細は EntityTHShot#canBeCollidedWith を参照（1.7.10 には姿勢機構が無い）。
 	@Override
 	public boolean canBeCollidedWith()
 	{
-		return true;
+		return false;
 	}
 
+	//照準・弾丸命中はこちらが担う（I8 で分離済み。canBeHitByProjectile の既定実装が isPickable() を見る）
 	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
 	@Override
 	public boolean isPickable()

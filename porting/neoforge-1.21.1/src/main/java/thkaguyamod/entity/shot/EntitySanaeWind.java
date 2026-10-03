@@ -85,13 +85,17 @@ public class EntitySanaeWind extends EntityTHShot
 		return tickCount % 4;
 	}
 
-	//1.7.10 の canBeCollidedWith = true（常に当たり判定・照準対象）に相当
+	//diag-pose: 常に false。詳細は EntityTHShot#canBeCollidedWith を参照。
+	//（早苗之风は使用者の目の高さに 1.0 格の box で生まれるため、true だと
+	// プレイヤーが自動で Pose.SWIMMING（匍匐・眼高 0.4）へ落ちて「右键で趴下」する。
+	// 1.7.10 に姿勢フィット機構は無く、原作では起きなかった）
 	@Override
 	public boolean canBeCollidedWith()
 	{
-		return true;
+		return false;
 	}
 
+	//照準・弾丸命中はこちらが担う（canBeHitByProjectile の既定実装が isPickable() を見る）
 	@Override
 	public boolean isPickable()
 	{

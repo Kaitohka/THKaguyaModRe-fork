@@ -15,7 +15,7 @@ import thkaguyamod.entity.item.EntityMarisaBroom;
 import thkaguyamod.init.ModEntities;
 
 /**
- * I9 回归族（第二批）：{@link EntityMarisaBroom} の無人時物理。
+ * I9 回归族（第二批）+ diag-broom 診断批：{@link EntityMarisaBroom} の無人時物理。
  *
  * <p>修正内容（1.7.10 との差分を戻したもの）：
  * <ol>
@@ -24,17 +24,22 @@ import thkaguyamod.init.ModEntities;
  *       ローカル変数にしか書かれず {@code setDeltaMovement()} に届かない版があり、
  *       降りた後も箒が等速で飞び続けていた。修正後は {@code move()} の<b>前</b>に
  *       移動量へ反映される；</li>
- *   <li><b>着地時の {@code motionY += 0.06D} 補償</b>。1.7.10 は地面上で毎 tick
- *       {@code +0.06} を足して {@code -0.03} の沈降と釣り合わせ、箒が地面にめり込まず
- *       滑らかに静止していた。これが無いと着地後も下向きの移動量が積み上がる。</li>
+ *   <li><b>着地時の垂直補償</b>。1.7.10 は地面上で毎 tick {@code motionY += 0.06D} を足して
+ *       {@code -0.03} の沈降と釣り合わせていた。ただし 1.21.1 の {@code Entity#move()} は
+ *       着地時に垂直成分を 0 にしないため、そのまま移植すると 2 tick 周期の上下動
+ *       （実測 振幅 0.0141 ブロック）と運動量パケットの連続発火が起きる。
+ *       接地中は {@code motionY = -0.03} に固定する（{@link #groundedBroomStaysStill} が回帰）。</li>
  * </ol>
  *
  * <h2>场景</h2>
  * <ol>
  *   <li>{@link #unriddenBroomDeceleratesAfterDismount}：ゾンビを乗せてから降ろし、
  *       その直後に速度を与えて数 tick 進める → 速度模長が確実に減少していること；</li>
- *   <li>{@link #groundedBroomDoesNotSink}：石の上に置いた無人箒が 20 tick 後も
- *       地面の高さを保ち、下向き移動量が積み上がっていないこと。</li>
+ *   <li>{@link #groundedBroomDoesNotSink}：石の上に置いた無人箒が 30 tick 後も
+ *       地面の高さを保ち、下向き移動量が積み上がっていないこと；</li>
+ *   <li>{@link #groundedBroomStaysStill}：着地後に上下振動せず、垂直移動量も毎 tick 一定；</li>
+ *   <li>{@link #unriddenBroomGlideDistanceMatchesLegacy}：水平減衰が 0.9 × 0.99 倍/tick；</li>
+ *   <li>{@link #unriddenBroomTravelDistanceMatchesLegacy}：滑走距離が理論部分和の 5% 以内。</li>
  * </ol>
  *
  * <p>テンプレートの約定は {@link RegistryCompletenessTest} を参照（{@code empty}）。
@@ -130,6 +135,156 @@ public final class BroomPhysicsTest {
                             + broom.getDeltaMovement().y);
             helper.assertTrue(broom.getY() < groundTop + 1.5D,
                     "着地した扫帚が浮き上がり続けている: y=" + broom.getY());
+
+            broom.discard();
+            helper.succeed();
+        });
+    }
+
+    /**
+     * 着地した無人箒が<b>静止</b>すること（上下振動しない・垂直速度が振動しない）。
+     *
+     * <p>根因（実測で確定）: 1.21.1 の {@code Entity#move()} は着地時に
+     * {@code deltaMovement} の垂直成分を 0 にしない（{@code setOnGroundWithMovement} は
+     * {@code onGround} を立てるだけ）。そのため 1.7.10 の {@code motionY += 0.06} を
+     * そのまま移植すると、接地中も {@code -0.03}（沈降）に {@code +0.06}（補償）が乗って
+     * 差の <b>+0.03/0.95</b> が毎 tick 上向きに残り、「浮き上がる → 落ちる → 着地」の
+     * 2 tick 周期の上下動（実測 振幅 0.0141 ブロック、{@code motionY} は -0.022 / +0.007 を往復）が
+     * 永久に続く。さらに {@code deltaMovement} が毎 tick 変化するため運動量パケットと
+     * 補間が絶えず発火し、静止した箒が細かく震えて見える（「乱窜」の一部）。
+     *
+     * <p>修正（{@code EntityMarisaBroom} の無人ブロック）: 接地中は {@code motionY} を
+     * 沈降分の {@code -0.03} に固定する。下降が毎 tick 地面に阻まれるので位置は一切動かず
+     * （振幅 0）、摩擦後も値が常に一定（-0.0285）になるため運動量パケットも出ない。
+     * なお {@code 0} に固定すると衝突判定が「動いていない」と判定して {@code onGround} が
+     * 落ち、1 tick おきの振動に変わる（実測で確認）。
+     */
+    @GameTest(template = TEMPLATE)
+    public static void groundedBroomStaysStill(GameTestHelper helper) {
+        BlockPos ground = new BlockPos(3, 1, 3);
+        helper.setBlock(ground, Blocks.STONE);
+
+        EntityMarisaBroom broom = helper.spawn(ModEntities.MARISA_BROOM.get(), new Vec3(3.5D, 2.4D, 3.5D));
+        double groundTop = helper.absolutePos(ground).getY() + 1.0D;
+
+        java.util.List<Double> samples = new java.util.ArrayList<>();
+        java.util.List<Double> motionYs = new java.util.ArrayList<>();
+        helper.onEachTick(() -> {
+            samples.add(broom.getY());
+            motionYs.add(broom.getDeltaMovement().y);
+        });
+
+        helper.runAtTickTime(59, () -> {
+            helper.assertTrue(samples.size() > 40, "サンプルが取れていない: " + samples.size());
+
+            // 着地後の窓（tick 30-59）だけを見る
+            java.util.List<Double> settled = samples.subList(30, samples.size());
+            double min = settled.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
+            double max = settled.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+            double amplitude = max - min;
+
+            // 接地後の垂直移動量は一定（振動しない）であること
+            java.util.List<Double> mySettled = motionYs.subList(30, motionYs.size());
+            double myMin = mySettled.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
+            double myMax = mySettled.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+
+            String detail = "amplitude=" + amplitude + " min=" + min + " max=" + max
+                    + " myMin=" + myMin + " myMax=" + myMax
+                    + " yLast=" + samples.get(samples.size() - 1) + " groundTop=" + groundTop;
+
+            helper.assertTrue(amplitude < 0.001D, "着地した掃帚が上下振動している: " + detail);
+            helper.assertTrue(min > groundTop - 0.05D, "地面へ沈み込んでいる: " + detail);
+            helper.assertTrue(max < groundTop + 0.05D, "地面から浮き上がっている: " + detail);
+            helper.assertTrue(myMax - myMin < 1.0E-9D,
+                    "接地中の垂直移動量が毎 tick 変化している（運動量パケットが止まらない）: " + detail);
+            helper.assertTrue(Math.abs(myMax) < 0.05D, "接地中の垂直移動量が大きすぎる: " + detail);
+
+            broom.discard();
+            helper.succeed();
+        });
+    }
+
+    /**
+     * 【診断 diag-broom §C】無人箒の水平速度が 0.891 倍/tick（0.9 × 0.99）で減衰すること。
+     *
+     * <p>無人ブロックの {@code motionX *= 0.9} と移動後抵抗 {@code *0.99} がどちらも
+     * 1 tick に 1 回入っていれば、水平速度は {@code 0.9 × 0.99 = 0.891} 倍/tick で
+     * 単調減少する。0.8 格/tick（原作の上限）から出発した場合、
+     * {@code Σ 0.8 × 0.891^n = 0.8 / (1 - 0.891) ≈ 7.34 格} で停止する。
+     */
+    @GameTest(template = TEMPLATE)
+    public static void unriddenBroomGlideDistanceMatchesLegacy(GameTestHelper helper) {
+        double v0 = 0.8D;
+        EntityMarisaBroom broom = helper.spawn(ModEntities.MARISA_BROOM.get(), new Vec3(0.5D, 3.0D, 3.5D));
+        broom.setDeltaMovement(v0, 0.0D, 0.0D);
+
+        java.util.List<Double> speeds = new java.util.ArrayList<>();
+        helper.onEachTick(() -> {
+            Vec3 m = broom.getDeltaMovement();
+            speeds.add(Math.sqrt(m.x * m.x + m.z * m.z));
+        });
+
+        helper.runAtTickTime(POST_DISMOUNT_TICKS, () -> {
+            helper.assertTrue(speeds.size() > 3, "サンプルが取れていない: " + speeds.size());
+
+            StringBuilder detail = new StringBuilder("speeds=");
+            for (double s : speeds) {
+                detail.append(String.format("%.6f ", s));
+            }
+
+            for (int i = 1; i < speeds.size(); i++) {
+                helper.assertTrue(speeds.get(i) <= speeds.get(i - 1) + 1.0E-9D,
+                        "無人の水平速度が増加した tick がある（index " + i + "）: " + detail);
+            }
+
+            double last = speeds.get(speeds.size() - 1);
+            helper.assertTrue(last < v0, "水平速度が落ちていない: " + detail);
+
+            // 減衰率: 0.9 × 0.99 = 0.891 倍/tick
+            double observed = last / v0;
+            double expected = Math.pow(0.9D * 0.99D, POST_DISMOUNT_TICKS);
+            helper.assertTrue(Math.abs(observed - expected) < 0.02D,
+                    "無人時の水平減衰率が 0.9×0.99 と一致しない: observed=" + observed
+                            + " expected=" + expected + " " + detail);
+
+            broom.discard();
+            helper.succeed();
+        });
+    }
+
+    /**
+     * 【診断 diag-broom §C】無人箒の滑走距離が 1.7.10 相当であること。
+     *
+     * <p>理論値: tick k の位置変位は {@code v0 × 0.9 × 0.891^k}（初回 tick で
+     * 無人減速 0.9 と移動後抵抗 0.99 が両方入るため）。30 tick 分の部分和は
+     * {@code v0 × 0.9 × (1 - 0.891^30) / 0.109 ≈ 1.999} 格（v0 = 0.25）。
+     * 実測がこの近傍から外れる（大きい＝減衰漏れ／小さい＝二重適用）なら回帰。
+     */
+    @GameTest(template = TEMPLATE)
+    public static void unriddenBroomTravelDistanceMatchesLegacy(GameTestHelper helper) {
+        final double v0 = 0.25D;
+        final int ticks = 30;
+        EntityMarisaBroom broom = helper.spawn(ModEntities.MARISA_BROOM.get(), new Vec3(0.5D, 3.0D, 3.5D));
+        broom.setDeltaMovement(v0, 0.0D, 0.0D);
+        final double x0 = broom.getX();
+
+        // 理論部分和（実装と同じ式を独立に回す）
+        double sum = 0.0D;
+        double v = v0;
+        for (int i = 0; i < ticks; i++) {
+            v *= 0.9D;              // 無人減速
+            sum += v;               // この tick の変位
+            v *= 0.99D;             // 移動後抵抗
+        }
+        final double expected = sum;
+
+        helper.runAtTickTime(ticks, () -> {
+            double travelled = broom.getX() - x0;
+            String detail = "travelled=" + travelled + " expected=" + expected
+                    + " v0=" + v0 + " x0=" + x0 + " x=" + broom.getX();
+
+            helper.assertTrue(Math.abs(travelled - expected) < expected * 0.05D,
+                    "滑走距離が 1.7.10 相当（0.9×0.99 減衰）から外れている: " + detail);
 
             broom.discard();
             helper.succeed();

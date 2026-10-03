@@ -226,7 +226,6 @@ public class EntityMarisaBroom extends Entity
 			//move() より前に移動量へ反映させること。後段でローカル変数に書くだけでは
 			//setDeltaMovement に届かず、下騎後も動き続けていた）
 			motionX *= 0.9D;
-			motionY -= 0.03D;
 			motionZ *= 0.9D;
 			if(this.getXRot() > 1.0F)
 			{
@@ -238,7 +237,24 @@ public class EntityMarisaBroom extends Entity
 			}
 			if(this.onGround())
 			{
-				motionY += 0.06D;
+				//接地中は沈降分を一定値に固定する。
+				//TODO K3-review: 1.7.10 はここで motionY += 0.06D としていた（-0.03 の沈降を
+				//+0.06 で打ち消し、接地中は差の +0.03 が上向きに残る設計）。
+				//しかし 1.21.1 の Entity.move() は着地時に deltaMovement の垂直成分を 0 にしない
+				//（実測: 接地中も motionY ≈ -0.019 が残る）。そのため +0.06 をそのまま移植すると
+				//「+0.03 の浮き上がり → 落下 → 着地」の 2 tick 周期の上下動（実測 振幅 0.0141 ブロック、
+				//motionY は -0.022 / +0.007 を往復）が永久に続く。しかも deltaMovement が毎 tick
+				//変わるので運動量パケットと補間が絶えず発火し、静止した箒が細かく震えて見える。
+				//ここでは沈降分 -0.03 をそのまま維持する: 下行きが毎 tick 地面に阻まれるので位置は
+				//一切動かず（振幅 0）、摩擦後も値が常に一定（-0.0285）になるため運動量パケットも出ない。
+				//なお「垂直移動量が 0」にすると当たり判定が衝突を報告しなくなり onGround が
+				//false に落ちて次 tick で再び沈降する（1 tick おきの振動が残る）ので、0 ではなく
+				//-0.03 を維持するのが要点。
+				motionY = -0.03D;
+			}
+			else
+			{
+				motionY -= 0.03D;
 			}
 		}
 

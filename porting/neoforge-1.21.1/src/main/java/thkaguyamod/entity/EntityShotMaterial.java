@@ -251,14 +251,20 @@ public class EntityShotMaterial extends Entity
 
 	/**
 	 * 当たり判定を取るか返す
-	 * @return 当たり判定を取るならtrue
+	 * @return 常に false（diag-pose）
+	 *
+	 * <p>弹之素は弹の消滅位置（＝しばしばプレイヤーの目前）に 1.2 格の box で生まれる。
+	 * true を返すと 1.21.1 の姿勢フィット判定がプレイヤーの立ち姿勢を弾き、
+	 * 自動で {@code Pose.SWIMMING}（匍匐・眼高 0.4）に落ちる＝「右键で趴下」。
+	 * 詳細は {@code EntityTHShot#canBeCollidedWith} を参照（1.7.10 には姿勢機構が無い）。
 	 */
 	@Override
 	public boolean canBeCollidedWith()
 	{
-		return true;
+		return false;
 	}
 
+	//照準・弾丸命中はこちらが担う（canBeHitByProjectile の既定実装が isPickable() を見る）
 	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
 	@Override
 	public boolean isPickable()

@@ -1908,17 +1908,32 @@ public class EntityTHShot extends Entity
 
 	/**
 	 * 他のEntityとの当たり判定の有無を取得
-	 * @return trueなら当たり判定あり
+	 *
+	 * <p>diag-pose: 常に false。1.7.10 の {@code canBeCollidedWith} は
+	 * 「他Entityの移動を止める」役目も持っていたが、1.21.1 ではこのメソッドが
+	 * {@code Player#updatePlayerPose()} の姿勢フィット判定（{@code getEntityCollisions} →
+	 * {@code Entity#canCollideWith} → 相手の {@code canBeCollidedWith}）にも使われる。
+	 * 弾は使用者の目の高さ（脚から 1.12 格）に 0.6×0.6 の box で生まれるため、
+	 * true を返すとプレイヤーの立ち姿勢がそこに「収まらない」と判定され、
+	 * 原版が自動で {@code Pose.SWIMMING}（匍匐・眼高 0.4）へ落とす＝「右键で趴下」。
+	 * 1.7.10 にはこの姿勢機構が無いので原作では起きなかった。
+	 * 照準（{@link #isPickable()}）と弾丸命中（{@code canBeHitByProjectile}）は
+	 * そのまま生きているため、弹が打ち返せない等の不都合は無い。
+	 * @return 常に false（原版の投射物も既定で false）
 	 */
 	@Override
 	public boolean canBeCollidedWith()
 	{
-		return getAnimationCount() >= 1;//遅延時間でないなら当たり判定を取る
+		return false;
 	}
 
 	/**
 	 * 照準で狙えるかどうか（1.7.10 では canBeCollidedWith が照準取得のフィルタも兼ねていた）。
 	 * これが無いとプレイヤーの攻撃（弾の跳ね返し）が弾に届かない。
+	 *
+	 * <p>diag-pose: {@link #canBeCollidedWith()} を false に固定したので、
+	 * 「狙える」の唯一の担い手はこのメソッドになった。弾丸命中も
+	 * {@code canBeHitByProjectile} の既定実装がこの値を読むため同時に生きている。
 	 */
 	@Override
 	public boolean isPickable()

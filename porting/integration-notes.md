@@ -151,6 +151,7 @@
 | 阶段5 后续 | I13+I14 统一全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
 | 阶段5 后续（FIX-3a/3b 后） | GameTest 全量（+7 例：P0 回归 2 + fix3b 5） | **76/76 PASS** |
 | 阶段5 后续 | FIX-3 后最终全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
+| 阶段5 后续（I15/I16 修复） | compile + GameTest（+核弹地形 2 例）+ smoke 双模式 | **78/78 PASS + SMOKE PASS**（diag-nuke 批） |
 
 ## 代理协调文件
 
@@ -174,3 +175,5 @@
 | I12 | （过程教训）首轮 audit 双批 2h 超时零落盘 | 大分析批在内存攒报告（I4 模式复发） | resume 补「下一步必须写文件 + 限时收尾」→ 135s/144s 出完整报告；该指令模板已固化进后续批次简报 | ✅ 台账 |
 | I13 | 用户实测"扫帚乱窜"：无人时 2 tick 周期永久微颤（I9 修复的回归） | 1.21.1 `Entity.move()` 着地**不清零**垂直 deltaMovement（1.7.10 moveEntity 会吃掉被阻运动）→ I9 照抄的"着地 motionY+0.06"在新版变净上浮 +0.03/tick（实测振幅 0.0141 格、motionY -0.022/+0.007 往复） | diag-broom 批：着地时 `motionY = -0.03`（取 0 会让 onGround 掉 false 变交替振动，实测排除）；新增 3 物理由例（静止振幅/衰减 0.891/滑距与原作同式同值）；**61/61 + compile 0 错**。骑乘抖动另线（无 getControllingPassenger 双侧积分，Phase1 staging 方案覆盖） | ✅ 修复 |
 | I14 | 用户实测"右键符卡/物品人物趴下（鞘翅状趴平+视角下移）" | **原版自动匍匐被触发**：1.21.1 `Player.updatePlayerPose()` 站/蹲放不下时兜底 Pose.SWIMMING（0.6 高/眼高 0.4），拟合把实体碰撞盒算入；弹幕/效果实体生成在使用者胸口高度（脚底+1.12）且 canBeCollidedWith==true → 站蹲均相交 → 自动按趴。1.7.10 无姿势拟合机制故原作无此现象（机制判定=SWIMMING 匍匐，非鞘翅/非潜行） | diag-pose 批：5 实体（THShot/SanaeWind/SilverKnife/DivineSpirit/ShotMaterial）canBeCollidedWith→false（isPickable 不动，I8 瞄准/命中/打拳反弹零回归——全树产品码对该方法零读取）；新增 PlayerPoseRegressionTest 3 例（含原版船机理对照）；**64/64 + compile 0 错**。**裁决**：代价=弹幕不再参与实体推挤（不可感知），登记为行为差异 | ✅ 修复 |
+| I15 | 用户实测"扫帚飞行中模型整圈乱转（不影响方向）" | 骑乘分支每 tick `setYRot(骑手yaw−90)` 不回卷，骑手 yaw 随鼠标无限增长；而 yRotO 来自网络包（256 量化已正规化），渲染器素 lerp 把 360° 整数倍整段走完 → 视觉上整圈甩 | diag-broom-render 批：RenderMarisaBroom:72 改 `Mth.rotLerp`（1.21.1 自身插值惯例）；纯函数沙盒数值验证：持续转向 600 tick 修正前最大扫掠 3960°→修正后 0°，常规操作两实现零差异；76/76 + compile 0 错。遗留：tick 内 wrapDegrees 的更根本做法待 broom-input 合并时一并验证 | ✅ 修复 |
+| I16 | 用户实测"控制棒（核弹）不破坏地形" | **原作即如此**：1.7.10 物品用 6 参 ShotData.shot → special 恒 0 → EXPLOSION01 破坏分支不可达；tick() 的 4 处爆炸在"蓄力中换掉手持物"才触发，正常游玩不可达（javap 字节码证实）——移植忠实继承"不破坏"；但配置项 `Master Spark Destroys Blocks` 与分支注释"地形を破壊する爆発"证明破坏是设计意图 | diag-nuke 批：按设计意图实现（同 P22 GLM 先例）——核弹命中方块调用 `explodeOnBlockHit(loc, ModConfig.MasterSparkDestroysBlocks)`，半径随蓄力（原作 tick 路径同式）；**K3 裁决保留**（玩家预期+配置门控+可单点回退），USER_MIGRATION §3.4 已登记为有意偏离；新增 NuclearShotTerrainTest 2 例（破坏/门控负对照），变异验证 2 红；78/78 + smoke 双 PASS | ✅ 已修（有意偏离，可回退） |

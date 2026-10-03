@@ -26,6 +26,10 @@ import thkaguyamod.entity.item.EntityMarisaBroom;
  * <p>1.7.10 の {@code doRender(..., yaw, pitch)} の第 6 引数 {@code pitch} は
  * 実体は {@code partialTicks} なので 1.21.1 の {@code partialTick} を使う。</p>
  *
+ * <p><b>yaw は引数 {@code entityYaw} ではなく {@link Mth#rotLerp} で自前補間する</b>
+ * （理由は {@link #render} のコメント）。pitch は 1.7.10 と同じく現在値を使う
+ * （{@code Entity#turn} が ±90° にクランプするので yaw のような 360° 倍数のずれが起きない）。</p>
+ *
  * <p>TODO K3-review: テクスチャ未コピー。1.7.10 {@code textures/MagicBloom.png} →
  * {@code textures/entity/shot/magicbloom.png} を想定し、{@link DanmakuRenderTypes#texture(String)}
  * の規則（全小文字・{@code textures/entity/shot/}）で解決している。</p>
@@ -51,8 +55,28 @@ public class RenderMarisaBroom extends EntityRenderer<EntityMarisaBroom>
 	{
 		VertexConsumer buffer = bufferSource.getBuffer(DanmakuRenderTypes.get(TEXTURE, DanmakuRenderTypes.MODE_OPAQUE));
 
+		//TODO K3-review: 引数 entityYaw は使わない。LevelRenderer#renderEntity が渡してくる値は
+		//   Mth.lerp(partialTick, entity.yRotO, entity.getYRot())
+		// （1.21.1 LevelRenderer.java:1265）で、バニラの全レンダラはこれをそのまま使ってよい。
+		// バニラのエンティティは yRotO と yRot が常に ±180° 以内に収まるため
+		// （サーバーの回転パケットは byte 量子化、クライアントの lerpTo も rotLerp で短い方を回る）。
+		//
+		// しかしこの箒は毎 tick クライアント側で騎手の yaw から setYRot し直す（下の tick()）ため、
+		// yRotO（ネットワークで正規化された値）と yRot（騎手の非正規化 yaw − 90）が
+		// 360° の倍数だけ離れる。騎手の yaw は加算され続ける（MouseHandler#turnPlayer →
+		// Entity#turn、正規化されない）ので、素の lerp は「整数回転ぶん余分に回る」値を返し、
+		// モデルが 1 フレームで数回転する（実測: 7°/tick で回し続けた場合、掃引角は
+		// 時間とともに増え 600 tick で最大 3960°＝11 回転/フレーム。
+		// porting/staging/diag-broom-render/REPORT.md の純関数ハーネスで実測）。
+		//
+		// 対策: バニラがネットワーク補間で使っている Mth.rotLerp（内部で wrapDegrees を通し、
+		// 必ず短い方を回る）に置き換える。yRotO/yRot は public フィールドなので参照できる。
+		// 通常操作（前後・微調整）では yRotO と yRot の差が小さいため素の lerp と一致し、
+		// 180° 差のときにだけ「短い方」を選ぶ＝常に自然な見た目になる。
+		float renderYaw = Mth.rotLerp(partialTick, entity.yRotO, entity.getYRot());
+
 		poseStack.pushPose();
-		poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
+		poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - renderYaw));
 
 		float f2 = (float)entity.getTimeSinceHit() - partialTick;
 		float f3 = entity.getDamageTaken() - partialTick;
@@ -72,6 +96,8 @@ public class RenderMarisaBroom extends EntityRenderer<EntityMarisaBroom>
 		poseStack.scale(1.0F / size, 1.0F / size, 1.0F / size);
 		poseStack.scale(-1.0F, -1.0F, 1.0F);
 		poseStack.mulPose(Axis.YP.rotationDegrees(-90F));
+		//pitch は 1.7.10 と同じく「現在値」を使う（Entity#turn が ±90° にクランプするため
+		//yaw のような 360° 倍数のずれが起きない＝補間の必要が無い）。
 		poseStack.mulPose(Axis.XP.rotationDegrees(-entity.getXRot()));
 
 		float rodWidth = 0.05F;

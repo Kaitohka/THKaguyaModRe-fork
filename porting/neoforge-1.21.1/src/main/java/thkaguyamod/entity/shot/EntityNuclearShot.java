@@ -16,6 +16,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import thkaguyamod.config.ModConfig;
 import thkaguyamod.danmaku.ShotData;
 import thkaguyamod.danmaku.THShotLib;
 import thkaguyamod.init.ModItems;
@@ -242,15 +243,36 @@ public class EntityNuclearShot extends EntityTHShot
 			{
 				if(hitResult instanceof BlockHitResult blockHit)
 				{
-					if(blockHitSpecialProcess(blockHit))
-					{
-						delete();//ブロックに当たったら消滅
-						return true;
-					}
+					// TODO K3-review: 1.7.10 の制御棒核弾はこの経路で爆発せず、そのまま消滅していた
+					// （shipped jar のバイトコードで確認済み。tick() の createExplosion 4 箇所は
+					//   「チャージ中に手持ちを外した」ときだけの到達不能経路）。
+					// しかし DanmakuConstants.EXPLOSION01 は「地形を破壊する爆発」と定義され、
+					// Master Spark Destroys Blocks もそのために存在する。実測報告（核弾が地形を壊さない）
+					// に合わせ、ブロック命中時にだけ原作 tick 経路と同じ半径で爆発させる。
+					// 対 Entity 命中の挙動（10 ダメージ・爆発なし）は原作のまま変更していない。
+					explodeOnBlockHit(blockHit.getLocation(), ModConfig.MasterSparkDestroysBlocks);
+					delete();//ブロックに当たったら消滅
+					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * ブロック命中時の爆発。{@code destroysBlocks} が false なら地形を壊さない爆発（{@code NONE}）。
+	 *
+	 * <p>副作用をこのメソッドへ集約しているのは、{@code Master Spark Destroys Blocks} の
+	 * 負の対照を GameTest から（グローバル設定を書き換えずに）取れるようにするため。
+	 */
+	public void explodeOnBlockHit(Vec3 location, boolean destroysBlocks)
+	{
+		if(level().isClientSide)
+		{
+			return;
+		}
+		level().explode(user, location.x, location.y, location.z, getShotSize(),
+				destroysBlocks ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
 	}
 
 	//当たり判定の追加

@@ -23,6 +23,11 @@ import thkaguyamod.entity.item.EntityMazinkyoukan;
  * {@link DanmakuRenderTypes#MODE_ADD_ONE_MINUS_SRC_COLOR} で再現する。
  * 1.7.10 の {@code glDisable(GL_CULL_FACE)}（両面）は両モードとも NO_CULL で再現済み。</p>
  *
+ * <p>1.7.10 の {@code tessellator.draw()} 3 回（左取手 → 本文 → 右取手）に対し、
+ * 1.21.1 の {@link MultiBufferSource} は別 RenderType へ切り替えた時点で前の
+ * バッファを flush する。よって右取手は本文描画後に {@code MODE_OPAQUE} を
+ * 取り直してから積む（取り直しが本文バッチの flush を兼ね、描画順も 1.7.10 と一致する）。</p>
+ *
  * <p>TODO K3-review: テクスチャ未コピー。1.7.10 {@code textures/Mazinkyoukan_Texture.png} →
  * {@code textures/entity/shot/mazinkyoukan_texture.png} を想定し、
  * {@link DanmakuRenderTypes#texture(String)} の規則（全小文字）で解決している。</p>
@@ -106,7 +111,10 @@ public class RenderMazinkyoukan extends EntityRenderer<EntityMazinkyoukan>
 		px2max = -Mth.sin((angle + 2F) / 180F * 3.141593F) * 1.65F;
 		pz2min = Mth.cos((angle - 2F) / 180F * 3.141593F) * 1.55F;
 		pz2max = Mth.cos((angle + 2F) / 180F * 3.141593F) * 1.65F;
-		quad(opaqueBuffer, poseStack, 1F, 1F, 1F, 1F,
+		// 本文バッチは別 RenderType への切り替え時に flush 済みで、左の opaqueBuffer は
+		// building=false になっている。ここで取り直してから積む（1.7.10 の 3 回目の draw 相当）。
+		VertexConsumer opaqueBufferRight = bufferSource.getBuffer(DanmakuRenderTypes.get(TEXTURE, DanmakuRenderTypes.MODE_OPAQUE));
+		quad(opaqueBufferRight, poseStack, 1F, 1F, 1F, 1F,
 				px2min, py - widthY2, (float)pz2min, 1.0F,   1.0F,
 				px2max, py - widthY2, (float)pz2max, 0.875F, 1.0F,
 				px2max, py + widthY2, (float)pz2max, 0.875F, 0.5F,

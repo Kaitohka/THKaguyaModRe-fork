@@ -1,0 +1,33 @@
+--- a/src/main/java/thkaguyamod/client/THKaguyaClient.java
++++ b/src/main/java/thkaguyamod/client/THKaguyaClient.java
+@@ -6,15 +6,19 @@
+ import net.neoforged.api.distmarker.Dist;
+ import net.neoforged.bus.api.IEventBus;
+ import net.neoforged.fml.common.Mod;
++import net.neoforged.neoforge.client.event.ClientTickEvent;
+ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+ 
++import net.neoforged.neoforge.common.NeoForge;
++
+ import thkaguyamod.THKaguyaMod;
+ import thkaguyamod.client.gui.screen.DanmakuCraftingScreen;
+ import thkaguyamod.client.gui.screen.DanmakuLaserCraftingScreen;
+ import thkaguyamod.client.gui.screen.MerchantSanaeScreen;
+ import thkaguyamod.client.gui.screen.MiracleMalletScreen;
++import thkaguyamod.client.input.BroomSteerClient;
+ import thkaguyamod.client.model.ModelHisou;
+ import thkaguyamod.client.model.ModelKinkakuzi;
+ import thkaguyamod.client.model.ModelMarisaBroom;
+@@ -116,6 +120,10 @@
+     }
+ 
+     public THKaguyaClient(IEventBus modEventBus) {
++        // 魔法の箒の操舵入力。Pre は Minecraft#tick() の先頭、level.tickEntities() の前に
++        // 発火するので、箒の tick は必ずキー読み取りの後に走る（乗り物→乗員の tick 順は不変）。
++        NeoForge.EVENT_BUS.addListener(ClientTickEvent.Pre.class, BroomSteerClient::onClientTickPre);
++
+         modEventBus.addListener(RegisterMenuScreensEvent.class, event -> {
+             event.register(ModMenus.DANMAKU_CRAFTING.get(), DanmakuCraftingScreen::new);
+             event.register(ModMenus.DANMAKU_LASER_CRAFTING.get(), DanmakuLaserCraftingScreen::new);

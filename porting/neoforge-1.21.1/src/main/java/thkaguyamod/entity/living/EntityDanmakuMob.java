@@ -1216,7 +1216,7 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 		{
 			Entity entity1 = list.get(j);
 			//entity1が当たり判定を取らないならパス
-			if (entity1.canBeCollidedWith())
+			if (entity1.canBeHitByProjectile())
 			{
 				//判定を弾の大きさに変更
 				AABB axisalignedbb = entity1.getBoundingBox().inflate(hitSize, hitSize, hitSize);

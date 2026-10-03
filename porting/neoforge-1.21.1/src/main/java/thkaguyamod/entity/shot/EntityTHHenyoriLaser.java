@@ -123,7 +123,7 @@ public class EntityTHHenyoriLaser extends EntityTHLaser
 			{
 				Entity entity1 = list.get(j);//entity1にリストの先端のentityを保存
 				//entity1が、当たり判定を取らない　または　EntityTHShotならパス
-				if ( entity1.canBeCollidedWith() &&
+				if ( entity1.canBeHitByProjectile() &&
 					!hitCheckEx(entity1) &&
 					!(entity1 instanceof EntityTHShot) &&
 					//TODO: EntitySakuyaWatch / EntityTHFairy 移植後に 1.7.10 の除外条件を復元する

@@ -1,0 +1,13 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "thkaguyamod:item/jeweled_branch_of_hourai"
+  },
+  "overrides": [
+    { "predicate": { "thkaguyamod:hourai_charge_stage": 0.2 }, "model": "thkaguyamod:item/jeweled_branch_of_hourai_4" },
+    { "predicate": { "thkaguyamod:hourai_charge_stage": 0.4 }, "model": "thkaguyamod:item/jeweled_branch_of_hourai_3" },
+    { "predicate": { "thkaguyamod:hourai_charge_stage": 0.6 }, "model": "thkaguyamod:item/jeweled_branch_of_hourai_2" },
+    { "predicate": { "thkaguyamod:hourai_charge_stage": 0.8 }, "model": "thkaguyamod:item/jeweled_branch_of_hourai_1" },
+    { "predicate": { "thkaguyamod:hourai_charge_stage": 1.0 }, "model": "thkaguyamod:item/jeweled_branch_of_hourai_0" }
+  ]
+}

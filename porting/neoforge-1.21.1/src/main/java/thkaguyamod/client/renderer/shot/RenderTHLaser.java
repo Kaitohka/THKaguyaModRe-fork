@@ -605,7 +605,9 @@ public class RenderTHLaser extends EntityRenderer<EntityTHLaser>
 	public void renderLightEffect(Ctx ctx, int color, float size, EntityTHShot thShot)
 	{
 		int c = color % 8;
-		int count = thShot.getAnimationCount() % 2;
+		// 遅延期は getAnimationCount() が負になり得るため、負値でも 0/1 になる & 1 を使う
+		// （1.7.10 は % 2 で -1 になり UV が負になっていた。I7 の RenderTHShot.renderLightEffect と同じ扱い）。
+		int count = thShot.getAnimationCount() & 1;
 		float f3 = (float)(count * 32 +  0) / 64F;
 		float f4 = (float)(count * 32 + 32) / 64F;
 		float f5 = 0F;

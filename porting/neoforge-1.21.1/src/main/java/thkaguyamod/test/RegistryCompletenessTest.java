@@ -12,10 +12,12 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import thkaguyamod.THKaguyaMod;
+import thkaguyamod.config.ModConfig;
 import thkaguyamod.init.ModBlocks;
 import thkaguyamod.init.ModEntities;
 import thkaguyamod.init.ModItems;
 import thkaguyamod.init.ModMenus;
+import thkaguyamod.registry.DanmakuPatternRegistry;
 
 /**
  * 阶段 5 质量基建：注册完整性冒烟测试。
@@ -76,6 +78,9 @@ public final class RegistryCompletenessTest {
 
     private static final List<String> MENU_IDS = List.of(
             "danmaku_crafting", "danmaku_laser_crafting", "merchant_sanae", "miracle_mallet");
+
+    /** 妖精の弾幕パターン表（難易度別）の最低限の期待値。 */
+    private static final int MIN_DANMAKU_PATTERNS = 1;
 
     private RegistryCompletenessTest() {}
 
@@ -144,6 +149,46 @@ public final class RegistryCompletenessTest {
         for (String menuId : MENU_IDS) {
             assertPresent(helper, BuiltInRegistries.MENU, menuId);
         }
+
+        helper.succeed();
+    }
+
+    /**
+     * 弾幕パターン表（{@link DanmakuPatternRegistry}）が空でないことを検証する。
+     *
+     * <p>P0 回帰：1.7.10 は {@code THKaguyaCore.preInit} で {@code registerDanmakuPattern()} を
+     * 呼んでいたが、移植版はこの呼び出しが丸ごと抜けており、{@code pattern} が空のまま
+     * {@link thkaguyamod.entity.living.EntityTHFairy#setPattern} が
+     * {@code pattern.get(0)} で {@code IndexOutOfBoundsException} を投げていた
+     * （妖精／ひまわり妖精／幽霊／使い魔が一切 summon できない）。
+     * ここで「表に少なくとも 1 件入っている」を固定し、呼び出しが再び消えたら即座に落ちるようにする。
+     */
+    @GameTest(template = TEMPLATE)
+    public static void danmakuPatternsAreRegistered(GameTestHelper helper) {
+        List<String> firstBuild = List.copyOf(DanmakuPatternRegistry.pattern);
+
+        helper.assertTrue(firstBuild.size() >= MIN_DANMAKU_PATTERNS,
+                "DanmakuPatternRegistry.pattern is empty (size=" + firstBuild.size()
+                        + ", danmakuLevel=" + ModConfig.danmakuLevel
+                        + ") — EntityTHFairy.setPattern would throw IndexOutOfBoundsException");
+
+        // 空表だった場合に落ちるのは setPattern の中なので、同じ経路を表の側からも固定する
+        for (String patternName : firstBuild) {
+            helper.assertTrue(DanmakuPatternRegistry.danmaku.containsKey(patternName),
+                    "pattern list contains " + patternName + " but danmaku map does not");
+            helper.assertTrue(DanmakuPatternRegistry.span.containsKey(patternName),
+                    "pattern list contains " + patternName + " but span map does not");
+            helper.assertTrue(DanmakuPatternRegistry.speed.containsKey(patternName),
+                    "pattern list contains " + patternName + " but speed map does not");
+            helper.assertTrue(DanmakuPatternRegistry.form.containsKey(patternName),
+                    "pattern list contains " + patternName + " but form map does not");
+        }
+
+        // 冪等性：config Reloading で再度呼ばれても表が倍にならないこと
+        // （1.7.10 は preInit の 1 回だけだったので clear 不要だった）
+        DanmakuPatternRegistry.setDanmakuPattern();
+        helper.assertValueEqual(DanmakuPatternRegistry.pattern, firstBuild,
+                "DanmakuPatternRegistry.pattern after a second setDanmakuPattern() call");
 
         helper.succeed();
     }

@@ -101,6 +101,13 @@ public class EntityCirnoIceBox extends Entity
 		return true;
 	}
 
+	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
+	@Override
+	public boolean isPickable()
+	{
+		return true;
+	}
+
 	/**
 	 * 毎tick行う処理
 	 */

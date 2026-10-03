@@ -31,7 +31,19 @@
 | P10 | `ItemOnbashira` 挖掘速度 3.0 恒值在 1.21.1 无 item 覆写点 | agent-10 TODO | 用属性组件或 Tool 规则补，阶段 5 |
 | P11 | `ItemCursedDecoyDoll` 的 OriginalItemID 还原需新组件 ORIGINAL_ITEM（物品注册名字符串） | agent-18 | 合并道具实体批时加组件并对接万宝槌还原 |
 | P12 | `sakuyas_pocket_watch` damage 当模式位 → 需 durability(2)（同 kaigo 处理） | agent-18 | 生成器表改，合并物品批时 |
-| P13 | 早苗符卡 Charge 守卫闭环 | agent-29 | ✅ 已落实并合并（库侧守卫+物品侧去重；提示文案键缺失→保持旧版静默失败，待补键后可启用 displayClientMessage） |
+| P13 | 早苗符卡 Charge 守卫闭环 | agent-29 | ✅ 已落实并合并（库侧守卫+物品侧去重）。**更正**（charge-hint 批核实）：提示键 thKaguya.msg.sneScCharge 5 语言俱在，「键缺失」系事实错误；启用补丁已备（staging/charge-hint/），发布冻结未合并 |
+| P31 | D4 悔悟之棒组件化：ROD_OF_REMORSE 的 durability(2) 去留 | polish-trio | 去掉=无耐久语义正确但叠加上限 1→64；保留=占位延续。补丁已备（staging/polish-trio/d4/），下一窗口裁决 |
+| P32 | P10 御柱挖掘：字面「恒 3.0」vs 原作实机「クモの巣 3.0 / 其他 1.0」 | polish-trio | BreakSpeed 事件方案已备（staging/polish-trio/p10/），取值待裁决 |
+| P33 | broom-input 操舵设计：①旧版限速笔误（单键 0.2~0.5 巡航、全键发散）忠实保留 vs cap 修复（建议修复+记差异）②Phase 2 服务端镜像包是否随下个窗口 | broom-input | DESIGN.md 已定稿（staging/broom-input/），待裁决后实施 |
+| P34 | charge-hint 启用方式：默认开启+actionBar（建议）vs 配置门控 | charge-hint | 补丁与文档同步清单已备（staging/charge-hint/PREP.md），下一窗口裁决；启用时同步改 USER_MIGRATION §3.4/§5#15/附录A#9/FAQ Q2 |
+| P35 | `DanmakuParams` int 字段无范围夹紧；`EntityDanmakuMob.dropShotItem` 等处 `form % 8` 负取模潜伏（当前调用点均正常量，不可达） | audit-common P1-1 | 下一窗口：DanmakuParams compact 构造器统一夹紧（单点覆盖所有写入路径） |
+| P36 | `EntitySpellCard.java:236` 无 null 检查调 useSpellCard（:122-141 允许其为 null）；`EntitySakuyaWatch:238`/`EntitySakuyaStopWatch:179` 解引用可能为 null 的 spellCard.user；**二轮补充**：`THSC_SatuzinDoll:90` 同族——客户端 EntitySpellCard.user 恒 null，现被同样不同步的 canMoveInTimeStop 短路挡住，一旦同步即变客户端每 tick NPE | audit-common P1-2/3 + 二轮 | 下一窗口统一修：改 `this.user.equals(spellCard.user)` 或加 null 守卫（3 处同型） |
+| P37 | `THSC_Fafurotskies_no_Kiseki:69` 把 shotLimitSpeed 当模式编号 | audit-common P1-4 | 原作即如此，裁决保持现状（与 P27 同类登记） |
+| P38 | `RenderTHBoss:146-147` moveDanmakuAttack(maxHP=0) → HP 条 UV 为 NaN | audit-render P1-2 | 原作即如此；可选 max(getMaxHealth(),1F)，下一窗口随渲染润色一并评估 |
+| P39 | soak 闸门盲区：数据包 summon 失败不走 [ERROR] 级 → 两轮浸泡"名单全召成功"结论实际未逐条验证（I10 的 18 次异常漏报） | audit-common 发现 | soak_test.sh 增强：统计 `Failed to summon`/命令失败行；已在 FIX 批 GameTest 补 spawn 断言覆盖 |
+| P40 | 1.7.10 `canBeCollidedWith` 三职拆分（碰撞/准星/弹丸命中）→ 1.21.1 的映射规则 | I8/I9 | **已立项为移植规则**：见 MIGRATION_RULES 增补建议（命中扫描→canBeHitByProjectile；准星交互→isPickable；推挤→canBeCollidedWith） |
+| P41 | （已落实为 soak-v2，见批次收尾记录） | — | — |
+| P42 | 伤害路径回归测试第三批：EntityTHSetLaser / EntityNuclearShot / EntityTHHenyoriLaser / EntityDanmakuMob 4 处 I8 修复点未覆盖 | agent-2 建议 | 下一窗口派批 |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
@@ -78,6 +90,19 @@
 |---|---|
 | agent-32 符卡诊断 | 实质完成（失败分支 debug 日志 + SpellCardDeclarationTest 3 用例，GameTest 实证通过）；根因=宣言需 32 格视线目标（原版设计），可观测性已补 |
 | agent-33 实体性能 | A1 流体短路/A2 脏数据门控/A3 跟踪范围单位修正/A4 弹尺寸动态化/A11 MutableBlockPos 已落主树编译通过；B1 追踪节流未做（旧设计，延期评估） |
+| verify-fix（I8/I9 验证） | compile 0 错 + GameTest 22/22（×4 稳定）+ smoke 双 PASS；产品零改动（仅修 2 处测试构造）；变异验证证明新用例真实有效 |
+| gametest-edge 边界用例 | 5 测试类 24 用例合并主树 → **GameTest 46/46**；ShotAnimationCountBoundary/ShotIdEncoding/DanmakuParams/IntegerDataComponent/SpellCardDeclarationEdge |
+| polish-trio（D4/P10/P15） | 实施预备交付（staging/polish-trio/，25 文件，javac 0 错，贴图 md5 核对）；发布冻结未合并，4 项裁决点见 P31-P34 |
+| broom-input 操舵设计 | staging/broom-input/DESIGN.md 定稿：vanilla Boat 模型（本地读键→5-bit 位域→控制端独占积分），2 新 2 改无协议变更；发布冻结未实施 |
+| charge-hint 早苗充能提示 | 键 thKaguya.msg.sneScCharge **5 语言全部存在**（P13「键缺失」系事实错误，已更正）；补丁备好（THKaguyaLib:199 静默失败②→actionBar 提示），javac 0 错；建议默认开启，发布冻结未合并 |
+| broom-input Phase1 实施 | staging/broom-input/impl/ 完整交付（BroomSteer 纯函数 297 行 + Client 输入 89 行 + 扫帚整文件/补丁 + 11 例 GameTest 草稿）；零协议改动（弃 Phase 2 自建包，Boat 模型单侧积分）；javac 沙盒 263 文件 0 错 + **9 项数值断言实跑全中**；主树无人减速修复完整保留。待裁决 P33①（限速 cap 修复已固化为 fullMaskStaysBounded 测试） |
+| polish-trio 双变体 | variants/ 交付：D4 A（去 durability，等价 1.7.10 setMaxDamage(0)）/B（保留占位）仅 1 行之差；P10 A（恒 3.0，javap 证实原作）/B（按 hasCorrectToolForDrops 分岐逼近 1.7.10 实机）；P15 MERGE-READY 与 I8/I9 零交集；四变体 overlay javac 全 0 错、6 PNG md5 对原作 |
+| audit-common 逻辑侧普查 | 20KB 报告：P0×1（I11 弹幕样式表零调用，已派 FIX）、P1×4（P35-P37 登记）、P2×11（多为已排除项）；codec 对称性/组件 NPE/除零/CME/反射 明确零发现；50 文件逐读 + 8 类模式 grep 全筛 |
+| audit-render 渲染普查 | 16.5KB 报告：P0×1（I10 魔人镜冠 A→B→A buffer 复用，已派 FIX-2）、P1×2（P38 + THLaser 延迟 UV 随 FIX-2 硬化）、P2×6；I5 专项 20 模型取件链脚本比对零缺失；72 文件全覆盖（30 逐读+10 模型逐读+32 模式扫描） |
+| audit-render 二轮深化 | 首轮 32 个模式扫描文件全部逐行精读（含 12 模型 +1.7.10 逐行对照）：**零新增 P0/P1**；2 条初判候选经原作逐字复核撤回（ModelRinnosuke 臂姿/ModelWriggle root.render，均原作即如此）；client 包至此无未覆盖文件 |
+| soak-v2 闸门增强 + doc-sync | P39 落实：soak_test.sh 升级——summon 失败/异常/IOOB 纳入 FAIL 判定 + 36 条实体存活回执断言；用 I11 污染日志回放实证旧闸门假绿→新闸门必红；已合并 porting/tools/。doc-sync：USER_MIGRATION 与 I8/I9 修复逐条核查**零矛盾**（修复=恢复文档所述原作行为） |
+| audit-common 二轮深化 | 35/35 符卡逐行读 + 与 1.7.10 逐行 diff：**转录笔误 0**、P0=0；P1-latent×1（SatuzinDoll/SakuyaWatch/SakuyaStopWatch 的 spellCard.user 客户端 NPE 潜伏，已并入 P36）；登记原作即如此 8 条；除零/越界/死循环逐项查空 |
+| gametest-edge2 回归测试二批 | 3 类 8 例（激光/银刀伤害路径、弹相殺数值、12 实体 isPickable 断言、扫帚物理）合并主树；首跑 3 例败 → agent-2 鉴别**全部为测试构造缺陷**（动画计数存储语义/相对绝对坐标混用/几何与靶选择），产品零改动，变异验证 5+1 红证效 → **58/58 PASS**；第 4 处伤害路径（SetLaser/NuclearShot/HenyoriLaser/DanmakuMob）建议第三批 → P42 |
 
 ## 事故台账补记
 
@@ -91,6 +116,18 @@
 | 阶段3 | build+runClient | PASS（0 配方/模型错误） |
 | FIX 批后（a976221） | build+runClient（smoke_test.sh） | PASS（主菜单到达、0 相关 ERROR） |
 | 环境修复后 | 双模式 smoke（R3闸+client+server） | **PASS 双端全绿** |
+| 阶段5（dfda417 基线） | 双模式 smoke | PASS（R3 OK / client / server） |
+| 阶段5（I7 修复后） | 双模式 smoke + GameTest | **PASS + 20/20** |
+| 阶段5 | jar 内容核验（832 文件） | PASS（110 配方 / 14 群系修饰器 / GLM / 146 模型 / 5 语言 / 元数据展开正确） |
+| 阶段5 | 30 分钟专用服务端浸泡（含 36 实体 soak 数据包常驻 tick） | **PASS**（0 相关 ERROR / 0 OOM / 0 Can't keep up；用户客户端中途接入观察 1 分钟亦正常） |
+| 阶段5（I8/I9 修复后） | compile + GameTest（含 DanmakuDamageTest 2 例）+ smoke 双模式 | **PASS：22/22 + smoke 双 PASS**（verify-fix 批 ×4 连跑稳定） |
+| 阶段5（gametest-edge 合并后） | GameTest 全量 | **46/46 PASS** |
+| 阶段5（I8/I9 修复后） | 30 分钟专用服务端浸泡（第二轮） | **PASS**（0 相关 ERROR / 0 OOM / 0 Can't keep up） |
+| 阶段5（I10/I11 修复后） | compile + GameTest（+样式表/妖精生成 4 例）+ smoke 双模式 | **PASS：50/50 + smoke 双 PASS**（FIX+FIX-2 批） |
+| 阶段5 | 第三轮浸泡（soak-v2 增强闸门：36 实体存活回执 + 异常计数，全新世界） | **PASS**：receipts 36/36（alive=36 dead=0，妖精系真实生成）、summon_failures=0、exceptions=0、IOOB=0、0 OOM、0 Can't keep up |
+| 阶段5（gametest-edge2 合并 + 败例修复后） | GameTest 全量 | **58/58 PASS**（3 败例均鉴别为测试构造缺陷，产品零改动；变异验证 5+1 红证效） |
+| 阶段5 | 最终全量 smoke（build+client+server） | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR / 0 配方 / 0 模型） |
+| 阶段5 | 最终构建 jar（842 文件，含 16 测试类）+ 快照提交 | PASS；**git a03a4ee** |
 
 ## 代理协调文件
 
@@ -106,3 +143,9 @@
 | I2 | 专用服务端无法启动 | 本机 Steamcommunity302 代理 TLS 拦截，Java 信任库不认 libraries.minecraft.net（netty epoll 下载 PKIX 失败） | 构建工程信任库（cacerts+代理CA链）`porting/tools/thkaguya-truststore.jks`，复制到 `~/.gradle/` 并配 `org.gradle.jvmargs` trustStore | ✅ 服务端 Done(5.4s) |
 | I3 | 429 限流 ×3（agent-18/23/25） | 13 路并发超每分钟 21 次请求上限 | 无损恢复；稳态并发 ≤10；批次空位补入 | ✅ 台账 |
 | I4 | 2h 超时 ×6（agent-16/17/19/21/24/26） | 大文件批次分析阶段过长（agent-16/24 超时前零落盘） | 全部无损恢复；简报补"立即逐文件落盘"指令；超大批次今后先拆小 | ✅ 恢复中 |
+| I7 | 用户世界内实测客户端崩溃（run/ 与 run-smoke/ 各 1 份 crash，AIOOBE index -1 @ RenderTHShot:498） | 转录笔误：延迟弹预告（renderLightEffect）把颜色数组下标写成动画帧奇偶 `c=count%2`；延迟期 animationCount 为负 → 奇数帧 c=-1 越界。1.7.10 原作该处用 `colorR[color]`，count 仅驱动贴图 UV | 改回 `colorR[color]`（与原作一致）；`count % 2`→`count & 1` 保证负计数下帧奇偶非负；全渲染器同类下标已普查（laser/minihakkero/气质弹均安全）；修复后 smoke 双 PASS + GameTest 20/20 | ✅ 修复 |
+| I8 | 用户实测：弹幕/激光/符卡对怪物零伤害（发布阻塞） | 1.7.10 的 `canBeCollidedWith` 身兼三职（可碰撞/可被准星选取/可被弹丸命中）；1.21.1 拆为 `canBeCollidedWith`（推挤，**原版生物不再覆写→恒 false**）/`isPickable`（准星）/`canBeHitByProjectile`。移植只搬了第一职 → 命中扫描过滤器排除一切生物 | 7 处命中扫描改 `canBeHitByProjectile()`（THShot/THLaser/THSetLaser/THHenyoriLaser/NuclearShot/SilverKnife/DanmakuMob）；EntityTHShot 补 `isPickable()`=animCount>=1（恢复打拳反弹）；另 11 个 1.7.10 恒 true 实体补 `isPickable`（隙间染色/八卦炉/银刀回收等交互同步恢复）；GameTest 新增 DanmakuDamageTest 2 例（变异验证有效） | ✅ 修复（verify-fix 批验证 22/22 + smoke PASS） |
+| I9 | 用户实测：扫帚下骑后不停、无法破坏/回收 | (a) 同 I8：`isPickable` 未覆写 → 准星永远选不中（首次骑乘是物品 startRiding 直挂才骑得上）；(b) tick() 无人减速块只改局部变量未写回 setDeltaMovement → 下骑后永不减速（1.7.10 该块在 moveEntity 后执行同样不写回，属修正性移植） | 扫帚补 `isPickable()`=!isRemoved()；减速块移到骑乘 if 的 else 分支、move() 之前（双侧运行）；GameTest 覆盖创造一拳破坏 | ✅ 修复（同上） |
+| I10 | 用户实测 crash（10:24）：魔人镜冠在视野内客户端必崩 `IllegalStateException: Not building!` | RenderMazinkyoukan 同一 BufferSource 上 A→B→A 重取渲染类型后复用旧 VertexConsumer（中间 getBuffer 触发 endBatch 把旧 builder 置 building=false）；转录自 1.7.10 三次 tessellator.draw() 时丢了对应用语义 | ✅ FIX-2 批修复（右取手前重新 getBuffer，javap 复核 3 getBuffer+3 quad；A→B→A 同型全树扫描零残留）；附带项 RenderTHLaser:608 延迟期 `% 2`→`& 1` 硬化（与 I7 同法）；其上报的 RenderTHShot:304/320/462 同类疑点经 K3 核实**不可达**（调用点均在实体化分支，animationCount≥0），无需处理 | ✅ 修复（compile 0 错） |
+| I11 | 妖精/向日葵妖精/幽灵/使魔全部无法生成（召唤与自然生成均失效） | `DanmakuPatternRegistry.setDanmakuPattern()` 全树零调用（原作 THKaguyaCore.java:95 有）→ 样式表恒空 → EntityTHFairy.setPattern:96 必抛 IndexOutOfBoundsException；浸泡日志 18 次异常但因 summon 失败不走 ERROR 级被闸门漏报（P39） | ✅ FIX 批：主类在 ModConfig Loading/Reloading（sync 之后）补调用（样式表依赖 danmakuLevel，SERVER config 此时才就绪）；setDanmakuPattern 开头 clear 五表保幂等；原作有 default 兜底故 level=0 不崩（新增测试钉死）；新增 danmakuPatternsAreRegistered + DanmakuMobSpawnTest 3 例；**GameTest 50/50 + smoke 双 PASS**；同数据包复跑浸泡日志 0 异常 | ✅ 修复 |
+| I12 | （过程教训）首轮 audit 双批 2h 超时零落盘 | 大分析批在内存攒报告（I4 模式复发） | resume 补「下一步必须写文件 + 限时收尾」→ 135s/144s 出完整报告；该指令模板已固化进后续批次简报 | ✅ 台账 |

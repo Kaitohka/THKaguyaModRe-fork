@@ -1,0 +1,26 @@
+--- a/src/main/java/thkaguyamod/danmaku/THKaguyaLib.java
++++ b/src/main/java/thkaguyamod/danmaku/THKaguyaLib.java
+@@ -198,10 +198,19 @@
+ 					//旧版は「NBT が無い」「Charge <= 0」の双方を宣言失敗にしていたので、getOrDefault(…, 0) <= 0 で同値。
+ 					if(itemStack.getOrDefault(ModDataComponents.CHARGE.get(), 0) <= 0)
+ 					{
+-						//1.7.10 には宣言失敗時のメッセージが無かったため、専用キーは存在しない。
+-						//TODO K3-review: lang キー "thKaguya.msg.sneScCharge"（「奇跡之力」不足の警告）が未登録。
+-						//キー追加までは旧版どおり無言で失敗させる（下の 1 行を有効化すれば表示に切り替わる）。
+-						//player.displayClientMessage(Component.translatable("thKaguya.msg.sneScCharge"), true);
++						//1.7.10 はこの分岐を無言で通していた（旧版にメッセージ用キーは無い）。
++						//移植では「右键が無反応」の最頻原因がここだと判明したため、アクションバーへ
++						//文言キー thKaguya.msg.sneScCharge を出す。overlay=true なので通常チャットは汚さない。
++						//このメソッドは両側で走る（use() が両側で呼ばれる）ため、!isClientSide で
++						//サーバー側の 1 回だけに絞る＝L377/L404 の送信規約と同型、二重表示も防げる。
++						//専用サーバーでも効く: Player#displayClientMessage は ServerPlayer が override して
++						//actionBar パケットを送る（共通コードに client-only 参照は無い＝R3 準拠）。
++						//TODO K3-review: 既定 ON か配置門控かは未決。推奨=既定 ON で Other 節に切替キーを追加
++						//（理由と代替案: porting/staging/charge-hint/PREP.md §3.3）。下の if が門控の差込点。
++						if(!world.isClientSide)
++						{
++							player.displayClientMessage(Component.translatable("thKaguya.msg.sneScCharge"), true);
++						}
+ 						logFail(user, spellCardNumber, "no miracle charge on this Sanae card");
+ 						return false;//宣言失敗
+ 					}

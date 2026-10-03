@@ -28,6 +28,17 @@ public class DanmakuPatternRegistry
 	public static void setDanmakuPattern()
 	{
 		//1.7.10 は THKaguyaConfig.danmakuLevel を直接参照していた。1.21.1 は ModConfig の同名静的フィールド。
+		//
+		//1.7.10 は preInit で一度だけ呼ばれたので clear は不要だった。1.21.1 では config の
+		//Reloading（ModConfigEvent.Reloading）でも同じメソッドを呼ぶため、clear しないと
+		//pattern が add で二重登録され、pattern.get(index) の意味がずれて弾幕レベルを変えるたびに
+		//妖精の見た目・挙動が変わる。5 つの表すべてをここで空に戻してから組み直す。
+		pattern.clear();
+		danmaku.clear();
+		span.clear();
+		speed.clear();
+		form.clear();
+
 		switch(ModConfig.danmakuLevel)
 		{
 		case 1:

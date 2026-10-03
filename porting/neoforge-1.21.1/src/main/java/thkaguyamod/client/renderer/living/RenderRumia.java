@@ -42,11 +42,11 @@ import thkaguyamod.entity.living.EntityRumia;
  * {@link #DARK_TRANSPARENCY} として同じ書式で自前定義している
  * （{@code glBlendFunc} と等価。{@link DanmakuRenderTypes} へ取り込むのが本筋）。</p>
  *
- * <p>TODO K3-review: 貼り先 {@code DarkTexture.png} はまだ移植先にコピーされていない。
- * 1.7.10 の {@code textures/DarkTexture.png} を
- * {@code assets/thkaguyamod/textures/entity/darktexture.png} に置く想定でパスを書いてある
- * （他の同種レンダラ {@code RenderPrivateSquare} / {@code RenderSakuyaStopWatch} /
- * {@code RenderSpiritualStrikeTalisman} も同じ貼り先を使うため、コピー時にパスを確定すること）。
+ * <p>貼り先 {@code DarkTexture.png} は 1.7.10 の {@code textures/DarkTexture.png} を
+ * {@code assets/thkaguyamod/textures/entity/shot/darktexture.png} に置いたもので、
+ * {@link DanmakuRenderTypes#texture(String)}（{@code textures/entity/shot/<name>.png} を全小文字で解決）
+ * を使う。他の同種レンダラ {@code RenderPrivateSquare} / {@code RenderSakuyaStopWatch} /
+ * {@code RenderSpiritualStrikeTalisman} も同じ解決を使う。
  * なお {@code DarkTexture.png} は全面ほぼ単色（白）のテクスチャで、掃引の見た目は
  * 頂点色とブレンドだけで決まる。</p>
  *
@@ -64,9 +64,8 @@ public class RenderRumia extends RenderTHBoss<EntityRumia, ModelRumia>
 	private static final ResourceLocation RUMIA_TEXTURE =
 			ResourceLocation.fromNamespaceAndPath("thkaguyamod", "textures/entity/living/rumiatexture.png");
 
-	/** 1.7.10: textures/DarkTexture.png（未コピー。TODO 参照） */
-	private static final ResourceLocation DARK_TEXTURE =
-			ResourceLocation.fromNamespaceAndPath("thkaguyamod", "textures/entity/darktexture.png");
+	/** 1.7.10: textures/DarkTexture.png（実ファイルは textures/entity/shot/darktexture.png） */
+	private static final ResourceLocation DARK_TEXTURE = DanmakuRenderTypes.texture("DarkTexture");
 
 	/** 暗闇の描画を始める距離しきい値（1.7.10 のハードコード 36.0D）。 */
 	private static final double DARK_NEAR_DISTANCE = 36.0D;

@@ -893,7 +893,7 @@ public class EntityTHShot extends Entity
 		{
 			Entity entity1 = list.get(j);//entity1にリストの先端のentityを保存
 			//entity1が、当たり判定を取らない　または　entity1が使用者　または　EntityTHShotならパス
-			if ( entity1.canBeCollidedWith() &&
+			if ( entity1.canBeHitByProjectile() &&
 				userHitCheck(entity1) &&
 				!hitCheckEx(entity1) &&
 				!(entity1 instanceof Animal) &&
@@ -1914,5 +1914,15 @@ public class EntityTHShot extends Entity
 	public boolean canBeCollidedWith()
 	{
 		return getAnimationCount() >= 1;//遅延時間でないなら当たり判定を取る
+	}
+
+	/**
+	 * 照準で狙えるかどうか（1.7.10 では canBeCollidedWith が照準取得のフィルタも兼ねていた）。
+	 * これが無いとプレイヤーの攻撃（弾の跳ね返し）が弾に届かない。
+	 */
+	@Override
+	public boolean isPickable()
+	{
+		return getAnimationCount() >= 1;//遅延時間でないなら狙える
 	}
 }

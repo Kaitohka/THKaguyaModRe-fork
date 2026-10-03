@@ -487,7 +487,7 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 		// 1.7.10: GL_CULL_FACE は変更なし（有効）→ CULL 版
 		// # perf: A5
 		VertexConsumer b = ctx.bufCulled(DanmakuRenderTypes.MODE_ADD_SRC_ALPHA);
-		int c = count % 2;
+		int c = count & 1;
 		float u1 = (float)(c * 32 +  0) / 64F;
 		float u2 = (float)(c * 32 + 32) / 64F;
 		float v1 = 0F;
@@ -500,7 +500,7 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 				 width, -width, 0.0F, u2, v2,
 				 width,  width, 0.0F, u2, v1,
 				-width,  width, 0.0F, u1, v1,
-				colorR[c], colorG[c], colorB[c], 0.5F);
+				colorR[color], colorG[color], colorB[color], 0.5F);
 		ctx.pose.popPose();
 	}
 

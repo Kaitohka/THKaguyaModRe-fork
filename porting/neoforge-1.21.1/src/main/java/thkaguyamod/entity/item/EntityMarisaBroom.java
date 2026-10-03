@@ -99,6 +99,14 @@ public class EntityMarisaBroom extends Entity
 		return !isRemoved();
 	}
 
+	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当。
+	//これが無いと左クリックでの攻撃（破壊・回収）や右クリックでの再騎乗が届かない）
+	@Override
+	public boolean isPickable()
+	{
+		return !isRemoved();
+	}
+
 	//Entityに攻撃されたときに呼ばれる
 	@Override
 	public boolean hurt(DamageSource damageSource, float par2)
@@ -212,6 +220,27 @@ public class EntityMarisaBroom extends Entity
 				motionZ *= moveSpeed;
 			}
 		}
+		else
+		{
+			//無人の箒は緩やかに減速・降下する（1.7.10 と同じ挙動。
+			//move() より前に移動量へ反映させること。後段でローカル変数に書くだけでは
+			//setDeltaMovement に届かず、下騎後も動き続けていた）
+			motionX *= 0.9D;
+			motionY -= 0.03D;
+			motionZ *= 0.9D;
+			if(this.getXRot() > 1.0F)
+			{
+				this.setXRot(this.getXRot() - 1.0F);
+			}
+			else if(this.getXRot() < -1.0F)
+			{
+				this.setXRot(this.getXRot() + 1.0F);
+			}
+			if(this.onGround())
+			{
+				motionY += 0.06D;
+			}
+		}
 
 		if(this.isInWater())
 		{
@@ -257,26 +286,6 @@ public class EntityMarisaBroom extends Entity
 			{
 				this.getFirstPassenger().fallDistance = 0.0F;
 				this.fallDistance = 0.0F;
-			}
-			else
-			{
-				//TODO K3-review: 1.7.10 は無人時に motionX/Z を 0.9 倍、motionY を -0.03 し、
-				//着地していれば +0.06 していた（緩やかな降下）。ここも同じ挙動を踏襲している。
-				motionX *= 0.9D;
-				motionY -= 0.03D;
-				motionZ *= 0.9D;
-				if(this.getXRot() > 1.0F)
-				{
-					this.setXRot(this.getXRot() - 1.0F);
-				}
-				else if(this.getXRot() < -1.0F)
-				{
-					this.setXRot(this.getXRot() + 1.0F);
-				}
-				if(this.onGround())
-				{
-					motionY += 0.06D;
-				}
 			}
 		}
 

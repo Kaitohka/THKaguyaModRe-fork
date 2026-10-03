@@ -300,7 +300,7 @@ public class EntitySilverKnife extends Entity
 			// 衝突リストから、j番目のEntityを取得
 			Entity entityCheck = list.get(j);
 
-			if(entityCheck.canBeCollidedWith() && // 当たり判定を持ったEntityであるか？
+			if(entityCheck.canBeHitByProjectile() && // 当たり判定を持ったEntityであるか？
 					entityCheck != shootingEntity && // 使用者ではないか？
 					ticksInAir >= 5 &&
 					!(entityCheck instanceof EntityTHShot))//弾幕には当たらない
@@ -843,6 +843,13 @@ public class EntitySilverKnife extends Entity
 
 	@Override
 	public boolean canBeCollidedWith()
+	{
+		return true;
+	}
+
+	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
+	@Override
+	public boolean isPickable()
 	{
 		return true;
 	}

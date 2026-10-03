@@ -217,6 +217,13 @@ public class EntityDivineSpirit extends Entity
 		return true;
 	}
 
+	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
+	@Override
+	public boolean isPickable()
+	{
+		return true;
+	}
+
 	/**
 	 * 小神霊のカウントを設定
 	 * @param count 設定する小神霊のカウント

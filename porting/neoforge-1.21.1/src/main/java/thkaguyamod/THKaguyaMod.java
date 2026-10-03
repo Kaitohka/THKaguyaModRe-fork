@@ -37,6 +37,7 @@ import thkaguyamod.init.ModNetworking;
 import thkaguyamod.init.ModSounds;
 import thkaguyamod.init.ModSpawns;
 import thkaguyamod.init.ModSpellCards;
+import thkaguyamod.registry.DanmakuPatternRegistry;
 
 /**
  * 五つの難題MOD+ (Itutu no Nandai MOD+) — NeoForge 1.21.1 port.
@@ -66,8 +67,14 @@ public class THKaguyaMod {
         ModSpellCards.registerSpellCards();
 
         modContainer.registerConfig(Type.SERVER, ModConfig.SPEC);
-        modEventBus.addListener(ModConfigEvent.Loading.class, event -> ModConfig.sync());
-        modEventBus.addListener(ModConfigEvent.Reloading.class, event -> ModConfig.sync());
+        modEventBus.addListener(ModConfigEvent.Loading.class, event -> {
+            ModConfig.sync();
+            registerDanmakuPatterns();
+        });
+        modEventBus.addListener(ModConfigEvent.Reloading.class, event -> {
+            ModConfig.sync();
+            registerDanmakuPatterns();
+        });
         modEventBus.addListener(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent.class,
                 ModNetworking::register);
 
@@ -96,5 +103,20 @@ public class THKaguyaMod {
                 event -> event.enqueueWork(ModDispenserBehaviors::register));
 
         LOGGER.info("Itutu no Nandai MOD+ (NeoForge port) loading.");
+    }
+
+    /**
+     * 妖精系の弾幕パターン表を組み立てる（1.7.10 {@code THKaguyaCore.preInit} →
+     * {@code CommonProxy.registerDanmakuPattern()} の移植）。
+     *
+     * <p>1.7.10 は config 読込（{@code THKaguyaConfig.setConfig}）直後に 1 回だけ呼んでいた。
+     * 1.21.1 では {@code ModConfig.danmakuLevel} は SERVER config（{@code ModConfigEvent.Loading}）
+     * で初めて確定するため、そのリスナーから呼ぶ。{@code ModConfig.sync()} の直後・
+     * どのサーバーもワールドを読み込む前（= 妖精系エンティティがインスタンス化される前）に走る。
+     */
+    private static void registerDanmakuPatterns() {
+        DanmakuPatternRegistry.setDanmakuPattern();
+        LOGGER.info("Registered {} fairy danmaku patterns (danmakuLevel={}).",
+                DanmakuPatternRegistry.pattern.size(), ModConfig.danmakuLevel);
     }
 }

@@ -84,4 +84,17 @@ public class EntitySanaeWind extends EntityTHShot
 	{
 		return tickCount % 4;
 	}
+
+	//1.7.10 の canBeCollidedWith = true（常に当たり判定・照準対象）に相当
+	@Override
+	public boolean canBeCollidedWith()
+	{
+		return true;
+	}
+
+	@Override
+	public boolean isPickable()
+	{
+		return true;
+	}
 }

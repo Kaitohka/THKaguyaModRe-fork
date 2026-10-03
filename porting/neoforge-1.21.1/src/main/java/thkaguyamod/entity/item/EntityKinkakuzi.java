@@ -147,6 +147,13 @@ public class EntityKinkakuzi extends Entity
 		return !isRemoved();
 	}
 
+	//照準で狙えるかどうか（1.7.10 の canBeCollidedWith が兼ねていた照準フィルタ相当）
+	@Override
+	public boolean isPickable()
+	{
+		return !isRemoved();
+	}
+
 	/** 毎tick呼ばれる処理 */
 	@Override
 	public void tick()

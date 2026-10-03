@@ -149,7 +149,7 @@ public class EntityTHSetLaser extends EntityTHLaser
 		{
 			Entity entity1 = list.get(j);//entity1にリストの先端のentityを保存
 			//entity1が、当たり判定を取らない　または　entity1が使用者　ならパス
-			if ( entity1.canBeCollidedWith() &&
+			if ( entity1.canBeHitByProjectile() &&
 				!entity1.is(user) &&
 				!entity1.is(source) &&
 				!hitCheckEx(entity1) &&

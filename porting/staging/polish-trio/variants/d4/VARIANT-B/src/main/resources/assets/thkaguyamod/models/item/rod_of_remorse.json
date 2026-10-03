@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "thkaguyamod:item/rod_of_remorse"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "thkaguyamod:remorse_used": 1
+      },
+      "model": "thkaguyamod:item/rod_of_remorse_used"
+    }
+  ]
+}

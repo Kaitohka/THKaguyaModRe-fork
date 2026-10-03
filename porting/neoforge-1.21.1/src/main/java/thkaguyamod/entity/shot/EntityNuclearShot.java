@@ -172,7 +172,7 @@ public class EntityNuclearShot extends EntityTHShot
 		{
 			Entity entity1 = list.get(j);//entity1にリストの先端のentityを保存
 			//entity1が、当たり判定を取らない　または　entity1が使用者　ならパス
-			if ( entity1.canBeCollidedWith() &&
+			if ( entity1.canBeHitByProjectile() &&
 				userHitCheck(entity1) &&
 				!hitCheckEx(entity1) &&
 				//TODO: EntitySakuyaWatch / EntityTHFairy 移植後に 1.7.10 の除外条件を復元する

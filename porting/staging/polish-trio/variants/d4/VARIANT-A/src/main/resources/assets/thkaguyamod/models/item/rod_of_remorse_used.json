@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "thkaguyamod:item/rod_of_remorse_used"
+  }
+}

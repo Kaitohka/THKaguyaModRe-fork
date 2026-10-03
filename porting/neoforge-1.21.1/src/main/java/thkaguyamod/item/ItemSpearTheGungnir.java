@@ -30,10 +30,10 @@ import static thkaguyamod.danmaku.DanmakuConstants.RED;
  * そのまま使用している。第 2 引数の {@code itemStack} は現状未使用（符卡所持チェックは
  * インベントリ内の {@code spell_card} を直接走査する実装になっている）。
  *
- * <p>TODO K3-review: 原作は耐久を {@code setItemDamage(damage + 1)} で直接増やしていた。
- * 1.21.1 では {@code ItemStack#setDamageValue} が {@code getMaxDamage()} でクランプするため、
- * 登録側の耐久値（原作 95）を超える書き込みはできない。本移植は
- * {@code setDamageValue(getDamageValue() + 1)} としている（登録値が原作どおりなら等価）。
+ * <p>耐久書き込み（FIX-3b で確認）：原作は {@code setItemDamage(damage + 1)} を直接書いていた。
+ * 1.21.1 では {@code ItemStack#setDamageValue} → {@code Item.setDamage} が
+ * {@code Mth.clamp(damage, 0, getMaxDamage())} で既にクランプするため、超上限は登録不能で、
+ * 登録側の耐久値（原作 95）と等価。追加の clamp は不要（値が上限を超えることはない）。
  */
 public class ItemSpearTheGungnir extends Item {
 
@@ -66,6 +66,9 @@ public class ItemSpearTheGungnir extends Item {
             }
 
             if (!player.isCreative()) {
+                // FIX-3b: 1.7.10 は setItemDamage(damage+1) を直接書いていた。1.21.1 の
+                // setDamageValue → Item.setDamage は Mth.clamp(damage, 0, getMaxDamage()) で
+                // 既にクランプする（IItemExtension.setDamage）ので、ここでの clamp は不要。
                 stack.setDamageValue(stack.getDamageValue() + 1);
             }
         }

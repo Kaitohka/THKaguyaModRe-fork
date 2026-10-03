@@ -1940,4 +1940,23 @@ public class EntityTHShot extends Entity
 	{
 		return getAnimationCount() >= 1;//遅延時間でないなら狙える
 	}
+
+	/**
+	 * 準星（クロスヘア）の選択半径を返す。
+	 *
+	 * <p>1.7.10 の {@code getCollisionBorderSize() = getShotSize()}（原作
+	 * {@code thKaguyaMod.entity.shot.EntityTHShot:2007-2014}）に相当。旧版はこの 1 つの値が
+	 * 「準星で狙える半径」と「弾丸命中判定の膨らみ」を兼ねていた。1.21.1 では前者が
+	 * {@link net.minecraft.world.entity.Entity#getPickRadius()}、後者が
+	 * {@code isPickable()} 系に分離されたため、準星の太さを原作値に合わせてここで返す。
+	 *
+	 * <p>diag-pose（I8）で命中側は {@code canBeHitByProjectile()} へ移行済みなので、
+	 * この上書きは**準星の当たり判定のみ**を広げる（弾の命中計算には影響しない）。
+	 * {@code getShotSize()} は同期槽由来なので、クライアントでも同じ値が見える。
+	 */
+	@Override
+	public float getPickRadius()
+	{
+		return getShotSize();
+	}
 }

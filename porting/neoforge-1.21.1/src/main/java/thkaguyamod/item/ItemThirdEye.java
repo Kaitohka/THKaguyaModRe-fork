@@ -22,15 +22,21 @@ import net.minecraft.world.phys.Vec3;
  * 第三の眼 (Third Eye) — ported from 1.7.10 {@code thKaguyaMod.item.ItemThirdEye}.
  *
  * <p>Right-click traces up to 64 m along the look vector, latches onto the nearest living entity,
- * and then reports its name, HP and (for tamed animals) owner in chat on the next tick.
+ * and reports its name, HP and (for tamed animals) owner in chat.
  * Durability regenerates 1 point per tick.
  *
  * <p>Note: like the original, players only get a name readout (HP is not shown for players).
+ *
+ * <p><b>FIX-3b（移植引入，已修）</b>：1.7.10 は {@code EntityLivingBase hitEntity} /
+ * {@code boolean check} を <b>Item インスタンスのフィールド</b>に持っていた（原作同式）。
+ * しかし Item はレジストリ上の単一インスタンスなので、1.21.1 のマルチプレイでは
+ * ① プレイヤー A の右クリック結果がプレイヤー B のチャットに出る（串話）、
+ * ② 表示待ちのあいだ Entity への強参照が Item に残る（滞留）という 2 つの実害が出る。
+ * 原作の 1 tick 遅延表示は「onUpdate で読み出す」ための実装手段にすぎず、表示内容・対象は
+ * 同じなので、{@link #use} 内で即時表示に変更して状態そのものを消した
+ * （差はメッセージが 1 tick 早く出る点のみ）。耐久回復は {@link #inventoryTick} に残している。
  */
 public class ItemThirdEye extends Item {
-
-    private LivingEntity hitEntity = null;
-    private boolean check = false;
 
     public ItemThirdEye(Item.Properties properties) {
         super(properties);
@@ -60,10 +66,34 @@ public class ItemThirdEye extends Item {
                 e -> e != player && e instanceof LivingEntity);
 
         if (entityHit != null && entityHit.getEntity() instanceof LivingEntity living) {
-            check = true;
-            hitEntity = living;
+            report(level, player, living);
         }
         return InteractionResultHolder.success(stack);
+    }
+
+    /**
+     * 対象の名前・体力・（手懐け可能なら）飼い主をチャットに出す。
+     *
+     * <p>原作は「右クリックで記録 → 次の onUpdate で表示」という 2 段構えだったが、
+     * 表示内容は同じなので、状態を持たないよう 1 箇所へまとめた（クラス javadoc 参照）。
+     */
+    private static void report(Level level, Player player, LivingEntity living) {
+        if (level.isClientSide || !living.isAlive()) {
+            return;
+        }
+        float hp = Math.round((living.getHealth() / 2F) * 100F) / 100F;
+        String strHP = " HP ： " + hp + "/" + (living.getMaxHealth() / 2F);
+
+        String strEntityName = living instanceof Player other
+                ? other.getDisplayName().getString()
+                : living.getName().getString();
+        player.sendSystemMessage(Component.literal(strEntityName));//名前を表示
+        player.sendSystemMessage(Component.literal(strHP));//体力を表示
+
+        if (living instanceof TamableAnimal tame && tame.isTame() && tame.getOwner() != null) {
+            String strOW = "  Owner : " + tame.getOwner().getName().getString();
+            player.sendSystemMessage(Component.literal(strOW));//オーナー名を表示
+        }
     }
 
     @Override
@@ -71,26 +101,6 @@ public class ItemThirdEye extends Item {
         // 耐久が減っていたら徐々に回復（毎tick 1）
         if (stack.isDamaged()) {
             stack.setDamageValue(Math.max(0, stack.getDamageValue() - 1));
-        }
-        if (check && hitEntity != null) {
-            if (entity instanceof Player player && !level.isClientSide && hitEntity.isAlive()) {
-                LivingEntity living = hitEntity;
-                float hp = Math.round((living.getHealth() / 2F) * 100F) / 100F;
-                String strHP = " HP ： " + hp + "/" + (living.getMaxHealth() / 2F);
-
-                String strEntityName = living instanceof Player other
-                        ? other.getDisplayName().getString()
-                        : living.getName().getString();
-                player.sendSystemMessage(Component.literal(strEntityName));//名前を表示
-                player.sendSystemMessage(Component.literal(strHP));//体力を表示
-
-                if (living instanceof TamableAnimal tame && tame.isTame() && tame.getOwner() != null) {
-                    String strOW = "  Owner : " + tame.getOwner().getName().getString();
-                    player.sendSystemMessage(Component.literal(strOW));//オーナー名を表示
-                }
-            }
-            check = false;
-            hitEntity = null;
         }
     }
 }

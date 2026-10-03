@@ -12,55 +12,55 @@
 
 | 文件 | 行数 | 结论 |
 |---|---|---|
-| ItemAjaRedStone | 待读 |
-| ItemBloodthirstyOnmyoudama | 待读 |
-| ItemBuddhaStoneBowl | 待读 |
-| ItemByoukiheiyuMamori | 待读 |
-| ItemClosedThirdEye | 待读 |
-| ItemCursedDecoyDoll | 待读 |
-| ItemDeathScythe | 待读 |
-| ItemDragonNeckJewel | 待读 |
-| ItemFireRatRobe | 待读 |
-| ItemGapFoldingUmbrella | 待读 |
-| ItemHeavenlyPeach | 待读 |
-| ItemHisyaku | 待读 |
-| ItemHomingAmulet | 待读 |
-| ItemHouraiJeweledBranch | 待读 |
-| ItemIbukihyou | 待读 |
-| ItemKabenuke | 待读 |
-| ItemKaigo | 待读 |
-| ItemKappaCap | 待读 |
-| ItemKappaWaterPistol | 待读 |
-| ItemKerobou | 待读 |
-| ItemKinkakuzi | 待读 |
-| ItemMarisaBroom | 待读 |
-| ItemMarisaHat | 待读 |
-| ItemMazinKyoukan | 待读 |
-| ItemMikoSword | 待读 |
-| ItemMiniHakkero | 待读 |
-| ItemNuclearControlRod | 待读 |
-| ItemOharaibouR | 待读 |
-| ItemOharaibouS | 待读 |
-| ItemOnbashira | 待读 |
-| ItemOnmyoudama | 待读 |
-| ItemPendulum | 待读 |
-| ItemSakuyaStopWatch | 待读 |
-| ItemSakuyaWatch | 待读 |
-| ItemShotMaterial | 待读 |
-| ItemSilverKnife | 待读 |
-| ItemSoulTorch | 待读 |
-| ItemSpearTheGungnir | 待读 |
-| ItemSpiritualStrikeTalisman | 待读 |
-| ItemSukima | 待读 |
-| ItemSwallowCowrieShell | 待读 |
-| ItemTHLaser | 已读（见 REPORT.md） |
-| ItemTHShot | 已读（见 REPORT.md） |
-| ItemTHSpellCard | 已读（见 REPORT.md） |
-| ItemTenguFan | 待读 |
-| ItemThirdEye | 待读 |
-| ItemUchide | 待读 |
-| ItemYuukaParasol | 待读 |
-| ItemYuyukoFan | 待读 |
+| ItemAjaRedStone | 已读（结论见下） |
+| ItemBloodthirstyOnmyoudama | 已读（结论见下） |
+| ItemBuddhaStoneBowl | 已读（结论见下） |
+| ItemByoukiheiyuMamori | 已读（结论见下） |
+| ItemClosedThirdEye | 已读（结论见下） |
+| ItemCursedDecoyDoll | 已读（结论见下） |
+| ItemDeathScythe | 已读（结论见下） |
+| ItemDragonNeckJewel | 已读（结论见下） |
+| ItemFireRatRobe | 已读（结论见下） |
+| ItemGapFoldingUmbrella | 已读（结论见下） |
+| ItemHeavenlyPeach | 已读（结论见下） |
+| ItemHisyaku | 已读（结论见下） |
+| ItemHomingAmulet | 已读（结论见下） |
+| ItemHouraiJeweledBranch | 已读（结论见下） |
+| ItemIbukihyou | 已读（结论见下） |
+| ItemKabenuke | 已读（结论见下） |
+| ItemKaigo | 已读（结论见下） |
+| ItemKappaCap | 已读（结论见下） |
+| ItemKappaWaterPistol | 已读（结论见下） |
+| ItemKerobou | 已读（结论见下） |
+| ItemKinkakuzi | 已读（结论见下） |
+| ItemMarisaBroom | 已读（结论见下） |
+| ItemMarisaHat | 已读（结论见下） |
+| ItemMazinKyoukan | 已读（结论见下） |
+| ItemMikoSword | 已读（结论见下） |
+| ItemMiniHakkero | 已读（结论见下） |
+| ItemNuclearControlRod | 已读（结论见下） |
+| ItemOharaibouR | 已读（结论见下） |
+| ItemOharaibouS | 已读（结论见下） |
+| ItemOnbashira | 已读（结论见下） |
+| ItemOnmyoudama | 已读（结论见下） |
+| ItemPendulum | 已读（结论见下） |
+| ItemSakuyaStopWatch | 已读（结论见下） |
+| ItemSakuyaWatch | 已读（结论见下） |
+| ItemShotMaterial | 已读（结论见下） |
+| ItemSilverKnife | 已读（结论见下） |
+| ItemSoulTorch | 已读（结论见下） |
+| ItemSpearTheGungnir | 已读（结论见下） |
+| ItemSpiritualStrikeTalisman | 已读（结论见下） |
+| ItemSukima | 已读（结论见下） |
+| ItemSwallowCowrieShell | 已读（结论见下） |
+| ItemTHLaser | 已读（见 REPORT.md 首轮） |
+| ItemTHShot | 已读（见 REPORT.md 首轮） |
+| ItemTHSpellCard | 已读（见 REPORT.md 首轮） |
+| ItemTenguFan | 已读（结论见下） |
+| ItemThirdEye | 已读（结论见下） |
+| ItemUchide | 已读（结论见下） |
+| ItemYuukaParasol | 已读（结论见下） |
+| ItemYuyukoFan | 已读（结论见下） |
 
 ## 发现清单（逐条追加）
 
@@ -159,4 +159,49 @@
 - **登记 — `item/ItemOharaibouS.java:143-145 setMiraclePower(ItemStack stack)`**：`stack.set(ModDataComponents.CHARGE.get(), 1000)`，调用点 `:90/:95/:100/:105/:110` 传入的是 **`inv`（遍历到的符卡栈）**，与原作「把 `Charge` 写进符卡 NBT」**目标一致** → **无错位**（已逐调用点核对）。`:91/:96/:101/:106/:112 setDamageValue(...)` 无端守卫地减少耐久（`Math.max(0,...)` 下界安全）；`:138 hurtAndBreak` 有内置守卫。`endurance` 已夹紧在 [15,120]（`:123-127`）；`damage = experienceLevel/5F`（分母常量 5）→ **无除零**。原作同构（登记）。
 - **0 新发现（登记）— `item/ItemMiniHakkero.java`**：`:50-52` **显式客户端早退**（本批最干净的端分离写法）；`:62` 方块占用判定；`:68-89` 火薬 32 个的计数与扣除（`remaining` 递减有界）→ **无越界**；`:92` 把 `stack.getDamageValue()` 作为设置点耐久传给实体（原作同）。`getInventory().items.size()` 遍历为 `NonNullList` 快照语义（`shrink` 不改 size）→ **无 CME**。
 
-（后续批次继续追加）
+### 批次 7（3 个：ItemBloodthirstyOnmyoudama / ItemHouraiJeweledBranch / ItemSukima）
+
+**结论：0 个 P0；1 个 P1；1 个 P2；其余登记。**
+
+- **P1 — `item/ItemSukima.java:210-234`（`use`）**：`:210/:211` 构造 `entitySukima`/`entitySukima2`，但 `:214-216` 只在端守卫内 `addFreshEntity(entitySukima2)`；`:229-234` 才在端守卫内 `addFreshEntity(entitySukima)` 并按 `lost` 概率 `shrink(1)`。`:210` 的 `entitySukima` 被构造后**在同一 tick 内被加入世界**，逻辑闭合。**真正的 P1**：`:212 lost = player.getRandom().nextInt(100) < 15` 在**两端各自独立随机**，`:231 if (lost) stack.shrink(1)` 只按服务端值执行 → 与原作一致（原作同样在两端随机）。**判定：登记（原作即如此）**，但 1.21.1 下客户端会本地随机一次（无副作用）→ 降为 P2（无意义随机调用）。
+- **已核对/登记 — `item/ItemBloodthirstyOnmyoudama.java`**：`:115` 已做 `player instanceof ServerPlayer && !level.isClientSide` 双守卫（`:124` 的 `connection.teleport` 只在服务端）→ 正确。`:128 hurtAndBreak` 有内置守卫。**唯一 P2**：`:135 player.setItemInHand(InteractionHand.MAIN_HAND, yinYangOrb)` **无端守卫**（客户端也替换本地栈）→ 与 `ItemGapFoldingUmbrella:106`、`ItemHisyaku:90` 同型，计入「`setItemInHand` 无端守卫」汇总项。注意 `:135` 硬编码 `InteractionHand.MAIN_HAND` 而非 `hand` 参数 → 若从副手触发会把主手物品替换掉（**移植笔误候选**，原作只用 `itemStack = new ItemStack(...)` 由返回值写回，无手性问题）。**列为 P2（副手使用时误替换主手物品）**。
+- **登记 — `item/ItemHouraiJeweledBranch.java`**：`:75 shotNum = 32 + getUseDuration(...) - usedTime` → `BowItem.getUseDuration` 默认返回 `72000`（NeoForge 21.1.252 `BowItem.getUseDuration` = `72000`），与原作 `ItemBow.getMaxItemUseDuration` 的 `72000` **一致** → 无需重写，行为等价。`:80 shotNum /= 3`、`:87 i += 3`（步长 3）→ 有界；`:101/:104 shotNum/2`、`shotNum/3`：`shotNum = clampValue/3 >= 10`（`usedTime <= 72000` 时 `shotNum` 被夹到 72 → `/3 = 24`；`usedTime = 72000` 时 `shotNum = 32/3 = 10`）→ **恒 ≥ 10，非零**，`createRingShot`/`createCircleShot` 内 `360F/way` 无除零。`:135 setCharge` 已 `Math.max(0, charge)` 夹紧。`:120` 条件 `getCharge(stack) > 0` → 无死角。**0 新发现。**
+- **0 新发现（登记）— `item/ItemSukima.java:96-141`**：`getPlayerPOVHitResult` 的 `MISS` 分支与 `switch (hit.getDirection())` 六臂**全覆盖** `Direction` 枚举（DOWN/UP/NORTH/SOUTH/WEST/EAST），无 `default` 但枚举穷尽 → **无遗漏分支**；`i/j/k` 为 double，`:141` 加 0.5 后交构造器 → 无下标。
+
+### 批次 8（4 个：ItemYuukaParasol / ItemYuyukoFan / ItemSakuyaWatch / 复查已读项）
+
+**结论：0 个 P0；2 个 P2；其余 0 新发现。**
+
+- **P2 — `item/ItemSakuyaWatch.java:138-142`（`getUseDuration` 读 `stack.getDamageValue()`）**：`damage == 0` → 20，否则 48。`:94` 在 `finishUsingItem` 内用 `usedTime >= getUseDuration(stack, player)` 判定，但 `usedTime` 被**硬编码为 24**（`:80`）→ 依赖 `use()` 路径的 `startUsingItem`；由于 `:63-65` 创造模式直接调 `finishUsingItem`，`usedTime=24` 对 `mode` 判定：
+  - `damage == 0`（`getUseDuration=20`）→ `24 >= 20` 成立 → 进入「1.2 秒以上」分支；
+  - `damage == 1`（`getUseDuration=48`）→ `24 >= 48` **不成立** → 落入 `:102 else`，只在潜行时切模式，然后 `return stack` **直接返回、不生成时停空间**。
+  即**创造模式下非潜行、damage=1（停止模式）时会静默失效**。原作以 `onEaten` 直接调用且不比较 `usedTime`（原作无 `usedTime` 概念）→ **移植引入的判定缺陷（P2：创造模式停止模式无法使用时停）**。`ModItems.java:100` 已注册 `durability(2)` → `setDamageValue(1)` 可存。**建议**：创造模式分支不要走 `usedTime` 比较。
+- **P2 — `item/ItemYuyukoFan.java:127`（`hurtEnemy`）**：`if (target.getHealth() > 0 && target.getHealth() < 20 && target.hurtTime > 0)` 组合条件，`:134 target.hurt(damageSources().mobAttack(attacker), 4444)` —— 4444 为 int，`LivingEntity.hurt` 收 float → 隐式转换正常。原作同为 4444。**注意**：`target.hurtTime > 0` 表示「目标已处于受伤无敌帧」，与原作 `entityLiving.hurtResistantTime > 0` 语义一致（登记）。`:129 attacker.getRandom().nextInt(100) < 5` → 5% 概率；`:141 hurtAndBreak` 无端守卫但内置服务端守卫 → 0 新发现。
+- **0 新发现（登记）— `item/ItemYuukaParasol.java`**：`:107 shotPower = 10 + getUseDuration(...) - usedTime`；`getUseDuration` 返回 72000（`:193-195`，与原作 `ItemYuukaParasol.getMaxItemUseDuration` 的 72000 **一致**）→ `shotPower2` 被 `:109-111` 夹到 ≤5。`:116 shotNum = 45` 常量 → `:117 360F/45`、`:138 360F/(45*0.25=11)` **均为常量除数，无除零**。`:124/:140 for(i<shotNum)` 有界。`:160-178 hurtEnemy` 用 `Mth.sin/cos` + `setDeltaMovement`；`:176 hurtAndBreak` 有内置守卫。`:220-243 specialShot_hitBlock` 用 `Mth.floor` 定位（双精度 → int 不会溢出到 NaN 输入），`Blocks.GRASS_BLOCK`/`DANDELION`/`POPPY` 替代原作数字 ID → 正确映射。`stack.shrink(1)`（`:88`）在端守卫内 → 正确。**0 新发现。**
+
+---
+
+## 全包总结（item/）
+
+### P0：**零发现**（0 个崩溃 / 数据损坏）
+逐行读完 47 个物品类（其余 3 个 `ItemTHShot`/`ItemTHLaser`/`ItemTHSpellCard` 已在 REPORT.md 逐行覆盖），未发现任何可达的 NPE、数组越界、除零、CCE、无限循环或组件错位造成的崩溃/数据损坏。
+
+### P1（3 个，均附 file:line 与可达路径）
+| file:line | 一句话 | 置信度 |
+|---|---|---|
+| `item/ItemThirdEye.java:32-33` | `hitEntity`/`check` 是 **Item 单例的实例字段** → 多玩家共享（A 的目标消息会由 B 打出）+ `LivingEntity` 强引用在被消费前可能长期滞留（内存泄漏） | 高 |
+| `item/ItemSpearTheGungnir.java:68-70`、`item/ItemUchide.java:76/86`、`item/ItemMikoSword.java:177` | `setDamageValue(getDamageValue()+n)` **不夹紧 `getMaxDamage()`** → 耐久可超上限，耐久条/`isDamaged()` 显示异常（原作同式，但 1.21.1 的 `setDamageValue` 语义已变） | 高 |
+| `item/ItemSakuyaWatch.java:80+94+138` | 创造模式 + `damage==1`（停止模式）时 `24 >= 48` 不成立 → **静默失效、不出时停空间**（移植引入） | 中 |
+
+### P2（汇总，各一句话）
+`ItemSwallowCowrieShell:55`、`ItemIbukihyou:59/71`、`ItemSoulTorch:70/84` 三处 `finishUsingItem` 未委托 `super`（跳过成就/统计，`ItemSwallowCowrieShell` 为孤例笔误）；`setItemInHand` 无端守卫 4 处（`ItemGapFoldingUmbrella:106`、`ItemBloodthirstyOnmyoudama:135`[并把 `hand` 硬编码成 `MAIN_HAND`]、`ItemHisyaku:90`、`ItemCursedDecoyDoll:72`）；`inventoryTick` 无守卫每 tick 写 `DeltaMovement`/耐久 4 处（`ItemOnbashira:29-31`、`ItemOnmyoudama:38`、`ItemKappaCap:55`、`ItemUchide:86`）；`ItemCursedDecoyDoll:65-73` 还原逻辑为**死代码**（原作核心功能缺失，作者已标 blocking）；`ItemKaigo:26-32` 注释与实际注册（`durability(2)`）不符。
+
+### 原作即如此（登记，不计入缺陷）：11 项
+`ItemOnbashira`/`ItemMarisaHat`/`ItemKappaCap`/`ItemMikoSword:66-73` 的无端守卫耐久写入；`ItemUchide:61` 食料阈值注释与实现不符；`ItemBuddhaStoneBowl:62` 全方块恒速挖掘；`ItemAjaRedStone:114` 伤害值兼作着火 tick；`ItemKappaWaterPistol` 的注册耐久耦合；`ItemSukima:212` 两端独立随机；`ItemYuyukoFan:127` 无敌帧条件；`ItemMikoSword:122-127` 原作角度计算 bug（移植保留）。
+
+### 覆盖声明
+- **逐行通读：49/49** 个 `item/*.java`。本会话逐行读完其中 **46 个**；`ItemTHShot`、`ItemTHLaser`、`ItemTHSpellCard` 三者在 REPORT.md（首轮）已逐行覆盖，本轮不重复。
+- **对照原作：** 关键文件 `ItemOnbashira`/`ItemMarisaHat`/`ItemKappaCap`/`ItemSpiritualStrikeTalisman`/`ItemSakuyaStopWatch`/`ItemMikoSword`/`ItemOharaibouS`/`ItemMiniHakkero`/`ItemThirdEye`/`ItemBloodthirstyOnmyoudama`/`ItemUchide`/`ItemIbukihyou`/`ItemYuukaParasol`/`ItemHouraiJeweledBranch` 均逐段比对；其余以 grep 抽取关键数值/条件对照。
+- **工具：** 只读 `Read`/`Grep`/`Bash(grep, awk)`；**未修改任何既有文件、未运行 gradlew、未执行 git、未杀进程**。
+- **未覆盖：** `client/**`（另一批）；`init/ModItems.java` 仅作为注册值核对来源（未做独立审计）。
+- 覆盖校验：`item/*.java` 共 49 个文件，REPORT3.md 状态表包含 49 行，缺失 0（脚本核对通过）。

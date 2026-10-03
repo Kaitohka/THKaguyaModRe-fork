@@ -101,4 +101,26 @@ public class EntitySanaeWind extends EntityTHShot
 	{
 		return true;
 	}
+
+	/**
+	 * 準星（クロスヘア）の選択半径を返す。
+	 *
+	 * <p>1.7.10 の {@code getCollisionBorderSize() = 1.0F}（原作
+	 * {@code thKaguyaMod.entity.shot.EntitySanaeWind:338-341}）に相当。旧版ではこの値が
+	 * 「準星で狙えるか」と「弾丸の命中判定の膨らみ」の両方を兼ねていた。
+	 * 1.21.1 では準星側が {@link net.minecraft.world.entity.Entity#getPickRadius()} に分離されたため、
+	 * 風弾を狙って打ち返せるよう（原作の 1.0 格の加粗）ここで同じ値を返す。
+	 *
+	 * <p>P46（diag-pose の I8 系譜）: 移植当初この上書きが漏れており、既定値 0.0F のため
+	 * 風弾だけ準星が痩せていた。{@code canBeHitByProjectile()} 側は {@code isPickable()} 経由で
+	 * 生きているので、命中判定そのものには影響しない（準星の太さのみ）。
+	 *
+	 * <p>diag-pose との整合: {@link #canBeCollidedWith()} は false のままなので、
+	 * この半径がプレイヤーの姿勢フィット（{@code getEntityCollisions}）に影響することはない。
+	 */
+	@Override
+	public float getPickRadius()
+	{
+		return 1.0F;
+	}
 }

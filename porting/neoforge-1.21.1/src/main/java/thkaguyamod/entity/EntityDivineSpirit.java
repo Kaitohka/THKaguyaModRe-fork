@@ -231,6 +231,20 @@ public class EntityDivineSpirit extends Entity
 	}
 
 	/**
+	 * 準星（クロスヘア）の選択半径を返す。
+	 *
+	 * <p>1.7.10 の {@code getCollisionBorderSize() = 0.1F}（原作
+	 * {@code thKaguyaMod.entity.EntityDivineSpirit:258-262}）に相当。1.21.1 では準星側が
+	 * {@link net.minecraft.world.entity.Entity#getPickRadius()} に分離されたため、
+	 * 小神霊を狙えるよう同じ値を返す（移植当初はこの上書きが漏れ、既定 0.0F だった）。
+	 */
+	@Override
+	public float getPickRadius()
+	{
+		return 0.1F;
+	}
+
+	/**
 	 * 小神霊のカウントを設定
 	 * @param count 設定する小神霊のカウント
 	 */

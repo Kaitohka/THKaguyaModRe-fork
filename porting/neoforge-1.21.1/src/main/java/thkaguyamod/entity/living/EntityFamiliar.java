@@ -26,7 +26,12 @@ public class EntityFamiliar extends EntityTHFairy
 		xpReward = 0;//経験値の量
 
 		setForm((byte)random.nextInt(3));
-		setPattern(random.nextInt(DanmakuPatternRegistry.pattern.size()));
+		// P0-4（audit-ai）: pattern 表が空の瞬間（DanmakuPatternRegistry は ModConfig の
+		// Reloading で clear → 再登録するため理論上の空窓がある）に nextInt(0) を呼ぶと
+		// IllegalArgumentException: bound must be positive で**この実体の生成そのものが失敗**する。
+		// 1.7.10 は preInit で一度だけ構築していたため表は恒に非空だった（移植固有の窓）。
+		// EntityTHFairy:45 と同じ Math.max(...,1) で下限を保証する（空表でも例外を出さない）。
+		setPattern(random.nextInt(Math.max(DanmakuPatternRegistry.pattern.size(), 1)));
 
 		lostTarget = 0;
 		this.setSpeed(0.3D);

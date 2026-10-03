@@ -232,6 +232,9 @@ public class ItemMikoSword extends SwordItem {
 
         //探知した数だけ耐久を減らす
         if (!player.isCreative()) {
+            // FIX-3b: 原作は setItemDamage(damage + i) を直接書いていた。1.21.1 の
+            // setDamageValue → Item.setDamage が Mth.clamp(damage, 0, getMaxDamage()) で
+            // 既にクランプするため、探知数が多くても耐久が上限を超えたり負値になったりしない。
             stack.setDamageValue(stack.getDamageValue() + i);
         }
     }

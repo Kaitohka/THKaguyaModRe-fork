@@ -38,6 +38,34 @@ public class EntityDanmakuCreeper extends Creeper
 		super((EntityType<? extends Creeper>)(EntityType<?>)type, level);
 	}
 
+	/**
+	 * 起爆カウンタ（1.7.10 の {@code timeSinceIgnited2}）の現在値を返す。
+	 *
+	 * <p>FIX-3a でテスト用に公開した読み取り専用アクセサ。フィールドは 1.7.10 から
+	 * private のままで、外からは見えなかった（移植でも同様）。P0-2 の回帰テストが
+	 * 「起爆後の冷却窓に入ったこと」を実 tick で確認するために必要。
+	 * @return 起爆カウンタ。正値は起爆までのカウント、負値は起爆後の冷却カウンタ
+	 */
+	public int getIgnitionCooldownTicks()
+	{
+		return timeSinceIgnited2;
+	}
+
+	/**
+	 * 起爆カウンタを直接設定する（<b>テスト専用</b>）。
+	 *
+	 * <p>P0-2 の回帰テストは「冷却窓（{@code -280 < t < -100}）の最中に体力が 0 になる」という
+	 * 状態を再現する必要がある。実プレイでは点火 → 起爆（30 tick）→ 冷却窓入り（さらに 20 tick）と
+	 * 時間がかかり、しかも原版 {@code Creeper.tick()} の fuse（{@code swell/maxSwell}）が
+	 * 同時に進行して実体が爆散してしまうため、状態を直接置く方が確実で速い。
+	 * 本メソッドはそのためだけに存在し、製品コードからは呼ばれない。
+	 * @param ticks 設定する起爆カウンタ（負値なら冷却窓）
+	 */
+	public void setIgnitionCooldownTicks(int ticks)
+	{
+		timeSinceIgnited2 = ticks;
+	}
+
 	/** 死亡時に毎tick呼ばれる処理（1.7.10 の onDeathUpdate） */
 	@Override
 	protected void tickDeath()
@@ -131,6 +159,22 @@ public class EntityDanmakuCreeper extends Creeper
 		if(timeSinceIgnited2 >= -100 && timeSinceIgnited2 < 0)
 		{
 			timeSinceIgnited2 = 0;
+		}
+
+		// FIX-3a / P0-2（audit-ai）: 1.7.10 由来の同源バグを修正。
+		// 旧版のこのブロックは「冷却窓（-280 < t < -100）の間だけ手動で onDeathUpdate() を回し、
+		// t が [0,20) のときだけ super.onUpdate() を回す」構造だった。ところが冷却窓の間に
+		// 体力が 0 になった（＝プレイヤーに倒された）場合、getHealth() <= 0 で手動死亡更新が
+		// スキップされ、t < 20 も成立しないため super.tick() も呼ばれない。すると原版側の
+		// 自動死亡推進（LivingEntity.baseTick() の isDeadOrDying() → tickDeath()）が
+		// 一度も走らず、さらに isAlive() が false で t が増えないため冷却窓からも永久に出られない
+		// → 実体が remove() されずに世界へ残留する（毎回のチャンクロードで tick し続ける）。
+		// 対処は最小限: 「死んでいるなら必ず原版の tick() を通す」ことを最優先で保証する。
+		// 生きている間の冷却窓の挙動（手動 tickDeath のみ・super は呼ばない）は原作どおり維持する。
+		if(this.isDeadOrDying())
+		{
+			super.tick();
+			return;
 		}
 
 		if(timeSinceIgnited2 < -100 && timeSinceIgnited2 > -280)

@@ -93,12 +93,23 @@ public class EntityTHFairy extends EntityDanmakuMob
 
 	protected void setPattern(int patternId)
 	{
-		String patternKey = DanmakuPatternRegistry.pattern.get(patternId);
-		int shot = DanmakuPatternRegistry.form.get(patternKey);
+		// P0-4（audit-ai）: 呼び出し側を Math.max(...,1) で守っても、表が空なら
+		// pattern.get(0) で IndexOutOfBoundsException になる（＝実体生成失敗）。
+		// 1.7.10 は preInit で一度だけ表を作っていたので恒に非空だったが、移植版は
+		// ModConfig の Reloading ごとに clear → 再登録するため理論上の空窓がある。
+		// 空表では何も設定せずに戻る（＝コンストラクタで設定済みの既定値を使う）。
+		if(DanmakuPatternRegistry.pattern.isEmpty())
+		{
+			return;
+		}
 
-		setDanmakuPattern(DanmakuPatternRegistry.danmaku.get(patternKey));
-		danmakuSpan = DanmakuPatternRegistry.span.get(patternKey);
-		speedRate = DanmakuPatternRegistry.speed.get(patternKey);
+		int safeId = Mth.clamp(patternId, 0, DanmakuPatternRegistry.pattern.size() - 1);
+		String patternKey = DanmakuPatternRegistry.pattern.get(safeId);
+		int shot = DanmakuPatternRegistry.form.getOrDefault(patternKey, 0);
+
+		setDanmakuPattern(DanmakuPatternRegistry.danmaku.getOrDefault(patternKey, 0));
+		danmakuSpan = DanmakuPatternRegistry.span.getOrDefault(patternKey, 30);
+		speedRate = DanmakuPatternRegistry.speed.getOrDefault(patternKey, 0.2F);
 		shotForm = (byte)((shot - (shot % 8)) / 8);
 		shotColor = (byte)(shot % 8);
 	}

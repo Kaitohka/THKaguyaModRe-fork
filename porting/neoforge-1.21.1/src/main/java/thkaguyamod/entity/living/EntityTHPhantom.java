@@ -30,7 +30,10 @@ public class EntityTHPhantom extends EntityTHFairy
 		xpReward = 5;//経験値の量
 
 		setForm((byte)random.nextInt(8));
-		setPattern(random.nextInt(DanmakuPatternRegistry.pattern.size()));
+		// P0-4（audit-ai）: EntityFamiliar:29 と同じ理由。pattern 表が空の瞬間に nextInt(0) を
+		// 呼ぶと IllegalArgumentException で実体生成が失敗するため、EntityTHFairy:45 と同じ
+		// Math.max(...,1) で下限を保証する。
+		setPattern(random.nextInt(Math.max(DanmakuPatternRegistry.pattern.size(), 1)));
 
 		lostTarget = 0;
 		this.setSpeed(0.18D);

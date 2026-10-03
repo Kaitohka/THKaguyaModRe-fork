@@ -46,6 +46,11 @@
 | P42 | 伤害路径回归测试第三批：EntityTHSetLaser / EntityNuclearShot / EntityTHHenyoriLaser / EntityDanmakuMob 4 处 I8 修复点未覆盖 | agent-2 建议 | 下一窗口派批 |
 | P43 | 游戏内教程/指引（用户询问）：原作即无，FAQ 即手册；若做指引书物品或 Patchouli 手册属**超出移植范围的新内容** | 用户反馈 | 可选立项；USER_MIGRATION §6 FAQ 可直接作底稿 |
 | P44 | BroomPhysicsTest.unriddenBroomGlideDistanceMatchesLegacy 偶发红（采样差 1 tick；隔离实验证与 diag-pose 批无因果） | agent-5 归因 | ✅ 已修（agent-4）：根因=onEachTick 采样器与 runAtTickTime 同 tick 触发顺序取决于 HashMap 迭代序→样本数 6/7 不定；改逐相邻样本比断言消除样本数依赖；6 连跑 64/64 全绿 + 变异验证有效 |
+| P45 | maxEntityCramming（1.21.1 新增）：模组 9 类 DanmakuMob 全计入挤压 → 密集战妖精成片"凭空死"（1.7.10 无此机制） | audit-vanilla-mech | 待裁决：EntityDanmakuMob 覆写 isPushable()→false（牺牲推挤换无挤压死）还是保留原版挤压（gamerule 可控） |
+| P46 | 1.7.10 getCollisionBorderSize 身兼准星加粗未全移：EntitySanaeWind 风弹 1.0 格加粗丢失 → 打拳反弹几乎点不中 | audit-vanilla-mech | 下一窗口补 getPickRadius 覆写（I8 瞄准链的覆盖缺口） |
+| P47 | 商店 maxUses=12 但 Sanae/Sakuya 未实现 needsRestock/resetUses → 交易用完后可能**永不恢复**；原作交易本就无限次；USER_MIGRATION §5#22"约 2 游戏日恢复"措辞疑似错误 | audit-vanilla-mech | FIX-3 实测判定后：恢复无限次（faithful）或实现补货机制 + 改文档 |
+| P48 | 核爆掉落实率与 1.21.1 blockExplosionDropDecay 语义差；USER_MIGRATION 相应措辞可能被误读为含核弹 | audit-vanilla-mech | 下一窗口核文档措辞 |
+| P49 | 商店交易上限次数：旧版=原版默认 7 次（用完永久缺货，无补货），移植版=12 次 | FIX-3b 实核 | 待裁决：对齐 7（严格忠实）或保留 12；USER_MIGRATION §5#22/Q11 措辞已按"永久缺货"修正 |
 | P14 | 发射器弹物品发射者改用 ArmorStand 占位（原 EntityFamiliar） | agent-25 | living 批合并后换回 EntityFamiliar |
 | P15 | 玉枝 6 段充能图标 / 折伞双层染色需模型 JSON ItemProperties | agent-18 | 阶段 5 客户端润色 |
 | P16 | RenderSukima 的 (SRC_ALPHA,SRC_ALPHA) 混合模式 DanmakuRenderTypes 缺失 | agent-22 | 合并渲染批时在 DanmakuRenderTypes 增加该模式 |
@@ -107,7 +112,15 @@
 | diag-broom 乱窜三源鉴别 | A 无人弹跳=移植缺陷（1.21.1 move 不清零垂直速度，I9 补偿回归 → I13 修复）；B 骑乘抖动=已知 Phase1 缺口（staging 方案）；C 滑距=与原作同式同值。+3 物理由例 61/61 |
 | diag-pose 姿势异常 | 根因=原版自动匍匐被模组实体碰撞盒触发（1.7.10 无姿势拟合故原作无）；5 实体 canBeCollidedWith→false + isPickable 契约保留；+3 姿势回归用例 64/64；首轮超时后按落盘纪律 30 分钟出活 |
 | broom-impl I13 对齐 | Phase1 impl 吸收 I13（EMPTY_GROUNDED_VERTICAL=-0.03，删 +0.06）；patch 对 159ede0 可干净应用；javac 沙盒 267 文件 0 错；修正 DESIGN 巡航数值错误（原作 W 单押均值 ≈0.717，实现恒定 0.792 +10%）；IMPL-NOTES 增合并决策事实表（玩家可见变化 7 条 + 回归闸门 5 条） |
+| audit-items 物品包深读 | 49/49 类逐行 + 14 关键类 diff 原作：**P0 零发现**；P1×3（ItemThirdEye 单例字段多玩家串话+泄漏；Gungnir/Uchide/MikoSword 耐久写入不夹上限——原作同式但 1.21.1 语义变；SakuyaWatch 创造+停止档 24>=48 静默失效——疑似移植引入）；P2 若干 + 原作登记 11 项。待 FIX-3 分诊 |
+| audit-ai living/BOSS 深读 | 16/17 类逐行（含 3 次自我更正轨迹）：**P0×2**——①DanmakuCreeper 起爆冷却窗内被击杀→实体永不移除（1.7.10 同源，规则=旧版 bug 修复并注释）②Familiar/Phantom 的 nextInt(pattern.size()) 缺守卫（I11 修复漏网点，远程客户端表空即抛）；P1×8；已证伪 2 条（伪死亡恢复链自洽/Reimu tickDeath 存在）；确认商人 NOT_ATTACK 无敌=原作意图 |
 | gametest-edge2 回归测试二批 | 3 类 8 例（激光/银刀伤害路径、弹相殺数值、12 实体 isPickable 断言、扫帚物理）合并主树；首跑 3 例败 → agent-2 鉴别**全部为测试构造缺陷**（动画计数存储语义/相对绝对坐标混用/几何与靶选择），产品零改动，变异验证 5+1 红证效 → **58/58 PASS**；第 4 处伤害路径（SetLaser/NuclearShot/HenyoriLaser/DanmakuMob）建议第三批 → P42 |
+| gametest-edge3 伤害路径三批 | P42 落实：4 类 5 例（SetLaser/核弹头/蛇行激光/DanmakuMob 接触扫描）；发现 HenyoriLaser 未注册（原作即如此）、DanmakuMob:1219 为无调用者死代码（登记）；首跑 2 例败（HenyoriLaser 运行时造类型撞注册表冻结、核弹头几何未命中）→ agent-2 修复中 |
+| gametest-edge3 败例闭环 | 两例均测试侧：HenyoriLaser 用例删除（死代码实体无法运行时实例化，其 :126 修复点不覆盖——登记）；核弹头发现 hitEntityCheck 循环内直调 onImpact 返回入参=1.7.10 同款语义（非缺陷），测试改副作用判定+负对照；变异验证 3 改 3 红；**69/69 PASS** |
+| audit-net 网络/菜单深读 | 13/13 文件逐行：**P0 零发现**（无 dupe/崩溃/数据损坏；Payload 线程侧别正确、槽位边界安全、弹幕参数 shift 取出/关界面不丢不复制）；P1×4 小项（MalletMenu 缺 .copy 硬化、LaserCraftingMenu shift 槽段沿用 1.7.10 错位、商店 offers 单次下发、预览硬编码——后两者原作同款）；超时恢复后 5 分钟落盘 |
+| FIX-3 统一修复（派发） | 3a（实体 P0×2+P46）与 3b（物品/菜单 P1×6）并行；分诊依据：audit-ai/audit-items/audit-net/audit-vanilla-mech 四报告 |
+| FIX-3b 物品菜单 P1 | 实修 3：ItemThirdEye 单例字段→即时 report（原作同式但为实害，修复并注释）；MiracleMalletMenu:147 补 .copy（结果槽共享实例，移植引入）；DanmakuLaserCraftingMenu shift 槽段 10/37/46→15/42/51（旧版 bug 修复并注释）。证伪 1：耐久 clamp 无需（1.21.1 setDamage 内置夹紧）。登记 1：SakuyaWatch 创造停止档=原作同式。P47 实核：原作 7 次上限+无补货 → 移植 12 次上限永久缺货=同款语义，代码不改、文档措辞已修正（P49 登记次数差） |
+| FIX-3a 实体 P0+P46 | 实修：①DanmakuCreeper 冷却窗内死亡优先短路（:174-179，原作同源 bug 按规则修复并注释）②Familiar/Phantom 补 max(size,1) + THFairy setPattern 统一收口（空表 return+clamp+兜底）③P46 补 4 处 getPickRadius（SanaeWind 1.0F/THShot=size/DivineSpirit/ShotMaterial 0.1F，对照原作 5 处无遗漏）。新增 DanmakuMobP0RegressionTest 2 例（含测试专用写入器取舍，已标注）；变异验证 2 改 2 红；71/71×3 连跑 |
 
 ## 事故台账补记
 
@@ -136,6 +149,8 @@
 | 阶段5 后续（I13 修复） | diag-broom：compile + GameTest（+扫帚物理 3 例） | **61/61 PASS + compile 0 错** |
 | 阶段5 后续（I14 修复） | diag-pose：compile + GameTest（+PlayerPoseRegressionTest 3 例） | **64/64 PASS + compile 0 错**（I8 契约零回归：isPickable/canBeHitByProjectile 不动） |
 | 阶段5 后续 | I13+I14 统一全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
+| 阶段5 后续（FIX-3a/3b 后） | GameTest 全量（+7 例：P0 回归 2 + fix3b 5） | **76/76 PASS** |
+| 阶段5 后续 | FIX-3 后最终全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
 
 ## 代理协调文件
 

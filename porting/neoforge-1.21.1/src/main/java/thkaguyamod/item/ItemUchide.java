@@ -28,8 +28,10 @@ import thkaguyamod.entity.shot.EntityTHShot;
  * (1)(2) は原作でもコメントアウト済み（死コード）、(3) は 1.21.1 の戦利品表 JSON 側で
  * 対応する必要がある（{@code porting/tools} の生成器 or 手書きデータパック）。
  *
- * <p>TODO K3-review: 1.7.10 の {@code ItemUchide} は {@code setItemDamage(damage + 30)} を
- * 直接行っていた。1.21.1 では登録側の耐久値（原作 100）に依存する。
+ * <p>耐久書き込み（FIX-3b で確認）：原作は {@code setItemDamage(damage + 30)} / {@code onUpdate} で
+ * {@code -1} を直接書いていた。1.21.1 では {@code ItemStack#setDamageValue} → {@code Item.setDamage} が
+ * {@code Mth.clamp(damage, 0, getMaxDamage())} で既にクランプするため、+30 で上限を超えても
+ * 破損扱いにはならず、単に上限（原作 100）で止まる。追加の clamp は不要。
  *
  * <p>TODO K3-review: 原作の {@code getFoodStats().getFoodLevel() > 0} は「空腹ゲージ 2 以上」と
  * コメントされているが実際の条件は「1 以上」。コメントと実装が食い違っているため、

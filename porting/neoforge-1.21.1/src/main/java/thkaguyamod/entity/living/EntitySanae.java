@@ -92,6 +92,13 @@ public class EntitySanae extends EntityDanmakuMob implements IDanmakuMob, Mercha
 		super.defineSynchedData(builder);
 		buyingList = new MerchantOffers();
 		//1.7.10: new MerchantRecipe(new ItemStack(shot_material,64,0), new ItemStack(illness_recovery_charm,1,0))
+		//
+		//FIX-3b（P47 实测判定）: maxUses=12 は 1.21.1 の MerchantOffer 既定値であり、原作の
+		//1.7.10 MerchantRecipe も toolUses/maxTradeUses による有限回数（既定 7 回、isRecipeDisabled()
+		//で結果スロットが無効化される）だった。原作 EntitySanae.useRecipe も
+		//incrementToolUses() のみで補貨処理を持たない（1.7.10 の補貨は EntityVillager.updateAITick
+		//側にあり、この自作商人はその経路に乗らない）→ 「使い切ったら永久に缺貨」は原作同式。
+		//したがって挙動は変更しない。USER_MIGRATION §5#22 の「约 2 个游戏日恢复」だけが誤り（K3 修正対象）。
 		buyingList.add(new MerchantOffer(new ItemCost(ModItems.SHOT_MATERIAL.get(), 64),
 				new ItemStack(ModItems.ILLNESS_RECOVERY_CHARM.get()), 12, 1, 0.05F));
 	}

@@ -143,8 +143,11 @@ public class MiracleMalletMenu extends AbstractContainerMenu {
         }
 
         // 制作結果のスロットに新しいアイテムを置く
+        // FIX-3b: ResultContainer.setItem はスタック参照をそのまま保持するため、
+        // 結果スロットと resultItem が同一インスタンスを共有してしまう。DanmakuCraftingMenu:269
+        // と同じく copy() を渡して切り離す（取り出しで resultItem が空スタックを指す事故を防ぐ）。
         this.resultItem = produced;
-        this.craftResult.setItem(0, produced);
+        this.craftResult.setItem(0, produced.copy());
     }
 
     /** 最近一次转换结果（1.7.10 {@code resultItem} 字段的对应物）。 */

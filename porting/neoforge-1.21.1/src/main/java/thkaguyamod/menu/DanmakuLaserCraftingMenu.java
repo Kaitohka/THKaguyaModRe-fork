@@ -46,6 +46,17 @@ public class DanmakuLaserCraftingMenu extends AbstractContainerMenu {
     private static final int SHAPE_UNCHANGED = -2;
     private static final int SHAPE_INVALID = -1;
 
+    // ---- 槽段常量（FIX-3b：原作照抄弹版的 10/37/46 与激光版真实布局不符，已按实际槽数修正）----
+    /** 0 = 结果槽。 */
+    private static final int RESULT_SLOT = 0;
+    /** 1..5 = 素材/弹数/速度/复制/颜色；6..14 = 3×3 矩阵。 */
+    private static final int INV_SLOT_START = 15;
+    /** 15..41 = 玩家主背包。 */
+    private static final int INV_SLOT_END = 42;
+    /** 42..50 = 玩家快捷栏。 */
+    private static final int USE_ROW_SLOT_START = 42;
+    private static final int USE_ROW_SLOT_END = 51;
+
     private static final boolean[] PATTERN_POINT   = {false, false, false, false, true,  false, false, false, false};
     private static final boolean[] PATTERN_FORWARD = {false, true,  false, false, true,  false, false, false, false};
     private static final boolean[] PATTERN_SECTOR  = {true,  true,  true,  false, false, false, false, false, false};
@@ -353,8 +364,18 @@ public class DanmakuLaserCraftingMenu extends AbstractContainerMenu {
     /**
      * 1.7.10 {@code transferStackInSlot} → {@code quickMoveStack}。
      *
-     * <p>TODO K3-review: 原 1.7.10 激光版的槽段常量 (10/37/46) 疑似直接沿用弹版、未随激光布局
-     * （玩家槽实际从 15 起）调整；此处按“忠实移植”照抄，行为与原版一致但可能与布局错位，待复核。
+     * <p><b>FIX-3b（旧版 bug，已修）</b>：原作激光版直接照抄了弹版的槽段常量 (10/37/46)，
+     * 而激光版实际槽位是 0=结果、1..5=功能槽、6..14=3×3 矩阵、15..41=主背包、42..50=快捷栏。
+     * 于是：
+     * <ul>
+     *   <li>shift 点击矩阵第 5..9 格（index 10..14）→ 走进 {@code >=10 && <37} 分支，
+     *       只尝试塞进 37..45（真实含义是主背包末 5 格），跳过 15..36；</li>
+     *   <li>shift 点击快捷栏第 4..9 格（index 42..45，旧常量 37..45 里的后半段）
+     *       以及主背包 37..41 → 走进 {@code >=37 && <46} 分支，尝试塞进 10..36
+     *       （真实含义含矩阵/功能槽，`mayPlace` 会拒绝绝大多数物品）→ 静默无反应。</li>
+     * </ul>
+     * 按迁移规则「旧版 bug 修复并注释」修正为真实槽段：结果 0 / 功能 1..5 / 矩阵 6..14 /
+     * 主背包 15..41 / 快捷栏 42..50。
      */
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
@@ -365,19 +386,19 @@ public class DanmakuLaserCraftingMenu extends AbstractContainerMenu {
             itemstack = slotStack.copy();
 
             if (index == 0) {
-                if (!this.moveItemStackTo(slotStack, 10, 46, true)) {
+                if (!this.moveItemStackTo(slotStack, INV_SLOT_START, USE_ROW_SLOT_END, true)) {
                     return ItemStack.EMPTY;
                 }
                 slot.onQuickCraft(slotStack, itemstack);
-            } else if (index >= 10 && index < 37) {
-                if (!this.moveItemStackTo(slotStack, 37, 46, false)) {
+            } else if (index >= INV_SLOT_START && index < INV_SLOT_END) {
+                if (!this.moveItemStackTo(slotStack, USE_ROW_SLOT_START, USE_ROW_SLOT_END, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (index >= 37 && index < 46) {
-                if (!this.moveItemStackTo(slotStack, 10, 37, false)) {
+            } else if (index >= USE_ROW_SLOT_START && index < USE_ROW_SLOT_END) {
+                if (!this.moveItemStackTo(slotStack, INV_SLOT_START, INV_SLOT_END, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.moveItemStackTo(slotStack, 10, 46, false)) {
+            } else if (!this.moveItemStackTo(slotStack, INV_SLOT_START, USE_ROW_SLOT_END, false)) {
                 return ItemStack.EMPTY;
             }
 

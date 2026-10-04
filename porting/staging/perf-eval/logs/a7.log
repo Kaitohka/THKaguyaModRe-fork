@@ -1,0 +1,13 @@
+== javac ==
+== run ==
+== A7 fixed-buffer flush bench (no GL) ==
+shots    strategy    draws/frame   draws/shot    verts/frame    bytes/frame
+50       shared             94.0        1.880            376           9022
+50       fixed              13.8        0.275            370           8874
+         -> draws/frame 94.0 -> 13.8 (-85.4%), verts 376 -> 370
+100      shared            199.0        1.990            796          19102
+100      fixed              13.8        0.138            783          18786
+         -> draws/frame 199.0 -> 13.8 (-93.1%), verts 796 -> 783
+200      shared            398.0        1.990           1592          38206
+200      fixed              13.8        0.069           1565          37571
+         -> draws/frame 398.0 -> 13.8 (-96.5%), verts 1592 -> 1565

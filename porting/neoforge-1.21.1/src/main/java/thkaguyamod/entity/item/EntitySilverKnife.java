@@ -667,7 +667,21 @@ public class EntitySilverKnife extends Entity
 		}
 
 		float f = Mth.sqrt((float)(motionX * motionX + motionZ * motionZ));
-		float rotationYaw = (float)((Math.atan2(motionX, -motionZ) * 180D) / 3.1415927410125732D);
+		/*
+		 * diag-knife: クライアント側の motionX/motionZ は常に 0 である。
+		 * 1.7.10 は EntityRegistry.registerModEntity(..., sendsVelocityUpdates=true) で
+		 * motionX/Y/Z をクライアントへ同期していた（CommonProxy.java:162）ため、
+		 * 下の atan2 は実速度から正しい yaw を出せていた。1.21.1 の銀のナイフは
+		 * 「サーバー側でしか進まない独自 motion フィールド」（このクラスの motionX/Y/Z）で動くため、
+		 * ClientboundSetEntityMotionPacket（= getDeltaMovement() 由来）には載らない。
+		 * その結果 atan2(+0.0, -0.0) が Java 仕様どおり +180° を返し、毎 tick
+		 * サーバーから同期された正しい yaw を 180° 固定で上書きしてしまう（＝刀の向きが固定される）。
+		 * 速度が観測できない場合は「今の向き」（= サーバー同期値、生成直後は投擲方向）を保つ。
+		 * 速度が観測できる場合（サーバー側の飛行中、垂直弾道など）は従来どおり atan2 で更新する。
+		 */
+		float rotationYaw = (motionX == 0.0D && motionZ == 0.0D)
+				? getYRot()
+				: (float)((Math.atan2(motionX, -motionZ) * 180D) / 3.1415927410125732D);
 		float rotationPitch = getXRot();
 		if(!level().isClientSide)
 		{

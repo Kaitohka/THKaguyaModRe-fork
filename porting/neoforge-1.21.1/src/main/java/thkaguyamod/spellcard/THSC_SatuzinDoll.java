@@ -87,7 +87,10 @@ public class THSC_SatuzinDoll extends THSpellCard
 				{
 					if(entityTHShot.getShotForm() == FORM_KNIFE
 							&& (entityTHShot.getShotColor() == BLUE || entityTHShot.getShotColor() == RED)
-							&& entityTHShot.user.equals(this.user) && rand.nextInt(100) < 25)
+							// P36（audit-common）: EntityTHShot.user は同期されない public フィールドで、
+							// クライアント側では null になりうる。旧コードはそれを直に receiver にしていたため
+							// NPE の潜伏があった（等価比較なので receiver を this.user 側に寄せる）。
+							&& this.user != null && this.user.equals(entityTHShot.user) && rand.nextInt(100) < 25)
 					{
 						//thShotLib.createShot03(user, ...);
 						Vec3 angle;

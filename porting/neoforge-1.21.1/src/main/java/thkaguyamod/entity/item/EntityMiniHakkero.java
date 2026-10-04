@@ -197,9 +197,20 @@ public class EntityMiniHakkero extends Entity
 	@Override
 	protected void readAdditionalSaveData(CompoundTag nbtTagCompound)
 	{
-		count = nbtTagCompound.getShort("count");
-		damage = nbtTagCompound.getShort("damage");
-		isSpellCard = nbtTagCompound.getBoolean("isSpellCard");
+		// # fix (audit-nbt-zero): 缺键即 0 会覆盖构造器设定的值（count/damage 与
+		//   isSpellCard = tgEntity != null）。与 EntityDanmakuMob 的 I19 同型，按同一手法加守卫。
+		if(nbtTagCompound.contains("count"))
+		{
+			count = nbtTagCompound.getShort("count");
+		}
+		if(nbtTagCompound.contains("damage"))
+		{
+			damage = nbtTagCompound.getShort("damage");
+		}
+		if(nbtTagCompound.contains("isSpellCard"))
+		{
+			isSpellCard = nbtTagCompound.getBoolean("isSpellCard");
+		}
 	}
 
 	public float getCircleAngle()

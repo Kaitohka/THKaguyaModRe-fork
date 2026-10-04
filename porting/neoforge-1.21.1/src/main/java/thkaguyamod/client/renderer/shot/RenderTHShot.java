@@ -6,11 +6,15 @@ import com.mojang.math.Axis;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+import thkaguyamod.client.model.ModelSilverKnife;
+import thkaguyamod.client.renderer.RenderSilverKnife;
 import thkaguyamod.client.renderer.shot.DanmakuRenderTypes;
 import thkaguyamod.entity.shot.EntityTHShot;
 
@@ -109,7 +113,18 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 	public RenderTHShot(EntityRendererProvider.Context context)
 	{
 		super(context);
+		// # perf: P2 — bake は 1 回だけ。以前は FORM_KNIFE の描画ごとに new ModelSilverKnife() していた
+		// （1.7.10 の原作もそうしていたが、1.21.1 では ModelPart の bake が重いのでレンダラ保持にする）。
+		this.knifeModel = new ModelSilverKnife(context.bakeLayer(RenderSilverKnife.LAYER_LOCATION));
 	}
+
+	/**
+	 * FORM_KNIFE（ナイフ弾）用の 3D モデル。1.7.10 の
+	 * {@code case THShotLib.FORM_KNIFE: ModelBase modelSilverKnife = new ModelSilverKnife();} に相当。
+	 * bake 済みの {@link net.minecraft.client.model.geom.ModelPart} を共有するため、
+	 * レンダラのインスタンス（エンティティ型ごとに 1 つ）で 1 度だけ作る。
+	 */
+	private final ModelSilverKnife knifeModel;
 
 	@Override
 	public ResourceLocation getTextureLocation(EntityTHShot entity)
@@ -341,12 +356,14 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 					break;
 				// ナイフ弾
 				case FORM_KNIFE:
-					// TODO K3-review: 1.7.10 は ModelSilverKnife (ModelBase) を entity 座標系で描画していた。
-					//   1.21.1 では ModelSilverKnife がまだ移植されておらず、エンティティモデル描画は
-					//   EntityRenderer + EntityModel + RenderType.entityCutout へ書き換えが必要。
-					//   現状は他のフォームと同じ手続き的描画にフォールバックし、ナイフテクスチャを貼る。
-					//   (移植後は poseStack に yaw/-pitch/angleZ を適用し ModelSilverKnife をレンダリングすること)
-					renderNormalShot(ctx, size, color, false);
+					// 1.7.10 (RenderTHShot.java:219-228):
+					//   size2 = size * 3.0F; glScalef(size2, size2, size2);
+					//   glRotatef(yaw, 0,1,0); glRotatef(-rotationPitch, 1,0,0); glRotatef(getAngleZ(), 0,0,1);
+					//   modelSilverKnife.render(thShot, 0,0,-0.1F, 0,0, 0.0625F);
+					// ここでは ModelSilverKnife（ModelLayerLocation thkaguyamod:silver_knife）を
+					// 銀刀エンティティと同じ entityCutoutNoCull で描く。テクスチャは getTextureLocation が
+					// 1.7.10 と同じ色→SilverKnife_<色>.png 表で返したものをそのまま使う。
+					renderKnifeShot(ctx, size, yaw, pitch, thShot.getAngleZ());
 					break;
 				// 風弾
 				case FORM_WIND:
@@ -415,6 +432,51 @@ public class RenderTHShot extends EntityRenderer<EntityTHShot>
 				 width,  height, 0.0F, u2, v1,
 				-width,  height, 0.0F, u1, v1,
 				1.0F, 1.0F, 1.0F, 1.0F);
+		ctx.pose.popPose();
+	}
+
+	/**
+	 * ナイフ弾（FORM_KNIFE）の描画。1.7.10 の
+	 * {@code case THShotLib.FORM_KNIFE:}（RenderTHShot.java:219-228）を 1.21.1 の
+	 * {@link PoseStack} + {@link MultiBufferSource} に写したもの。
+	 *
+	 * <p>1.7.10 の呼び出し系列:</p>
+	 * <ol>
+	 *   <li>{@code GL11.glScalef(size * 3.0F, size * 3.0F, size * 3.0F)}（原作は GL 行列をスタックで戻す）</li>
+	 *   <li>{@code GL11.glRotatef(yaw, 0,1,0)} … 弾道の yaw</li>
+	 *   <li>{@code GL11.glRotatef(-thShot.rotationPitch, 1,0,0)} … 弾道の pitch（符号反転）</li>
+	 *   <li>{@code GL11.glRotatef(thShot.getAngleZ(), 0,0,1)} … 弾の傾き（slope）</li>
+	 *   <li>{@code modelSilverKnife.render(thShot, 0,0,-0.1F, 0,0, 0.0625F)}</li>
+	 * </ol>
+	 *
+	 * <p>1.21.1 への写像:</p>
+	 * <ul>
+	 *   <li>{@code glScalef} → {@code poseStack.scale}。原作の {@code size2 = size * 3.0F} は
+	 *       そのまま（この弾だけ 3 倍のスケールで描かれていた）。</li>
+	 *   <li>{@code glRotatef} 3 回 → {@link Axis} の 3 回の {@code mulPose}。<b>順序は原作のまま</b>
+	 *       （Y → X → Z。1.7.10 の固定機能行列も同じ順で右から掛かる）。</li>
+	 *   <li>モデル → {@link ModelSilverKnife}（銀刀エンティティと同一の bake 済みモデル）。
+	 *       テクスチャは {@link #getTextureLocation} が FORM_KNIFE 用に返した
+	 *       {@code textures/entity/shot/silverknife_<色>.png} を {@code entityCutoutNoCull} で使う
+	 *       （1.7.10 の {@code bindEntityTexture(thShot)} と同じ解決結果）。</li>
+	 *   <li>原作の {@code render(..., 0,0,-0.1F, ...)} の平行移動は {@link ModelSilverKnife} 側が
+	 *       モデル座標に持たないため、ここでは {@code poseStack.translate(0, 0, -0.1)} として与える。</li>
+	 *   <li>1.7.10 は {@code GL11.glDisable(GL_LIGHTING)} 済み（renderTHShot 冒頭）なので
+	 *       {@link LightTexture#FULL_BRIGHT} を渡す。</li>
+	 * </ul>
+	 */
+	public void renderKnifeShot(Ctx ctx, float size, float yaw, float pitch, float slope)
+	{
+		float size2 = size * 3.0F;
+		ctx.pose.pushPose();
+		ctx.pose.scale(size2, size2, size2);
+		ctx.pose.mulPose(Axis.YP.rotationDegrees(yaw));
+		ctx.pose.mulPose(Axis.XP.rotationDegrees(-pitch));
+		ctx.pose.mulPose(Axis.ZP.rotationDegrees(slope));
+		ctx.pose.translate(0.0F, 0.0F, -0.1F);
+
+		VertexConsumer b = ctx.buffers.getBuffer(RenderType.entityCutoutNoCull(ctx.texture));
+		this.knifeModel.renderToBuffer(ctx.pose, b, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
 		ctx.pose.popPose();
 	}
 

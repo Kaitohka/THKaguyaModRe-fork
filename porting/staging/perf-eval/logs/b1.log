@@ -1,0 +1,29 @@
+== javac ==
+== run ==
+== B1 homing target-scan bench ==
+range=24.0 interval=4 shots=100
+
+candidates        ns/scan    Vec3 allocs           rays   ns/candidate
+1                     113              3              1          113.0
+4                     345              8              2           86.3
+16                   1008             22              3           63.0
+64                   9254             73              4          144.6
+
+-- getEntitiesOfClass の AABB 走査コスト（モデル推定。実 Level は使えないため）--
+sections overlapped by the 48^3 box: 64
+entities/section       AABB tests/scan tests/tick (100 shots) tests/tick (interval=4)
+1                                  64               6400             1600
+3                                 192              19200             4800
+8                                 512              51200            12800
+（AABB 交差 1 回 ≈ 6 回の浮動小数比較。実 Level での実測は未実施）
+
+-- 100 発の追尾弾が 1 tick に払う対象探索コスト（実測 ns/scan から積み上げ）--
+candidates   strategy                ns/tick          us/tick scans/tick
+1            every-tick                 9000             9.00      100.0
+1            interval=4                 2250             2.25       25.0
+4            every-tick                26200            26.20      100.0
+4            interval=4                 6550             6.55       25.0
+16           every-tick                88400            88.40      100.0
+16           interval=4                22100            22.10       25.0
+64           every-tick               935700           935.70      100.0
+64           interval=4               233925           233.93       25.0

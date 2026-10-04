@@ -319,7 +319,15 @@ public class EntitySukima extends Entity
 	@Override
 	protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag nbtTagCompound)
 	{
-		setColor(nbtTagCompound.getShort("color"));
+		// # fix (audit-nbt-zero): 缺键时 CompoundTag#getShort 返回 0，会把 DATA_COLOR 的默认
+		//   值覆盖成 0。隙间的颜色承载语义（16=直接ワープ / 17=飛光虫ネスト / >=32=折りたたみ傘・
+		//   スキマ道具），且 tick() 的「消滅」と「レーザー発射」判定都读它；归零会让隙间
+		//   永不消失、飞光虫ネスト 完全失效。1.7.10 只在完整存档读回时才会走到这里，故按原样式
+		//   仅在有键时覆盖。
+		if(nbtTagCompound.contains("color"))
+		{
+			setColor(nbtTagCompound.getShort("color"));
+		}
 	}
 
 	//スキマの色を設定する

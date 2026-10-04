@@ -235,7 +235,13 @@ public class EntitySakuyaWatch extends Entity
 					}
 					if(entity instanceof EntitySpellCard spellCard)
 					{
-						if(spellCard.canMoveInTimeStop && spellCard.user.equals(this.userEntity))
+						// P36（audit-common）: spellCard.user は同期されない public フィールドで、
+						// クライアント側では恒に null（addAdditionalSaveData が空・同期槽に無い）。
+						// 旧コードはそれを receiver にしていたため、将来 canMoveInTimeStop を
+						// 同期した瞬間にクライアントで NPE になる。等価比較なので receiver を
+						// this.userEntity 側へ寄せて null 安全にする（canMoveInTimeStop の短絡も維持）。
+						if(spellCard.canMoveInTimeStop && this.userEntity != null
+								&& this.userEntity.equals(spellCard.user))
 						{
 							pass = true;
 							spellCard.specialProcessInTimeStop();

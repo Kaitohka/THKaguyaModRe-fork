@@ -239,7 +239,12 @@ public class EntityYuukaParasol extends Entity
 	@Override
 	protected void readAdditionalSaveData(CompoundTag nbtTagCompound)
 	{
-		damage = nbtTagCompound.getInt("damage");
+		// # fix (audit-nbt-zero): damage 是「日傘の耐久」。缺键即 0 会让 tick() 的
+		//   `damage >= PARASOL_MAX_DAMAGE` 永不成立 → 耐久耗尽后伞不归还（玩家丢道具）。
+		if(nbtTagCompound.contains("damage"))
+		{
+			damage = nbtTagCompound.getInt("damage");
+		}
 	}
 
 	/**

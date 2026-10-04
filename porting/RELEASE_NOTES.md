@@ -37,7 +37,7 @@
 |---|---|
 | 静态闸 R3（common 不得引用 client-only 类） | PASS |
 | 冒烟双模式（客户端到主菜单 + 专用服务端启动，0 相关 ERROR / 0 配方错误 / 0 模型错误） | PASS |
-| GameTest 功能套件（注册表/弹幕生成与伤害路径/配方/组件编解码边界/残机复活/符卡宣言/扫帚物理与可破坏性/实体可选取性） | **58/58 PASS** |
+| GameTest 功能套件（注册表/弹幕生成与伤害路径/配方/组件编解码边界/残机复活/符卡宣言/扫帚物理与操舵/实体可选取/NBT 缺键归零/核弹地形/生成闸门/人偶还原/姿势回归） | **115/115 PASS**（连跑 8+ 次稳定） |
 | 30 分钟专用服务端浸泡（出生点常驻 36 个模组实体全程 tick） | 两轮 **PASS**（修复前基线 + 修复后复跑；均 0 相关 ERROR / 0 OOM / 0 "Can't keep up"） |
 | 发布 jar 内容核验（832 文件：110 配方 / 14 群系修饰器 / GLM / 146 模型 / 5 语言 / 元数据展开） | PASS |
 
@@ -96,5 +96,6 @@
 |---|---|
 | [`USER_MIGRATION.md`](USER_MIGRATION.md) | 玩家迁移说明：版本对照 / 存档声明 / 差异清单 / 配置迁移 / 已知问题 / FAQ |
 | [`MIGRATION_RULES.md`](MIGRATION_RULES.md) | 移植工程规则（现代化优先 + 八条验收） |
-| [`integration-notes.md`](integration-notes.md) | 裁决台账（P1-P42）与事故台账（I1-I12）、回归闸门记录 |
+| [`integration-notes.md`](integration-notes.md) | 裁决台账（P1-P53）与事故台账（I1-I19）、回归闸门记录 |
+| [`HANDOFF.md`](HANDOFF.md) | **交接文档**：新接手主 Agent 的完整导航（进度/模块结构/待办/环境/决策思路） |
 | [`phase1-inventory.md`](phase1-inventory.md) 等 | 各阶段盘点/骨架/注册/执行规划 |

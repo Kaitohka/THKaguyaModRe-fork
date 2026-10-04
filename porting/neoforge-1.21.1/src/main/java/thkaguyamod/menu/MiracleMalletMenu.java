@@ -95,8 +95,8 @@ public class MiracleMalletMenu extends AbstractContainerMenu {
         ItemStack originItem = this.craftMaterial.getItem(0);
         ItemStack produced = ItemStack.EMPTY;
 
-        // 1.7.10: int originID = -1 —— 用于记录外部 MOD 物品的数字 ID（见下方注释）
-        int originId = -1;
+        // 1.7.10 の int originID = -1（外部 MOD 物品の数字 ID を記録する変数）は、
+        // その変換が削除されたため 1.21.1 では不要。原物品は ORIGINAL_ITEM コンポーネントが担う。
         boolean isCommonDamage = false; // 変化前、変化後でダメージ値を共有するアイテムかどうか
 
         if (!originItem.isEmpty()) {
@@ -129,16 +129,16 @@ public class MiracleMalletMenu extends AbstractContainerMenu {
                 // ItemCursedDecoyDoll 的「破坏时还原」逻辑）。
                 produced.set(ModDataComponents.ORIGINAL_DAMAGE.get(), originItem.getDamageValue());
 
-                // TODO K3-review: 1.7.10 还写入 NBT "OriginalItemID"（外部 MOD 物品的数字 ID），
-                //  ItemCursedDecoyDoll 用 getItemById(originID) 还原成原物品。
-                //  1.21.1 无数字物品 ID，该字段「不可能等价还原」。此处按简报要求保留常量映射入口：
-                //  当前无任何处于启用状态的转换需要它（唯一使用者是需要记录 originID 的外部 MOD 配方，
-                //  该配方已随 MOD 缺失删除），故先不写入组件。若主控决定恢复「诅咒替身人偶 → 原物品」，
-                //  需新增一个 DataComponent 记录 Item 引用（Holder<Item>）或直接改用
-                //  ItemStack 的 crafting-remainder 语义，并在此处写入。
-                if (originId >= 0) {
-                    // 1.7.10: nbt.setInteger("OriginalItemID", originID)
-                }
+                // 1.7.10: if (originID >= 0) nbt.setInteger("OriginalItemID", originID)
+                // 旧版只在「外部 MOD 素材 → 呪いのデコイ人形」那一条转换里记录原物品的**数字 ID**
+                // （其余产物在自己的物品类里硬编码还原目标）。该转换因外部 MOD 无 1.21.1 版而删除
+                // （台账 P8），于是 1.21.1 里原物品改由 ORIGINAL_ITEM（レジストリ Holder<Item>）承载。
+                //
+                // 这里把「记录素材」这一语义**一般化**：凡是本转换台产出的可还原物品，都记录素材本身。
+                // 对现存的 2 条转换，产物各自的硬编码还原目标与素材一致（阴阳玉 / 隙間），写入该组件
+                // 不改变它们的行为（两者不读 ORIGINAL_ITEM）；对将来恢复的「デコイ人形」转换，
+                // ItemCursedDecoyDoll 直接读它即可还原，无需再改本处。
+                produced.set(ModDataComponents.ORIGINAL_ITEM.get(), originItem.getItemHolder());
             }
         }
 

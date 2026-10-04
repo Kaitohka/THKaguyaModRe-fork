@@ -233,6 +233,15 @@ public class EntitySpellCard extends Entity
 
 	public void specialProcessInTimeStop()
 	{
+		// P36（audit-common）: useSpellCard は 6 引数コンストラクタでのみ設定される非同期フィールドで、
+		// クライアントが EntityType#create(level) で生成された場合は null のまま。
+		// 呼び出し側（EntitySakuyaWatch / EntitySakuyaStopWatch / THSC_SatuzinDoll）は
+		// いずれもサーバー側の canMoveInTimeStop を前提にしているが、
+		// 将来の同期化・別経路の追加に備えて null ガードを置く（従来の挙動は変えない）。
+		if(useSpellCard == null)
+		{
+			return;
+		}
 		useSpellCard.specialProcessInTimeStop();
 	}
 

@@ -165,7 +165,13 @@ public class EntityCirnoIceBox extends Entity
 	@Override
 	protected void readAdditionalSaveData(CompoundTag nbtTagCompound)
 	{
-		count = nbtTagCompound.getShort("count");
+		// # fix (audit-nbt-zero): 缺键即 0 会把构造期写好的 count 覆盖掉。
+		//   count 本身不参与逻辑（移植已改用 tickCount），但保持「只在有键时覆盖」与
+		//   EntityDanmakuMob 的 I19 修法一致，避免 0 覆盖噪声。
+		if(nbtTagCompound.contains("count"))
+		{
+			count = nbtTagCompound.getShort("count");
+		}
 	}
 
 	//時間操作空間に入っていた時の処理（氷漬けの処理）

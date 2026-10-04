@@ -1,0 +1,32 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": {
+    "type": "neoforge:or",
+    "values": [
+      "#c:is_plains",
+      "#minecraft:is_beach",
+      "#minecraft:is_forest",
+      "#c:is_snowy",
+      "#minecraft:is_taiga",
+      "#minecraft:is_deep_ocean",
+      "#c:is_desert",
+      "#minecraft:is_hill",
+      "#minecraft:is_mountain",
+      "#minecraft:is_ocean",
+      "#minecraft:is_river",
+      "#c:is_snowy_plains",
+      "#minecraft:is_jungle",
+      "#minecraft:is_badlands",
+      "#minecraft:is_savanna",
+      "minecraft:stony_shore",
+      "#c:is_swamp"
+    ]
+  },
+  "spawners": {
+    "type": "thkaguyamod:sanae",
+    "weight": 1,
+    "minCount": 1,
+    "maxCount": 1
+  },
+  "_comment": "1.7.10 CommonProxy.registerEntitySpawn(): EntitySanae, weight=1, min=1, max=1, EnumCreatureType=ambient, BiomeGenBase=[plains, beach, birchForest, birchForestHills, coldBeach, coldTaiga, coldTaigaHills, deepOcean, desert, desertHills, extremeHills, extremeHillsEdge, extremeHillsPlus, forest, forestHills, frozenOcean, frozenRiver, iceMountains, icePlains, jungle, jungleEdge, jungleHills, megaTaiga, megaTaigaHills, mesa, mesaPlateau, mesaPlateau_F, ocean, river, roofedForest, savanna, savannaPlateau, stoneBeach, swampland, taiga, taigaHills]"
+}

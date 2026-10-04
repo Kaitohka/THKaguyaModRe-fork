@@ -221,9 +221,26 @@ public class EntityHisou extends Entity
 	@Override
 	protected void readAdditionalSaveData(CompoundTag nbtTagCompound)
 	{
-		count = nbtTagCompound.getShort("count");
-		damage = nbtTagCompound.getShort("damage");
-		num = (int)nbtTagCompound.getByte("number");
+		// # fix (audit-nbt-zero): 缺键即 0 会覆盖构造器设定的 count/damage/num
+		//   （num==8 是「本物の緋想の剣」标记，归零后气质弹发射分支失效）。
+		//   与 EntityDanmakuMob 的 I19 同型，按同一手法加守卫。
+		if(nbtTagCompound.contains("count"))
+		{
+			count = nbtTagCompound.getShort("count");
+		}
+		if(nbtTagCompound.contains("damage"))
+		{
+			damage = nbtTagCompound.getShort("damage");
+		}
+		if(nbtTagCompound.contains("number"))
+		{
+			num = (int)nbtTagCompound.getByte("number");
+			// 1.7.10 は dataWatcher と NBT の二重管理で、readEntityFromNBT が
+			// dataWatcher を直接書いていた。移植版は num と DATA_NUM が分離しているため、
+			// NBT から復元した値が同期槽へ伝わらない（getNum() は DATA_NUM を返す）。
+			// ここで同期槽も合わせる（既存挙動の不足を補う）。
+			setNum(num);
+		}
 	}
 
 	public void setNum(int num)

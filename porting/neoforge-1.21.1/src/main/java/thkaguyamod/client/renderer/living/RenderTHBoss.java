@@ -143,8 +143,14 @@ public abstract class RenderTHBoss<T extends EntityDanmakuMob, M extends EntityM
 
 		int cardNo = danmakuMob.getUsingSpellCardNo();
 
-		float hp = danmakuMob.getHealth() / danmakuMob.getMaxHealth();
-		float hp2 = danmakuMob.getHealth() / danmakuMob.getMaxHealth() * 2.0F - 1.0F;
+		// P38 硬化: moveDanmakuAttack(..., maxHP = 0F, ...) の呼び出し（EntityCirno:112 /
+		// EntityRumia:95 / EntityToziko:96 / EntityWriggle:106 / 各ボスの ATTACK_END など）で
+		// maxHealth が 0 になり、0/0 = NaN が HP バーの UV（u = hp / hp2）と頂点へ流れていた。
+		// 1.7.10 も同じ 0 除算をしていた（原作即如此）が、NaN の UV は 1.21.1 のバッチ描画では
+		// 未定義のサンプリングになるため分母だけ 1.0F で下限を切る（HP 0 の見た目は変わらない）。
+		float maxHealth = Math.max(danmakuMob.getMaxHealth(), 1.0F);
+		float hp = danmakuMob.getHealth() / maxHealth;
+		float hp2 = danmakuMob.getHealth() / maxHealth * 2.0F - 1.0F;
 
 		// 1.7.10: this.bindTexture(statusTexture) + Tessellator（ブレンド無効・深度 LEQUAL・深度書き込みあり）
 		VertexConsumer bar = bufferSource.getBuffer(

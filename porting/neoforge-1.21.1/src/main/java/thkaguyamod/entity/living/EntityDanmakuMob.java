@@ -1747,17 +1747,60 @@ public abstract class EntityDanmakuMob extends PathfinderMob
 		super.readAdditionalSaveData(nbtTagCompound);
 		if(nbtTagCompound != null && !nbtTagCompound.isEmpty())
 		{
-			//弾幕MOBの攻撃パターンを読み込み
-			setForm(nbtTagCompound.getByte("Form"));
-			setDanmakuPattern(nbtTagCompound.getInt("Danmaku"));
-			danmakuSpan = nbtTagCompound.getShort("Span");
-			shotForm = nbtTagCompound.getByte("ShotForm");
-			shotColor = nbtTagCompound.getByte("ShotColor");
-			speedRate = nbtTagCompound.getFloat("Speed");
-			setAttackDistance(nbtTagCompound.getByte("AttackRange"));
-			setDetectionDistance(nbtTagCompound.getByte("DetectRange"));
-			setFlyingHeight(nbtTagCompound.getByte("Flying"));
-			special = nbtTagCompound.getShort("Special");
+			// 弾幕MOBの攻撃パターンを読み込み
+			//
+			// # fix (diag-fairy-fire): 各キーは「存在するときだけ」読む。
+			//   1.7.10 は readEntityFromNBT が「保存済み実体の完全な NBT」に対してのみ呼ばれたため
+			//   全キーが揃っていた。1.21.1 では /summon（および部分 NBT からの load）でも
+			//   このメソッドが呼ばれ、その tag には id/Pos しか入っていない。CompoundTag の
+			//   getByte/getShort/getFloat/getInt はキー欠落時に **0** を返すため、
+			//   コンストラクタ（= EntityTHFairy#setPattern が样式表から設定した値）を
+			//   0 で上書きしてしまう：
+			//     danmakuSpan=0 → attackCounter が毎 tick リセットされ連発
+			//     speedRate=0.0F → createSphereShot の firstSpeed/limitSpeed/acceleration が
+			//                      すべて 0 になり弾が生成点（妖精の pos()）から動かない
+			//     detectionDistance/attackDistance=0 → 索敵範囲が消える
+			//   キーが無いフィールドはコンストラクタ設定値をそのまま残す。
+			if(nbtTagCompound.contains("Form"))
+			{
+				setForm(nbtTagCompound.getByte("Form"));
+			}
+			if(nbtTagCompound.contains("Danmaku"))
+			{
+				setDanmakuPattern(nbtTagCompound.getInt("Danmaku"));
+			}
+			if(nbtTagCompound.contains("Span"))
+			{
+				danmakuSpan = nbtTagCompound.getShort("Span");
+			}
+			if(nbtTagCompound.contains("ShotForm"))
+			{
+				shotForm = nbtTagCompound.getByte("ShotForm");
+			}
+			if(nbtTagCompound.contains("ShotColor"))
+			{
+				shotColor = nbtTagCompound.getByte("ShotColor");
+			}
+			if(nbtTagCompound.contains("Speed"))
+			{
+				speedRate = nbtTagCompound.getFloat("Speed");
+			}
+			if(nbtTagCompound.contains("AttackRange"))
+			{
+				setAttackDistance(nbtTagCompound.getByte("AttackRange"));
+			}
+			if(nbtTagCompound.contains("DetectRange"))
+			{
+				setDetectionDistance(nbtTagCompound.getByte("DetectRange"));
+			}
+			if(nbtTagCompound.contains("Flying"))
+			{
+				setFlyingHeight(nbtTagCompound.getByte("Flying"));
+			}
+			if(nbtTagCompound.contains("Special"))
+			{
+				special = nbtTagCompound.getShort("Special");
+			}
 			if(getFlyingHeight() <= 0)
 			{
 				isFlyingMode = false;

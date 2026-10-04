@@ -26,16 +26,27 @@ import thkaguyamod.init.ModItems;
  *
  * <p>1.7.10 {@code thKaguyaMod.entity.item.EntityMarisaBroom} の移植。
  *
- * <p><b>TODO K3-review: 操縦入力は未移植。</b>1.7.10 版は {@code Minecraft.getMinecraft()} を
- * 直接読み、W/A/S/D/ジャンプの押下状態を {@code @SideOnly(CLIENT)} メソッド経由で騎乗者から
- * 取得していた（サーバー側でも「常にmove_up=true」という暗黙の初期値で動いていた）。
- * 1.21.1 ではクライアント入力がサーバーへ {@code ServerboundPlayerInputPacket} として送られ、
- * {@code ServerPlayer.setPlayerInput()} で {@code xxa}/{@code zza} に反映されるが、
- * 「ジャンプ押下」は {@code LivingEntity.jumping}（protected）にしか入らず外部から読めない。
+ * <p>操舵は W/A/S/D/ジャンプの押下ビットを {@link #steerMask} として受け取り、
+ * {@link BroomSteer} の純関数で移動量を計算する（原作 {@code onUpdate} 344-687 に相当）。
+ * 1.7.10 は {@code Minecraft.getMinecraft()} を公共コードから直接読んでいたが、
+ * 1.21.1 ではクライアント専用の {@code thkaguyamod.client.input.BroomSteerClient} が
+ * {@code KeyMapping} を読んでビットを書き込む（{@code MIGRATION_RULES.md} R3 準拠）。
  *
- * <p>暫定実装: 騎乗者がいないときは緩やかに降下し、騎乗者がいるときは騎手の視線方向へ前進する。
- * 旧版のキー別の加減速（ジャンプで上昇・Sで後退・A/Dで横移動）は再現していない。
- * 入力経路が確定したら {@link #tick()} の移動ブロックを差し替えること。
+ * <h2>どちら側が動かすか（原作との最重要の差異）</h2>
+ * <p>1.7.10 は両側で同じ計算をしていた（サーバー側は「常に W 押下」の暗黙初期値、
+ * 旧箒 365-379）。1.21.1 ではバニラの乗り物と同じく
+ * <b>{@link #isControlledByLocalInstance()} が true の側だけが積分</b>し、
+ * もう一方は移動量を 0 にする（{@code Boat} と同じ扱い）。
+ * <ul>
+ *   <li>乗員がローカルプレイヤー → クライアントが積分し、毎 tick
+ *       {@code ServerboundMoveVehiclePacket} を送る（{@code LocalPlayer#tick}）。</li>
+ *   <li>サーバー側の同じ実体 → 送られてきた位置を受け取るだけ（二重積分しない）。</li>
+ *   <li>他のプレイヤーから見た実体 → 位置パケットを {@code lerpTo} で補間。</li>
+ *   <li>無人 → サーバーだけが積分（原作 665-687 の緩降下）。</li>
+ * </ul>
+ * この分岐が成立するには {@link #getControllingPassenger()} の実装が必須で、
+ * これが無いと {@code handleMoveVehicle} の乗員チェックも
+ * {@code ClientboundMoveEntityPacket} の補間ガードも通らない。
  */
 public class EntityMarisaBroom extends Entity
 {
@@ -47,6 +58,17 @@ public class EntityMarisaBroom extends Entity
 	/** 誰も乗っていない状態か（1.7.10 の isEmpty。クライアント側の位置補間の判定に使っていた） */
 	private boolean isEmpty;
 	private double speedMultiplier;
+
+	/**
+	 * 操舵入力ビット（{@link BroomSteer#FORWARD} 等の OR）。
+	 *
+	 * <p>制御側（ローカル騎乗者を持つ側）でだけ意味を持つ。書き込みは
+	 * クライアントの {@code BroomSteerClient}、またはサーバー側の
+	 * {@code BroomSteerPayload} ハンドラ（フェーズ 2、任意）から。
+	 * 同期データにはしない（毎 tick 変化させると {@code SynchedEntityData} が
+	 * 汚れ、{@code ServerEntity} の送信判定が毎 tick 成立してしまう）。
+	 */
+	private int steerMask;
 
 	public EntityMarisaBroom(EntityType<? extends EntityMarisaBroom> type, Level level)
 	{
@@ -105,6 +127,32 @@ public class EntityMarisaBroom extends Entity
 	public boolean isPickable()
 	{
 		return !isRemoved();
+	}
+
+	/**
+	 * 操舵者（1.7.10 の {@code riddenByEntity instanceof EntityPlayer} 判定に相当）。
+	 *
+	 * <p>1.21.1 ではこのメソッドが「操縦できる乗り物」の入口になる。
+	 * 実装すると次の連鎖が有効になる:
+	 * <ul>
+	 *   <li>{@code Entity#isControlledByLocalInstance()} が乗員の {@code isLocalPlayer()} を見る
+	 *       → ローカル騎乗中のクライアントだけが積分・送信する。</li>
+	 *   <li>{@code ServerGamePacketListenerImpl#handleMoveVehicle} が
+	 *       {@code getControllingPassenger() == player} を要求する
+	 *       → サーバーがこの箒の位置パケットを受け付ける。</li>
+	 *   <li>{@code ClientPacketListener#handleMoveEntity} が
+	 *       {@code !isControlledByLocalInstance()} を要求する
+	 *       → 自分が操縦中の箒がサーバー位置で上書きされない。</li>
+	 *   <li>{@code Entity#getKnownMovement()} が騎手の移動量を返す（原作の「箒の移動量＝騎手の移動量」相当）。</li>
+	 * </ul>
+	 *
+	 * <p>原作はプレイヤーのみを操舵者として扱っていた（旧箒 360）ので、
+	 * {@code Player} 以外（村人やゾンビ等）は {@code null} を返す＝操舵されない。
+	 */
+	@Override
+	public LivingEntity getControllingPassenger()
+	{
+		return this.getFirstPassenger() instanceof Player player ? player : null;
 	}
 
 	//Entityに攻撃されたときに呼ばれる
@@ -171,111 +219,52 @@ public class EntityMarisaBroom extends Entity
 		this.yo = this.getY();
 		this.zo = this.getZ();
 
-		Vec3 motion = this.getDeltaMovement();
-		double motionX = motion.x;
-		double motionY = motion.y;
-		double motionZ = motion.z;
-
-		double motionXZ = Math.sqrt(motionX * motionX + motionZ * motionZ);//平面方向の移動量
-
-		//誰か乗っているなら
-		if(this.getFirstPassenger() instanceof Player living)
+		if(this.isControlledByLocalInstance())
 		{
-			//TODO K3-review: 旧版はここでキー入力（W/A/S/D/ジャンプ）を読んでいた。未移植。
-			//暫定: 騎手の視線方向へ前進する。
-			Vec3 look = living.getLookAngle();
-			double acceleration = 0.04D;
-			motionX += look.x * acceleration;
-			motionY += look.y * acceleration;
-			motionZ += look.z * acceleration;
+			//この側だけが運動を積分する（バニラの乗り物と同じ）。
+			//注意: BroomSteer に渡す角度は「前 tick の箒の角度」でなければならない
+			//（原作も入力演算 395-479 の後に角度を更新する 481-507）。
+			float prevYaw = this.getYRot();
+			float prevPitch = this.getXRot();
 
-			//Entityの移動量に箒の移動量を合わす
-			float yaw = living.getYRot();
-			speedMultiplier = 0.6D;
+			if(this.getFirstPassenger() instanceof Player rider)
+			{
+				//原作 483。読み出しの無い死コードだが、フィールド互換のため維持する。
+				this.speedMultiplier = 0.6D;
 
-			float pitch = living.getXRot();
-			this.setXRot(pitch);
+				Vec3 next = BroomSteer.step(this.getDeltaMovement(), this.steerMask, prevYaw, prevPitch, this.isInWater());
+				this.setDeltaMovement(next);
 
-			if(pitch > 90F)
-			{
-				pitch = 90F;
-			}
-			else if(pitch < -90F)
-			{
-				pitch = -90F;
-			}
-
-			if(pitch < 0F)
-			{
-				pitch *= 0.1F;
-			}
-
-			this.setYRot(yaw - 90F);
-
-			double moveSpeed = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
-			if(moveSpeed > 0.8D)
-			{
-				motionX *= moveSpeed;
-				motionY *= moveSpeed;
-				motionZ *= moveSpeed;
-			}
-		}
-		else
-		{
-			//無人の箒は緩やかに減速・降下する（1.7.10 と同じ挙動。
-			//move() より前に移動量へ反映させること。後段でローカル変数に書くだけでは
-			//setDeltaMovement に届かず、下騎後も動き続けていた）
-			motionX *= 0.9D;
-			motionZ *= 0.9D;
-			if(this.getXRot() > 1.0F)
-			{
-				this.setXRot(this.getXRot() - 1.0F);
-			}
-			else if(this.getXRot() < -1.0F)
-			{
-				this.setXRot(this.getXRot() + 1.0F);
-			}
-			if(this.onGround())
-			{
-				//接地中は沈降分を一定値に固定する。
-				//TODO K3-review: 1.7.10 はここで motionY += 0.06D としていた（-0.03 の沈降を
-				//+0.06 で打ち消し、接地中は差の +0.03 が上向きに残る設計）。
-				//しかし 1.21.1 の Entity.move() は着地時に deltaMovement の垂直成分を 0 にしない
-				//（実測: 接地中も motionY ≈ -0.019 が残る）。そのため +0.06 をそのまま移植すると
-				//「+0.03 の浮き上がり → 落下 → 着地」の 2 tick 周期の上下動（実測 振幅 0.0141 ブロック、
-				//motionY は -0.022 / +0.007 を往復）が永久に続く。しかも deltaMovement が毎 tick
-				//変わるので運動量パケットと補間が絶えず発火し、静止した箒が細かく震えて見える。
-				//ここでは沈降分 -0.03 をそのまま維持する: 下行きが毎 tick 地面に阻まれるので位置は
-				//一切動かず（振幅 0）、摩擦後も値が常に一定（-0.0285）になるため運動量パケットも出ない。
-				//なお「垂直移動量が 0」にすると当たり判定が衝突を報告しなくなり onGround が
-				//false に落ちて次 tick で再び沈降する（1 tick おきの振動が残る）ので、0 ではなく
-				//-0.03 を維持するのが要点。
-				motionY = -0.03D;
+				//原作 486-487 / 507: 箒の向きは騎手に合わせる。
+				//pitch のクランプと減衰（原作 489-504）はローカル変数への代入で無効なため再現しない
+				//（BroomSteer のクラス javadoc §2.2 参照）。
+				this.setXRot(rider.getXRot());
+				this.setYRot(rider.getYRot() - 90.0F);
 			}
 			else
 			{
-				motionY -= 0.03D;
+				//原作 665-687: 無人の箒は緩やかに減速・降下する。
+				//move() より前に移動量へ反映させること（後段でローカル変数に書くだけでは
+				//setDeltaMovement に届かず、下騎後も動き続けていた）。
+				//接地中の垂直成分は主樹 I13 の修正（motionY を -0.03 に固定）を
+				//BroomSteer.stepEmpty 内で反映している（EMPTY_GROUNDED_VERTICAL の javadoc 参照）。
+				Vec3 next = BroomSteer.stepEmpty(this.getDeltaMovement(), this.onGround(), this.isInWater());
+				this.setDeltaMovement(next);
+				this.setXRot(BroomSteer.decayEmptyPitch(this.getXRot()));
 			}
-		}
 
-		if(this.isInWater())
+			this.move(MoverType.SELF, this.getDeltaMovement());
+
+			//原作 584-587: move() の後の減衰（常に実行される）
+			this.setDeltaMovement(BroomSteer.dampAfterMove(this.getDeltaMovement()));
+			this.setRot(this.getYRot(), this.getXRot());
+		}
+		else
 		{
-			motionX *= 0.5D;
-			motionY *= 0.5D;
-			motionZ *= 0.5D;
+			//非制御側は動かさない。位置は位置パケット（サーバー）または
+			//lerpTo（クライアント）で決まる。ここで積分すると二重積分になる。
+			this.setDeltaMovement(Vec3.ZERO);
 		}
-
-		this.setDeltaMovement(motionX, motionY, motionZ);
-		this.move(MoverType.SELF, this.getDeltaMovement());
-
-		{
-			motionX *= 0.9900000095367432D;
-			motionY *= 0.949999988079071D;
-			motionZ *= 0.9900000095367432D;
-		}
-
-		this.setDeltaMovement(motionX, motionY, motionZ);
-		this.setRot(this.getYRot(), this.getXRot());
 
 		if(!this.level().isClientSide)
 		{
@@ -306,6 +295,20 @@ public class EntityMarisaBroom extends Entity
 		}
 
 		this.isEmpty = this.getFirstPassenger() == null;
+	}
+
+	/**
+	 * 操舵入力ビットを設定する。制御側からのみ呼ばれる。
+	 */
+	public void setSteerMask(int mask)
+	{
+		this.steerMask = mask;
+	}
+
+	/** 操舵入力ビットを取得する（{@link BroomSteer#FORWARD} 等の OR）。 */
+	public int getSteerMask()
+	{
+		return this.steerMask;
 	}
 
 	/**

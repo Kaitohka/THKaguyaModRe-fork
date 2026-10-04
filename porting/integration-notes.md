@@ -34,7 +34,7 @@
 | P13 | 早苗符卡 Charge 守卫闭环 | agent-29 | ✅ 已落实并合并（库侧守卫+物品侧去重）。**更正**（charge-hint 批核实）：提示键 thKaguya.msg.sneScCharge 5 语言俱在，「键缺失」系事实错误；启用补丁已备（staging/charge-hint/），发布冻结未合并 |
 | P31 | D4 悔悟之棒组件化：ROD_OF_REMORSE 的 durability(2) 去留 | polish-trio | 去掉=无耐久语义正确但叠加上限 1→64；保留=占位延续。补丁已备（staging/polish-trio/d4/），下一窗口裁决 |
 | P32 | P10 御柱挖掘：字面「恒 3.0」vs 原作实机「クモの巣 3.0 / 其他 1.0」 | polish-trio | BreakSpeed 事件方案已备（staging/polish-trio/p10/），取值待裁决 |
-| P33 | broom-input 操舵设计：①旧版限速笔误（单键 0.2~0.5 巡航、全键发散）忠实保留 vs cap 修复（建议修复+记差异）②Phase 2 服务端镜像包是否随下个窗口 | broom-input | DESIGN.md 已定稿（staging/broom-input/），待裁决后实施 |
+| P33 | broom-input 操舵设计：①旧版限速笔误（单键 0.2~0.5 巡航、全键发散）忠实保留 vs cap 修复（建议修复+记差异）②Phase 2 服务端镜像包是否随下个窗口 | broom-input | **已裁决并合并**：①cap 修复（巡航恒 0.792，+10%，BroomSteer javadoc 记差异）②弃 Phase 2（零协议改动）；Phase1 已合并主树（89/89 + smoke PASS） |
 | P34 | charge-hint 启用方式：默认开启+actionBar（建议）vs 配置门控 | charge-hint | 补丁与文档同步清单已备（staging/charge-hint/PREP.md），下一窗口裁决；启用时同步改 USER_MIGRATION §3.4/§5#15/附录A#9/FAQ Q2 |
 | P35 | `DanmakuParams` int 字段无范围夹紧；`EntityDanmakuMob.dropShotItem` 等处 `form % 8` 负取模潜伏（当前调用点均正常量，不可达） | audit-common P1-1 | 下一窗口：DanmakuParams compact 构造器统一夹紧（单点覆盖所有写入路径） |
 | P36 | `EntitySpellCard.java:236` 无 null 检查调 useSpellCard（:122-141 允许其为 null）；`EntitySakuyaWatch:238`/`EntitySakuyaStopWatch:179` 解引用可能为 null 的 spellCard.user；**二轮补充**：`THSC_SatuzinDoll:90` 同族——客户端 EntitySpellCard.user 恒 null，现被同样不同步的 canMoveInTimeStop 短路挡住，一旦同步即变客户端每 tick NPE | audit-common P1-2/3 + 二轮 | 下一窗口统一修：改 `this.user.equals(spellCard.user)` 或加 null 守卫（3 处同型） |
@@ -121,6 +121,7 @@
 | FIX-3 统一修复（派发） | 3a（实体 P0×2+P46）与 3b（物品/菜单 P1×6）并行；分诊依据：audit-ai/audit-items/audit-net/audit-vanilla-mech 四报告 |
 | FIX-3b 物品菜单 P1 | 实修 3：ItemThirdEye 单例字段→即时 report（原作同式但为实害，修复并注释）；MiracleMalletMenu:147 补 .copy（结果槽共享实例，移植引入）；DanmakuLaserCraftingMenu shift 槽段 10/37/46→15/42/51（旧版 bug 修复并注释）。证伪 1：耐久 clamp 无需（1.21.1 setDamage 内置夹紧）。登记 1：SakuyaWatch 创造停止档=原作同式。P47 实核：原作 7 次上限+无补货 → 移植 12 次上限永久缺货=同款语义，代码不改、文档措辞已修正（P49 登记次数差） |
 | FIX-3a 实体 P0+P46 | 实修：①DanmakuCreeper 冷却窗内死亡优先短路（:174-179，原作同源 bug 按规则修复并注释）②Familiar/Phantom 补 max(size,1) + THFairy setPattern 统一收口（空表 return+clamp+兜底）③P46 补 4 处 getPickRadius（SanaeWind 1.0F/THShot=size/DivineSpirit/ShotMaterial 0.1F，对照原作 5 处无遗漏）。新增 DanmakuMobP0RegressionTest 2 例（含测试专用写入器取舍，已标注）；变异验证 2 改 2 红；71/71×3 连跑 |
+| broom-input Phase1 合并 | staging impl 全量落主树（BroomSteer+BroomSteerClient+EntityMarisaBroom 重构+THKaguyaClient 注册+11 例 BroomSteerTest）；I13/I15/I8/I9 逐条保全实证；cap 变异验证双红；**89/89 + smoke 双 PASS**；已知问题 #1 关闭（§5#1 改写为客户端权威注意事项） |
 
 ## 事故台账补记
 
@@ -152,6 +153,7 @@
 | 阶段5 后续（FIX-3a/3b 后） | GameTest 全量（+7 例：P0 回归 2 + fix3b 5） | **76/76 PASS** |
 | 阶段5 后续 | FIX-3 后最终全量 smoke | **SMOKE PASS**（R3 OK / 双端 0 相关 ERROR） |
 | 阶段5 后续（I15/I16 修复） | compile + GameTest（+核弹地形 2 例）+ smoke 双模式 | **78/78 PASS + SMOKE PASS**（diag-nuke 批） |
+| 阶段5 后续（broom Phase1 合并） | compile + GameTest（+操舵 11 例）+ smoke 双模式 | **89/89 PASS + SMOKE PASS**（合并批） |
 
 ## 代理协调文件
 

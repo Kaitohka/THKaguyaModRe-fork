@@ -27,10 +27,10 @@
 | 阶段 2 | NeoForge 1.21.1 工程骨架（ModDevGradle + 1.7.10 资源恢复） | ✅ 完成 | `phase2-skeleton.md` |
 | 阶段 3 | 核心注册迁移（126 物品 / 10 方块 / 2 标签页 / 110 配方 / 5 语言） | ✅ 完成 | `phase3-registration.md` |
 | 阶段 4 | 全量实体/渲染/物品/GUI/网络/数据合并 | ✅ 完成 | `phase4-execution-plan.md` + 台账批次状态板 |
-| 阶段 5 | 发布质量基建（GameTest / 冒烟 / 浸泡 / 三轮用户实测修复 / 发布文档） | 🏃 **收尾中** | `RELEASE_NOTES.md` + 台账回归闸门记录 |
+| 阶段 5 | 发布质量基建（GameTest / 冒烟 / 浸泡 / 四轮用户实测修复 / 发布文档） | ✅ **完成**（`8ce39ff`） | `RELEASE_NOTES.md` + 台账回归闸门记录 |
 
-阶段 5 的实际形态：**以用户实测反馈驱动的迭代修复**（事故台账 I1-I19），期间补齐了 GameTest 套件、
-双模式冒烟、浸泡闸门与玩家迁移文档。发布物尚未正式打包（见 §3）。
+阶段 5 的实际形态：**以用户实测反馈驱动的迭代修复**（事故台账 I1-I19），期间补齐了 GameTest 套件
+（89 → **115 例**）、双模式冒烟、浸泡闸门与玩家迁移文档。发布物已打包（见 §1.3）。
 
 ### 1.2 git 基线与快照链
 
@@ -47,31 +47,35 @@ dfda417  phase4 complete: perf fixes + migration guide + all green
 d0dcf87  phase5 follow-up 2: audit wave 3 + FIX-3 (2 P0 + 6 P1) + 76 GameTests
 73b247b  phase5 follow-up 3: broom model spin (I15) + nuclear terrain destruction (I16)
 1d75d9e  feat: broom manual steering (Phase1 merge) — W/S/A/D/space control
-ccd558b  docs: user playtest sign-off — broom steering + nuke terrain confirmed   ← **当前 HEAD**
+ccd558b  docs: user playtest sign-off — broom steering + nuke terrain confirmed
+8ce39ff  phase5 final wave: I17-I19 fixes + audit wave 4 batches + HANDOFF.md   ← **当前 HEAD**
 ```
 
-共 33 个提交，**无 tag**。`git status` 有约 48 项未提交改动 —— **这是当前在途批次的正常状态，不是脏树事故**：
+**终态：34 个提交，无 tag，工作区干净（`git status` 零改动），在途批次零。**
+最后一个提交 `8ce39ff` 一次性落地了此前在途的全部内容：I17 银刀朝向、I18 群系修饰器路径+语法
+（含生成器修复与验证器三重闸门）、I19 NBT 缺键归零同型普查、刀弹 3D 接线、替身人偶还原链、
+P35/P36 硬化、89→115 测试扩充，以及本文件。
 
-- 已修待提交：`I18` 群系修饰器路径修复（14 个 JSON 从 `data/thkaguyamod/biome_modifier/`
-  迁到 `data/thkaguyamod/neoforge/biome_modifier/`，旧路径删除）、`I19` 同型普查
-  （5 个实体 `readAdditionalSaveData` 补 `contains` 守卫）、`I17` 银刀朝向。
-- 新增未跟踪：4 个测试类（`BiomeSpawnGateTest` / `FairySummonFireTest` / `NbtRoundTripZeroKeyTest` /
-  `SilverKnifeOrientationTest`）+ 多个 `porting/staging/<批次>/` 报告目录。
-
-> **接手第一件事**：`git status` 逐项确认后提交（在途批次全部落盘即可一次提交），使快照链重新连续。
+> **接手第一件事**：无需清理，直接跑一遍 §4.3 的闸门命令确认环境可用即可开工。
 
 ### 1.3 质量闸门现状
 
-| 闸门 | 命令 | 当前状态（2026-10-04 实测/台账） |
+| 闸门 | 命令 | 当前状态（2026-10-04 终态，台账 + 实测） |
 |---|---|---|
 | 静态闸 R3（common 不得 import `net.minecraft.client`） | `smoke_test.sh` 步骤 [0] | PASS |
 | 编译 | `./gradlew compileJava` | 0 错 |
-| GameTest | `./gradlew runGameTestServer` | 台账记录 **89/89 PASS**（broom Phase1 合并批）。主树现有 **28 个测试类 / 105 个 `@GameTest`**，其中 4 个类（`BiomeSpawnGateTest` / `FairySummonFireTest` / `NbtRoundTripZeroKeyTest` / `SilverKnifeOrientationTest`，共 16 例）**尚未合并进基线提交**（`git status` 未跟踪）→ 提交后预期 **105/105** |
-| 双模式冒烟 | `bash porting/tools/smoke_test.sh` | 台账最近一次 **SMOKE PASS**（R3 OK / 客户端到主菜单 / 专用服务端启动 / 双端 0 相关 ERROR、0 配方错误、0 模型错误） |
-| 30 分钟浸泡 | `bash porting/tools/soak_test.sh 30` | 第三轮（soak-v2 增强闸门）**PASS**：36 实体存活回执 36/36、summon 失败 0、异常 0、IOOB 0、0 OOM、0 "Can't keep up" |
-| 数据资产校验 | `PYTHONIOENCODING=utf-8 python porting/tools/validate_phase4_data.py` | **RESULT: ALL CHECKS PASS**（本次实测；14 个群系修饰器与主树逐字节一致） |
-| 语言文件校验 | `python porting/tools/check_lang.py` | **OK**（本次实测；274 键 × 5 语言键集一致；46 实体 / 126 物品 / 10 方块 / 35 符卡全覆盖） |
-| jar 内容核验 | 人工/脚本 | 842 文件（110 配方 / 14 群系修饰器 / GLM / 146 模型 / 5 语言） |
+| GameTest | `./gradlew runGameTestServer` | **115/115 PASS**（**8+ 次连跑稳定，偶发已根除**）。主树 **30 个测试类 / 115 个 `@GameTest`** |
+| 双模式冒烟 | `bash porting/tools/smoke_test.sh` | **SMOKE PASS**（R3 OK / 客户端到主菜单 / 专用服务端启动 / 双端 0 相关 ERROR、0 配方错误、0 模型错误） |
+| 30 分钟浸泡 | `bash porting/tools/soak_test.sh 30` | **×3 PASS**（soak-v2 增强闸门）：36 实体存活回执 36/36、summon 失败 0、异常 0、IOOB 0、0 OOM、0 "Can't keep up" |
+| 数据资产校验 | `PYTHONIOENCODING=utf-8 python porting/tools/validate_phase4_data.py` | **RESULT: ALL CHECKS PASS**（含生成器↔主树逐字节自检；I18 后已加固为三重闸门） |
+| 语言文件校验 | `python porting/tools/check_lang.py` | **OK**（274 键 × 5 语言键集一致；46 实体 / 126 物品 / 10 方块 / 35 符卡全覆盖） |
+| 发布 jar | `porting/neoforge-1.21.1/build/libs/thkaguyamod-2.90-1.21.1.jar` | **860 文件**（1.85 MB；110 配方 / 14 群系修饰器 / GLM / 146 模型 / 5 语言） |
+
+**用户实测验收状态**
+
+| 已验收通过 | 待用户复测 |
+|---|---|
+| 弹幕/激光/符卡对怪物有伤害（I8）、扫帚可破坏与下骑停止（I9）、扫帚操舵与不抖动（I13/P33）、人物不再自动趴下（I14）、扫帚模型不再乱转（I15）、核弹破坏地形（I16，有意偏离） | 野外妖精自然生成（**I18**）、投掷小刀朝向（**I17**）、魔人镜冠不再崩溃（**I10**）、刀弹 3D 外观（§5#4） |
 
 > ⚠️ **闸门盲区教训（P39）**：数据包 `/summon` 失败**不走 `[ERROR]` 级**，所以"I11 妖精无法生成"
 > 在连续两轮浸泡里都是"名单全召成功"的假绿。soak-v2 已把 `Failed to summon`/异常/IOOB 纳入 FAIL 判定
@@ -97,9 +101,9 @@ ccd558b  docs: user playtest sign-off — broom steering + nuke terrain confirme
 | I14 | 右键物品时人物自动趴下（原版自动匍匐把弹幕碰撞盒算入站立空间） | ✅ 5 实体退出推挤碰撞 |
 | I15 | 扫帚飞行模型整圈乱转（角度不回卷 + 渲染 lerp 走完 360° 整数倍） | ✅ 改 `Mth.rotLerp` |
 | I16 | 控制棒（核弹）不破坏地形（原作从未接线，属设计意图未实现） | ✅ 按意图实现（**有意偏离**，配置门控） |
-| I17 | 银刀投掷朝向恒 180°（`sendsVelocityUpdates` 移植丢失 → 客户端 motion 恒 0） | ✅ 保留同步 yaw |
-| I18 | **野外妖精完全不自然生成**（群系修饰器 JSON 少一层 `neoforge/` + `biomes` 写法不合 HolderSetCodec，双错全程静默） | 🏃 修复中（未提交） |
-| I19 | `/summon` 妖精弹幕卡体内且射速异常（`getShort/getFloat` 缺键返回 0 覆盖构造器值） | ✅ 修复 + 同型普查在途 |
+| I17 | 银刀投掷朝向恒 180°（`sendsVelocityUpdates` 移植丢失 → 客户端 motion 恒 0） | ✅ 修复（保留同步 yaw；**待用户复测**） |
+| I18 | **野外妖精完全不自然生成**（群系修饰器 JSON 少一层 `neoforge/` + `biomes` 写法不合 HolderSetCodec，双错全程静默） | ✅ 修复 + 生成器同步修 + 验证器三重闸门（**待用户复测**） |
+| I19 | `/summon` 妖精弹幕卡体内且射速异常（`getShort/getFloat` 缺键返回 0 覆盖构造器值） | ✅ 修复 + 同型普查（6 实体 19 处 `contains` 守卫） |
 
 **规律（对新手最重要的一条）**：这 19 起事故里，**超过一半是"移植丢了一行调用/一个语义"，而不是算法写错**。
 `canBeCollidedWith` 三职、样式表注册调用、`sendsVelocityUpdates`、群系修饰器目录层级都属于这一类。
@@ -111,30 +115,30 @@ ccd558b  docs: user playtest sign-off — broom steering + nuke terrain confirme
 
 ### 2.1 源码总览
 
-根包 `thkaguyamod`（277 个 Java 文件，约 49,900 行）：
+根包 `thkaguyamod`（279 个 Java 文件，约 50,700 行）：
 
 ```
 porting/neoforge-1.21.1/src/main/java/thkaguyamod/
 ├── THKaguyaMod.java          @Mod 主入口（122 行）
-├── danmaku/      7 文件  2,851 行   弹幕核心算法与数据
-├── entity/      50 文件 15,939 行   实体（4 个子包）
-├── item/        49 文件  5,489 行   物品行为
-├── spellcard/   37 文件  3,855 行   35 张符卡 + 基类
+├── danmaku/      7 文件  2,895 行   弹幕核心算法与数据
+├── entity/      50 文件 15,950 行   实体（4 个子包）
+├── item/        49 文件  5,512 行   物品行为
+├── spellcard/   37 文件  3,867 行   35 张符卡 + 基类
 ├── client/      73 文件 11,294 行   渲染/模型/输入/界面（纯客户端）
 ├── menu/         8 文件  1,809 行   4 个容器菜单 + 4 个槽位
 ├── network/      2 文件    126 行   2 个自定义包
 ├── registry/     3 文件    381 行   样式表/特殊弹/符卡注册表
-├── init/        14 文件  1,614 行   全部 DeferredRegister 与数据注册
+├── init/        14 文件  1,638 行   全部 DeferredRegister 与数据注册
 ├── config/       1 文件    141 行   ModConfig（SERVER 侧 TOML）
 ├── block/        2 文件            工作台 / 小神灵方块
 ├── blockentity/  1 文件            DivineSpirit 方块实体（空壳）
 ├── event/        1 文件            玩家死亡（残机复活）
-└── test/        28 文件  5,416 行   105 个 GameTest
+└── test/        30 文件  5,965 行   115 个 GameTest
 ```
 
 ### 2.2 逐包职责
 
-**`danmaku/`（弹幕核心，2,851 行）**
+**`danmaku/`（弹幕核心，2,895 行）**
 整个模组的算法心脏，与 1.7.10 同名类一一对应。
 
 | 类 | 行数 | 职责 |
@@ -143,7 +147,7 @@ porting/neoforge-1.21.1/src/main/java/thkaguyamod/
 | `THKaguyaLib.java` | 516 | 高阶库：符卡宣言校验（`checkSpellCardDeclaration`）、`itemEffectFollowUser`、特殊弹派发 |
 | `DanmakuConstants.java` | — | 形状/颜色/难度/反弹（`BOUND01`）/激光类型常量。1.7.10 里 `THShotLib extends DanmakuConstants`，移植保留该继承 |
 | `ShotData.java` / `LaserData.java` | — | 弹/激光参数 record（尺寸、伤害、寿命、重力、特殊 ID） |
-| `DanmakuParams.java` | — | 弹物品的 `DataComponentType` 载荷：`(number, form, speed, gravity, special, color, infinity)`，含 `CODEC` + `STREAM_CODEC` |
+| `DanmakuParams.java` | — | 弹物品的 `DataComponentType` 载荷：`(number, form, speed, gravity, special, color, infinity)`，含 `CODEC` + `STREAM_CODEC`；**compact 构造器统一夹紧各字段（P35 修复点）** |
 | `ISpecialShot.java` | — | 特殊弹接口（配合 `SpecialShotRegistry` 做无反射派发） |
 
 **`entity/shot/`（10 类，3,896 行）** — 弹幕/激光实体。
@@ -172,14 +176,14 @@ porting/neoforge-1.21.1/src/main/java/thkaguyamod/
 `EntityMiracleCircle`、`EntityHakureiShield`、`EntityHakurouReflecter`、`EntityAjaRedStoneEffect`、
 `EntityCirnoIceBox`。
 
-**`item/`（49 类，5,489 行）** — 物品行为。三类：
+**`item/`（49 类，5,512 行）** — 物品行为。三类：
 - 弹幕物品：`ItemTHShot`（325 行，19 弹形共用，持 `DANMAKU` 组件）、`ItemTHLaser`、`ItemShotMaterial`。
 - 符卡物品：`ItemTHSpellCard`（35 张符卡共用，构造参数为符卡编号）。
 - 行为物品：约 40 个（`ItemUchide` 万宝槌、`ItemSpearTheGungnir`、`ItemMikoSword`、`ItemThirdEye`、
   `ItemSakuyaWatch`、`ItemGapFoldingUmbrella`、`ItemBloodthirstyOnmyoudama` …）。多数含
   `// TODO K3-review` 标注的"降级/外部依赖删除"说明。
 
-**`spellcard/`（37 类，3,855 行）** — `THSpellCard`（597 行，符卡基类，弹幕脚本）、
+**`spellcard/`（37 类，3,867 行）** — `THSpellCard`（597 行，符卡基类，弹幕脚本）、
 `EntitySpellCard`（符卡实体/生命周期）、`SpellCardRegistry` 在 `registry/`，
 其余 35 个 `THSC_*` 为具体符卡（每张一个类）。
 
@@ -225,11 +229,14 @@ porting/neoforge-1.21.1/src/main/java/thkaguyamod/
 **`block/` + `blockentity/`** — `DanmakuCraftingTableBlock`（一个类，`laser` 布尔区分两种工作台）、
 `DivineSpiritBlock`、`DivineSpiritBlockEntity`（1.7.10 为空壳，保持最小实现）。
 
-**`test/`（28 类，105 个 `@GameTest`）** — 全部用 `@GameTestHolder(THKaguyaMod.MOD_ID)` +
+**`test/`（30 类，115 个 `@GameTest`）** — 全部用 `@GameTestHolder(THKaguyaMod.MOD_ID)` +
 `@PrefixGameTestTemplate(false)` + `@GameTest(template = "empty")`；模板是
 `src/main/resources/data/thkaguyamod/structure/empty.nbt`（7×7×7 空结构）。
-覆盖：注册完整性、弹幕生成/命中/伤害路径、组件与参数编解码边界、NBT 往返、符卡宣言、
-扫帚物理与操舵、姿势回归、群系生成表、残机复活。**新增测试时照抄 `DanmakuSpawnTest` 的写法**。
+覆盖：注册完整性、弹幕生成/命中/伤害路径（4 条）、组件与参数编解码边界（含 `DanmakuParams` 夹紧）、
+NBT 往返与缺键归零、符卡宣言、扫帚物理与操舵、姿势回归、群系生成闸门、残机复活、
+人偶还原、银刀朝向、核弹地形。
+**新增测试时照抄 `DanmakuSpawnTest` 的写法**；注意测试间会互相干扰（结构坐标/世界状态），
+`8ce39ff` 已把偶发红根因定位并消除——**新用例不要依赖执行顺序**。
 
 ### 2.3 resources 资产布局
 
@@ -272,21 +279,22 @@ porting/neoforge-1.21.1/src/main/resources/
 
 ## 3. 待办事项与已知问题
 
-> **完整台账见 `porting/integration-notes.md`**（P1-P51 + I1-I19）。本节只列**未关闭**项。
-> 已关闭（✅）的 P 项：P8、P13、P23、P30、P33、P41、P44、P40（已固化为移植规则）。
+> **完整台账见 `porting/integration-notes.md`**（P1-P53 + I1-I19）。本节只列**未关闭**项。
+> 已关闭（✅）的 P 项：P8、P13、P23、P30、P33、P40（已固化为移植规则）、P41、P44、**P52**（B1 已实现复核通过）。
 > 玩家可见的问题另有一份面向玩家的表述：`USER_MIGRATION.md` §5（22 条）+ 附录 A（21 条待发布方确认）。
+>
+> **终态提示**：全部在途批次已合并进 `8ce39ff`，**staging 里剩余的都是"已交付但未合并"的可选补丁**（见 §3.1）。
 
-### 3.1 staging 已就绪、等待合并的批次
+### 3.1 staging 已就绪、等待合并的批次（均为可选，非阻塞）
 
-| 批次 | 位置 | 内容 | 阻塞原因 |
+| 批次 | 位置 | 内容 | 待办 |
 |---|---|---|---|
-| **D4** 悔悟之棒组件化 | `porting/staging/polish-trio/d4/` | A 变体（去掉 `durability(2)`，等价 1.7.10 `setMaxDamage(0)`）/ B 变体（保留占位）仅 1 行之差 | 需裁决 A/B（P31）；发布冻结 |
-| **P10** 御柱挖掘速度 | `porting/staging/polish-trio/p10/` | A 变体（恒 3.0，`javap` 证实是原作字面值）/ B 变体（按 `hasCorrectToolForDrops` 分岐，逼近原作实机表现） | 需裁决 A/B（P32）；发布冻结 |
-| **P15** 玉枝充能图标 / 折伞染色 | `porting/staging/polish-trio/` | 模型 JSON `ItemProperties` 覆盖层，`MERGE-READY`，与 I8/I9 零交集 | 需裁决；发布冻结 |
-| **charge-hint** 早苗充能提示 | `porting/staging/charge-hint/` | `THKaguyaLib:199` 的静默失败改为 actionBar 提示（键 `thKaguya.msg.sneScCharge` **5 语言已存在**） | 需裁决"默认开启 vs 配置门控"（P34）；启用时需同步改 `USER_MIGRATION.md` §3.4/§5#15/附录A#9/FAQ Q2 |
-| **broom-input Phase 2** | `porting/staging/broom-input/` | 服务端镜像包（Phase 1 已合并主树，Phase 2 已裁决**放弃**——零协议改动更优） | 已裁决放弃，无需行动 |
-
-> 四个 staging 批次的共同状态：**发布冻结期内未合并**。若要继续开发，先逐个裁决再合并。
+| **D4** 悔悟之棒组件化 | `porting/staging/polish-trio/d4/` | A 变体（去掉 `durability(2)`，等价 1.7.10 `setMaxDamage(0)`）/ B 变体（保留占位）仅 1 行之差 | 裁决 A/B（P31） |
+| **P10** 御柱挖掘速度 | `porting/staging/polish-trio/p10/` | A 变体（恒 3.0，`javap` 证实是原作字面值）/ B 变体（按 `hasCorrectToolForDrops` 分岐，逼近原作实机表现） | 裁决 A/B（P32） |
+| **P15** 玉枝充能图标 / 折伞染色 | `porting/staging/polish-trio/` | 模型 JSON `ItemProperties` 覆盖层，`MERGE-READY`，与 I8/I9 零交集 | 裁决是否做（纯外观） |
+| **charge-hint** 早苗充能提示 | `porting/staging/charge-hint/` | `THKaguyaLib:199` 的静默失败改为 actionBar 提示（键 `thKaguya.msg.sneScCharge` **5 语言已存在**） | 裁决"默认开启 vs 配置门控"（P34）；启用时同步改 `USER_MIGRATION.md` §3.4/§5#15/附录A#9/FAQ Q2 |
+| **P29 / A7** 渲染 fixed buffer | `porting/staging/perf-eval/` | 200 弹/帧 draw call 398→14（-96.5%）、按需内存 ≈21KiB、`RegisterRenderBuffersEvent` 一行接线（旧"与 THKaguyaClient 冲突"的顾虑已实测排除） | **建议下一窗口实施**；硬约束=复用 `DanmakuRenderTypes` 单例 |
+| **broom-input Phase 2** | `porting/staging/broom-input/` | 服务端镜像包 | **已裁决放弃**（Phase 1 已合并，零协议改动更优），无需行动 |
 
 ### 3.2 代码侧未关闭项（按优先级）
 
@@ -298,24 +306,27 @@ porting/neoforge-1.21.1/src/main/resources/
 | **P42** | 伤害路径回归测试第三批：4 处 I8 修复点（`EntityTHSetLaser` / `EntityNuclearShot` / `EntityTHHenyoriLaser` / `EntityDanmakuMob` 接触扫描） | **已覆盖**：`SetLaserDamagePathTest`(1) + `NuclearShotDamagePathTest`(2) + `DanmakuMobContactDamageTest`(2) 已合并；`EntityTHHenyoriLaser` 因**原作未注册**（运行时无法实例化）而用例删除，其 `:126` 修复点**不覆盖**——登记为已知缺口 |
 | **P49** | 商店交易次数：原作 = 1.7.10 原版默认 **7 次**，移植版 = **12 次**（`MerchantOffer` 构造参数） | 裁决"对齐 7（严格忠实）"或"保留 12"。两版**都不补货**（P47 已实核：`canRestock()` 取接口默认 false，全树无 `resetUses`），`USER_MIGRATION.md` §5#22 措辞已按"永久缺货"修正 |
 | **P46** | 1.7.10 `getCollisionBorderSize` 身兼"准星加粗"，`EntitySanaeWind` 风弹 1.0 格加粗丢失 → 打拳反弹几乎点不中 | **已修**（FIX-3a）：4 处 `getPickRadius`（SanaeWind 1.0F / THShot = size / DivineSpirit / ShotMaterial 0.1F），对照原作 5 处无遗漏 |
-| **P36** | `EntitySpellCard.java:236` 无 null 检查调 `useSpellCard`（`:122-141` 允许其为 null）；`EntitySakuyaWatch:238` / `EntitySakuyaStopWatch:179` 解引用可能为 null 的 `spellCard.user`；二轮补充 `THSC_SatuzinDoll:90` 同族 | `staging/fix-p35-36/` 已派批（直接改主树），**接手时先看该报告是否已落盘完成** |
-| **P35** | `DanmakuParams` int 字段无范围夹紧；`dropShotItem` 等处 `form % 8` 负取模潜伏（当前调用点均正常量，不可达） | 同上批次处理：在 `DanmakuParams` compact 构造器统一夹紧（单点覆盖所有写入路径） |
-| **P50** | `EntityCirnoIceBox` 的 `width`/`height` 未持久化（重载后回默认 0.5F，尺寸/消失时机漂移） | `audit-nbt-zero` 报告 §4；下一窗口补 NBT 读写 |
-| **P51** | `EntitySukima` 的 `warp`/`warpPos*`/`warpAngle`/`count`/`pattern`/`userEntity` 未持久化（重载后隙间传送失效） | **原作同样不持久化**（登记为原作同式）；若要修需成组补 NBT |
+| **P36** | `EntitySpellCard.java:236` 无 null 检查调 `useSpellCard`；`EntitySakuyaWatch:238` / `EntitySakuyaStopWatch:179` 解引用可能为 null 的 `spellCard.user`；`THSC_SatuzinDoll:90` 同族 | **已修**（`8ce39ff`）：4 处 null 守卫 |
+| **P35** | `DanmakuParams` int 字段无范围夹紧；`dropShotItem` 等处 `form % 8` 负取模潜伏 | **已修**（`8ce39ff`）：`DanmakuParams` 补 compact 构造器统一夹紧（单点覆盖所有写入路径）+ `DanmakuParamsClampTest`(5 例) |
+| **P50** | `EntityCirnoIceBox` 的 `width`/`height` 未持久化（重载后回默认 0.5F，尺寸/消失时机漂移） | **原作同缺** → 登记为原作设计；如需修则下一窗口补 NBT 键 |
+| **P51** | `EntitySukima` 的 `warp`/`warpPos*`/`warpAngle`/`count`/`pattern`/`userEntity` 未持久化（重载后隙间传送失效） | **原作同样不写** → 登记为原作设计；若要修需成组补 NBT |
+| **P53** | `ItemBloodthirstyOnmyoudama` / `ItemGapFoldingUmbrella` 用 `getDamageValue() >= getMaxDamage()` 判定耗尽，与 1.21.1 `hurtAndBreak` 的 shrink 语义不符（用尽即 shrink，事后读不到） | 下一窗口统一改 `isEmpty()` 判定（参照 `ItemCursedDecoyDoll:74` 的写法） |
 | **P48** | 核爆掉落实率与 1.21.1 `blockExplosionDropDecay` 语义差；`USER_MIGRATION.md` 相应措辞可能被误读为"含核弹" | 下一窗口修文档措辞（属文档，不是代码） |
 
 **低优先 / 外观与体验**
 
 | P | 问题 |
 |---|---|
-| **P29**（= 遗留评估项 **A7**） | 渲染 A7 fixed buffer 延期：收益需实测，且与 `THKaguyaClient` 有冲突面；收尾批再做 |
-| **B1**（agent-33 遗留） | `homing()` 追踪节流未做：当前每 tick 24 格全实体扫描 + 逐候选射线。旧设计，延期评估 |
-| **P2** | `RenderTHShot` 的 FORM_KNIFE 分支每帧 `new ModelSilverKnife`（R5 性能待办）——同时对应 §5#4"小刀弹用贴图弹代替 3D 小刀" |
-| **P15 / P16 / P18 / P25 / P26 / P27 / P37 / P38** | 外观与既有怪癖：玉枝充能图标、折伞染色、`RenderSukima` 混合模式近似值（`SRC_ALPHA,ONE` 代替 `SRC_ALPHA,SRC_ALPHA`）、商店箭头贴图缺失、模型包归属、**旧版模型度/弧度混用 bug 3 处原样保留**、`THSC_Fafurotskies_no_Kiseki` 把 `shotLimitSpeed` 当模式编号（原作同）、`RenderTHBoss` HP 条 UV 为 NaN（原作同） |
+| **P29**（= 遗留评估项 **A7**） | 渲染 fixed buffer 延期。**裁决依据已备**（`staging/perf-eval/`）：200 弹/帧 draw call 398→14（-96.5%）、按需内存 ≈21KiB、旧冲突顾虑已实测排除 → **建议下一窗口实施** |
+| **P52**（= 遗留评估项 **B1**） | `homing()` 追踪节流 **已实现且实测复核通过**（`EntityTHShot:81` `HOMING_TARGET_INTERVAL=4` 目标缓存 + 仅最良候选 DDA；100 弹 82µs→21µs）——台账旧记录"B1 未做"作废 |
+| **P2** | `RenderTHShot` 的 FORM_KNIFE 分支每帧 `new ModelSilverKnife`（R5 性能待办）——**已修**（构造器 bake 一次复用）；§5#4 的 3D 外观待用户实机点检 |
+| **P15 / P16 / P18 / P25 / P26 / P27 / P37** | 外观与既有怪癖：玉枝充能图标、折伞染色、`RenderSukima` 混合模式近似值（`SRC_ALPHA,ONE` 代替 `SRC_ALPHA,SRC_ALPHA`）、商店箭头贴图缺失、模型包归属、**旧版模型度/弧度混用 bug 3 处原样保留**、`THSC_Fafurotskies_no_Kiseki` 把 `shotLimitSpeed` 当模式编号（原作同） |
+| **P38** | `RenderTHBoss` HP 条 UV 为 NaN（原作同）——**已硬化**（`max(getMaxHealth(),1F)`） |
 | **P6** | 火鼠裘无限耐久是否真的无限（`ArmorItem` 构造器是否会强制材料耐久）——需游戏内核对 |
 | **P20 / P21 / P22** | GLM 地牢注入 0.77%（原设计意图 5%）、`#c:is_snowy` 群系范围略宽、原作 `registerChestItem` 是空方法（地牢战利品从未生效，GLM 实现的是设计意图）——均为**有意的文档化偏差** |
 | **P43** | 游戏内教程/指引：原作即无，`USER_MIGRATION.md` §6 FAQ 即手册；若做指引书/Patchouli 手册属**超出移植范围的新内容**，需单独立项 |
-| **P11 / P14** | 诅咒替身人偶的 `ORIGINAL_ITEM` 组件（还原原素材）未加；发射器弹幕发射者仍用 ArmorStand 占位（原 `EntityFamiliar`，玩家不可见、不影响弹道） |
+| **P11** | 诅咒替身人偶的 `ORIGINAL_ITEM` 组件 —— **已实装**（`8ce39ff`，还原链可用）；`USER_MIGRATION.md` §5#8 已更新为"机制已修复，仅缺获取途径" |
+| **P14** | 发射器弹幕发射者仍用 ArmorStand 占位（原 `EntityFamiliar`，玩家不可见、不影响弹道） |
 
 ### 3.3 发布前必须由发布方拍板的事项
 
@@ -329,21 +340,23 @@ porting/neoforge-1.21.1/src/main/resources/
 4 类音效原版占位、无刷怪蛋、商店预览硬编码、隙间/玉枝图标不变等），全部**不致命**，
 但接手后若要改代码，改完必须**同步更新 §5 与附录 A 的对应条目**。
 
-### 3.4 在途批次（接手前先确认是否已完成）
+### 3.4 已完成批次（留档索引，供追溯根因）
 
-`git status` 里未提交的改动对应以下批次，**它们的报告可能仍在写入中**：
+这些批次的代码**已全部合并进 `8ce39ff`**，报告留在 `staging/` 下作为证据链。排查同类问题时先读对应报告：
 
 | 批次 | 位置 | 内容 |
 |---|---|---|
 | `diag-spawn` | `staging/diag-spawn/REPORT.md` + `fix/` | **I18** 群系修饰器路径修复（14 JSON 迁到 `neoforge/` 子目录，`biomes` 改 HolderSet 写法）+ `BiomeSpawnGateTest` |
-| `audit-nbt-zero` | `staging/audit-nbt-zero/REPORT.md` | **I19 同型普查**：27 类全查，实害 5 处已修（Sukima 颜色、YuukaParasol 耐久、CirnoIceBox 计数、MiniHakkero 三字段、Hisou 三字段）+ `NbtRoundTripZeroKeyTest`(8 例)；存疑 2 处（P50/P51） |
-| `fix-p35-36` | `staging/fix-p35-36/REPORT.md` | P35 `DanmakuParams` 夹紧 + P36 `spellCard.user` null 守卫 |
-| `diag-knife` / `fix-knife-model` | `staging/diag-knife/`、`staging/fix-knife-model/` | **I17** 银刀朝向修复 + `SilverKnifeOrientationTest` |
+| `audit-nbt-zero` | `staging/audit-nbt-zero/REPORT.md` | **I19 同型普查**：27 类全查，实害 5 处已修（Sukima 颜色、YuukaParasol 耐久、CirnoIceBox 计数、MiniHakkero 三字段、Hisou 三字段）+ `NbtRoundTripZeroKeyTest`(8 例)；存疑 2 处 → P50/P51 |
+| `fix-p35-36` | `staging/fix-p35-36/REPORT.md` | P35 `DanmakuParams` 夹紧 + P36 `spellCard.user` null 守卫（4 处） |
+| `diag-knife` / `fix-knife-model` | `staging/diag-knife/`、`staging/fix-knife-model/` | **I17** 银刀朝向修复 + `SilverKnifeOrientationTest`；刀弹 3D 接线（§5#4） |
 | `diag-fairy-fire` | `staging/diag-fairy-fire/REPORT.md` | **I19** 妖精弹幕卡体内修复 + `FairySummonFireTest`(4 例) |
-| `fix-3a` / `fix3b-tests` | `staging/fix-3a/`、`staging/fix3b-tests/` | FIX-3 实体/物品修复报告（代码**已落主树**，报告为记录） |
+| `fix-decoy-restore` | `staging/fix-decoy-restore/` | 替身人偶还原链（`ORIGINAL_ITEM` 组件，§5#8 机制实装） |
+| `perf-eval` | `staging/perf-eval/` | **P52** B1 追踪节流实现与实测；**P29** A7 fixed buffer 的裁决依据（建议下一窗口实施） |
+| `fix-3a` / `fix3b-tests` | `staging/fix-3a/`、`staging/fix3b-tests/` | FIX-3 实体/物品修复报告 |
+| `audit-*`（common / render / net / ai / items / vanilla-mech） | `staging/audit-*/REPORT.md` | 五轮深读普查报告，是 P 项与 I 项的原始证据来源 |
 
-> **接手动作**：逐个打开报告确认"验证"节是否已填完（未填完说明该批被中断），
-> 然后跑一次 `compileJava` + `runGameTestServer` + `smoke_test.sh`，全绿再提交。
+> **接手动作**：无需清理。直接跑一次 `compileJava` → `runGameTestServer` → `smoke_test.sh` 确认环境可用。
 
 ---
 
@@ -549,10 +562,11 @@ powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \
 | **扫帚操舵客户端权威** | 移动计算在客户端（与原版船同级），非旧版的"视线前进" | `USER_MIGRATION.md` §5#1 | 中（需 Phase 2 服务端镜像包，已裁决放弃） |
 | **万宝槌地牢战利品**（P20/P22） | 原作 `registerChestItem` 是**空方法**（地牢战利品从未生效）→ GLM 实现设计意图，概率 0.77%（原设计 5%） | 台账 P20/P22；`USER_MIGRATION.md` §5#18 | 高（数据 JSON） |
 | **万宝槌 GUI 入口**（P8） | 原作潜行右键开 GUI 的代码被**注释掉**（死代码）→ 移植恢复该入口 | `ItemUchide` javadoc | 高（删 4 行） |
-| **万宝槌外部 MOD 配方删除**（P8） | `item.alicedoll.bare`（外部 MOD）无 1.21.1 版 → 整条转换删除；`roukanSenpuuzin` 用 `ROUKANKEN` 占位 | `USER_MIGRATION.md` §5#8/#9 | — |
+| **万宝槌外部 MOD 配方删除**（P8） | `item.alicedoll.bare`（外部 MOD）无 1.21.1 版 → 整条转换删除；`roukanSenpuuzin` 用 `ROUKANKEN` 占位。**替身人偶的"还原成原素材"链已实装**（`ORIGINAL_ITEM` 组件，`8ce39ff`） | `USER_MIGRATION.md` §5#8/#9 | — |
 | **`recipelessItemsRecipe` 的 8 条配方** | 原作默认关闭 → 转成常规 `_bonus` 配方（保证物品可获取） | `phase3-registration.md` | 高（JSON） |
 | **四类音效** | 原作 `.ogg` 缺失 → 用原版音效占位 | `USER_MIGRATION.md` §5#17 | — |
-| **保留的原作 bug（不修）** | 模型度/弧度混用 3 处（P27）、`THSC_Fafurotskies_no_Kiseki` 参数误用（P37）、`RenderTHBoss` HP 条 UV NaN（P38）、隙间 `warp*` 不持久化（P51） | 各 P 项 | — |
+| **保留的原作 bug（不修）** | 模型度/弧度混用 3 处（P27）、`THSC_Fafurotskies_no_Kiseki` 参数误用（P37）、隙间 `warp*` 不持久化（P51）、`EntityCirnoIceBox` 尺寸不持久化（P50） | 各 P 项 | — |
+| **已硬化的原作 bug（修复）** | `RenderTHBoss` HP 条 UV NaN → `max(getMaxHealth(),1F)`（P38）；`ItemThirdEye` 单例字段多玩家串话 → 无状态即时显示；`DanmakuLaserCraftingMenu` shift 槽段错位 → 按真实槽数修正 | FIX-3 / `8ce39ff` | — |
 
 ### 5.5 子代理编排协议要点（`ORCHESTRATION.md`）
 
@@ -573,35 +587,42 @@ powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \
 ### 5.6 接手后的建议动作顺序
 
 1. 读 `porting/integration-notes.md`（台账，唯一事实源）+ 本文。
-2. `git status` 确认在途批次的报告是否写完（见 §3.4），跑一次
-   `compileJava` → `runGameTestServer` → `smoke_test.sh`，全绿后提交，让快照链重新连续。
-3. 从 §3.2 的 P45（挤压致死）与 §3.1 的四个 staging 裁决点入手 —— 这两处最影响玩家体验。
-4. 任何代码改动：先看 §5.3 的五条硬规则，改完跑 §4.3 的 ⑤（数据校验）与 ③（冒烟）。
-5. 改到玩家可见行为时，**同步更新 `USER_MIGRATION.md` 的 §3/§5/附录 A**。
+2. 跑一次 `compileJava` → `runGameTestServer`（应 **115/115**）→ `smoke_test.sh`（应 **SMOKE PASS**），
+   确认环境可用。工作区是干净的，**无需清理**。
+3. 跟进 §1.3 的"待用户复测"清单（I18 野外生成 / I17 小刀朝向 / I10 魔人镜冠 / §5#4 刀弹外观）
+   —— 这四项是发布前最后的验证缺口。
+4. 从 §3.2 的 **P45（挤压致死）** 与 §3.1 的可选补丁裁决点入手 —— 这两处最影响玩家体验；
+   **P29/A7** 已有实测裁决依据，建议下一窗口实施。
+5. 任何代码改动：先看 §5.3 的五条硬规则，改完跑 §4.3 的 ⑤（数据校验）与 ③（冒烟）。
+6. 改到玩家可见行为时，**同步更新 `USER_MIGRATION.md` 的 §3/§5/附录 A**。
 
 ---
 
-## 附录：本次核实发现的文档/仓库不一致点
+## 附录：编写时点的核对记录（**已全部闭合**）
 
-撰写本文时对每个数字与路径都做了仓库实测，以下 **7 处不一致**已按"源码实测优先"处理，
-并在此登记（**`porting/*.md` 未做修改**，避免与在途批次冲突；由 K3/接手者决定是否回填）：
+本文件最初撰写时仓库里有多批在途，当时记录过 7 处"文档 ↔ 仓库"不一致。**这些现已全部闭合**
+（`8ce39ff` 一并修正了 `RELEASE_NOTES.md` / `integration-notes.md` / `USER_MIGRATION.md`），
+下表只作追溯留档，**不再需要任何行动**：
 
-| # | 位置 | 文档说法 | 仓库实测 | 本文采用 |
-|---|---|---|---|---|
-| 1 | `RELEASE_NOTES.md` §4、§7 文档索引 | GameTest **58/58** | 基线提交（`ccd558b`）**89 例**；主树工作区 **105 例**（28 类） | 用 105（并注明提交后预期值） |
-| 2 | `RELEASE_NOTES.md` §7 文档索引 | 台账为 "P1-P42 / I1-I12" | 台账已扩到 **P1-P51 / I1-I19** | 用 P1-P51 / I1-I19 |
-| 3 | `USER_MIGRATION.md` §5#22 的"移植版 12 次" | 暗示是移植版新增差异 | 台账 **P49** 记录：旧版是原版默认 **7 次**，两版**都不补货**（P47 实核）；`USER_MIGRATION.md` 已按"永久缺货"修正，**但 12 vs 7 的裁决（P49）仍未关闭** | 照实登记为待裁决项 |
-| 4 | 台账 P33/P34 等"下一窗口裁决"的 4 个 staging 批次 | 描述为"待裁决" | `staging/polish-trio/`(48 文件) / `charge-hint/`(9) / `broom-input/`(8) / `fix3b-tests/` 仍在库中，**未合并**；broom-input 的 Phase 1 已合并、Phase 2 已裁决放弃 | 在 §3.1 明确标注"发布冻结未合并" |
-| 5 | `integration-notes.md` 台账 P47 的措辞 | "原作交易本就无限次" | 1.7.10 `MerchantRecipe` 有 `toolUses`/`maxTradeUses`（MCP stable 39 映射可证），**原作也是有限次**；该措辞已被 P49 修正 | 采用 P49 的修正结论 |
-| 6 | `RELEASE_NOTES.md` §3 内容规模 | "46 个实体类型" | 实测 `ModEntities` 46 项、`RegistryCompletenessTest` 断言 46 —— **一致** | 保留 |
-| 7 | `ORCHESTRATION.md` §8 | "全部批次已交付或合并，无在途代理" | 实际有 6 个在途批次（`git status` 未提交 + `staging/` 新报告目录） | 在 §3.4 列出在途批次清单 |
+| # | 当时的差异 | 现状 |
+|---|---|---|
+| 1 | `RELEASE_NOTES.md` 的 GameTest 计数（58）落后于实测 | ✅ 已改为 **115/115** |
+| 2 | `RELEASE_NOTES.md` 文档索引写 "P1-P42 / I1-I12" | ✅ 已改为 **P1-P53 / I1-I19** |
+| 3 | `USER_MIGRATION.md` §5#22 与台账 P47/P49 的"无限次/12 次"矛盾 | ✅ 已按"永久缺货 + 移植版 12 次 / 旧版 7 次"统一；次数差异保留为 P49 待裁决 |
+| 4 | 4 个 staging 批次"待裁决" | ✅ 状态已在 §3.1 明确（均为**可选补丁**，非阻塞） |
+| 5 | 台账 P47 措辞"原作交易本就无限次" | ✅ 已由 P49 修正（原作也是有限次） |
+| 6 | `RELEASE_NOTES.md` "46 个实体类型" | ✅ 核对一致，无需改动 |
+| 7 | `ORCHESTRATION.md` §8 "无在途代理" | ✅ 已符合事实（在途批次零） |
 
-**另有 3 条环境层面的实测补充**（文档未写、但接手会踩）：
+**仍有效的 4 条环境/文档提醒**（文档未写、但接手会踩）：
 
 1. `porting/tools/validate_phase4_data.py` 必须在**仓库根**执行（脚本按相对路径定位
    `porting/staging/data`），且 GBK 控制台需 `PYTHONIOENCODING=utf-8`，否则在第 128 行因
    `↔` 字符抛 `UnicodeEncodeError`（**不是校验失败**，加环境变量后 `RESULT: ALL CHECKS PASS`）。
 2. `porting/neoforge-1.21.1/build/moddev/` 下的 classpath 文件**只有 `gameTestServerLegacyClasspath.txt`**
    （`clientLegacyClasspath.txt` 已改名；另有 `gameTestServerRunProgramArgs.txt` / `RunVmArgs.txt`）。
-3. `porting/neoforge-1.21.1/build.gradle` 只声明了 `gameTestServer`（86 行）与 `data`；
-   `clientSmoke` / `serverSmoke` 在 `runs {}` 块内（第 63-76 行附近）——查 run 配置时两处都要看。
+3. `porting/neoforge-1.21.1/build.gradle` 里 `clientSmoke` / `serverSmoke` 在 `runs {}` 块内
+   （约 63-76 行），`gameTestServer` 在约 86 行 —— 查 run 配置时两处都要看。
+4. **jar 文件数的两种口径**：`unzip -l` 汇总行的 `860 files` **含目录条目**，实际文件条目是
+   **803**。`RELEASE_NOTES.md` §4 仍写 "832 文件"（更早一版的核验值）—— 属于历史记录口径差异，
+   不影响发布，接手若更新该行建议统一为"860 条目 / 803 文件（含 115 个测试类）"。
